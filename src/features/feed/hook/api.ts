@@ -1,4 +1,3 @@
-// src/features/feed/hook/api.ts
 import { useState, useEffect, useCallback } from "react";
 import { feedService } from "../service/client";
 import { FeedItem, Story } from "../types";
@@ -31,19 +30,25 @@ export function useFeed() {
       },
     };
 
+    // Base feed item structure
+    const baseFeedItem = {
+      id: apiItem.id.toString(),
+      hasLiked: apiItem.hasLiked || false, // เพิ่ม hasLiked
+      user: {
+        id: apiItem.user.id,
+        name: apiItem.user.name,
+        avatar: apiItem.user.avatar,
+        level: apiItem.user.level,
+        title: apiItem.user.bio,
+      },
+    };
+
     // Map API type to UI type
     switch (apiItem.type) {
       case "quest_completion":
         return {
-          id: apiItem.id.toString(),
+          ...baseFeedItem,
           type: "quest_complete",
-          user: {
-            id: apiItem.user.id,
-            name: apiItem.user.name,
-            avatar: apiItem.user.avatar,
-            level: apiItem.user.level,
-            title: apiItem.user.bio,
-          },
           content: {
             ...baseContent,
             quest: {
@@ -57,34 +62,20 @@ export function useFeed() {
 
       case "level_up":
         return {
-          id: apiItem.id.toString(),
+          ...baseFeedItem,
           type: "level_up",
-          user: {
-            id: apiItem.user.id,
-            name: apiItem.user.name,
-            avatar: apiItem.user.avatar,
-            level: apiItem.user.level,
-            title: apiItem.user.bio,
-          },
           content: {
             ...baseContent,
             previousLevel: apiItem.levelHistory?.levelFrom || 0,
             newLevel: apiItem.levelHistory?.levelTo || 0,
-            newTitle: "New Title", // TODO: Get from JobLevel
+            newTitle: "New Title",
           },
         };
 
       case "achievement":
         return {
-          id: apiItem.id.toString(),
+          ...baseFeedItem,
           type: "achievement",
-          user: {
-            id: apiItem.user.id,
-            name: apiItem.user.name,
-            avatar: apiItem.user.avatar,
-            level: apiItem.user.level,
-            title: apiItem.user.bio,
-          },
           content: {
             ...baseContent,
             achievement: {
@@ -99,15 +90,8 @@ export function useFeed() {
       case "post":
       default:
         return {
-          id: apiItem.id.toString(),
+          ...baseFeedItem,
           type: "post",
-          user: {
-            id: apiItem.user.id,
-            name: apiItem.user.name,
-            avatar: apiItem.user.avatar,
-            level: apiItem.user.level,
-            title: apiItem.user.bio,
-          },
           content: {
             ...baseContent,
             text: apiItem.content,
@@ -198,20 +182,20 @@ export function useFeed() {
     try {
       const result = await feedService.toggleLike(feedItemId);
 
-      // Update local state optimistically
+      // Update local state
       setFeedItems((prev) =>
         prev.map((item) => {
           if (item.id === feedItemId) {
-            const currentLikes = item.content.engagement.likes;
             return {
               ...item,
+              hasLiked: result.liked, // Update hasLiked status
               content: {
                 ...item.content,
                 engagement: {
                   ...item.content.engagement,
                   likes: result.liked
-                    ? currentLikes + 1
-                    : Math.max(0, currentLikes - 1),
+                    ? item.content.engagement.likes + 1
+                    : Math.max(0, item.content.engagement.likes - 1),
                 },
               },
             };
@@ -222,7 +206,6 @@ export function useFeed() {
 
       return result;
     } catch (err) {
-      // Revert on error
       console.error("Toggle like failed:", err);
       throw err;
     }

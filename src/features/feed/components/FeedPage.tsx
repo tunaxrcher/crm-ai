@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useFeed } from "../hook/api";
-import StoryList from "./StoryList";
-import PostList from "./PostList";
+import StoryList from "./story/StoryList";
+import PostList from "./post/PostList";
 import {
   SkeletonLoading,
   ErrorDisplay,
@@ -85,12 +85,6 @@ function FeedPageContent() {
         ...prev,
         [feedItemId]: "",
       }));
-
-      // Show success message
-      showError("ความคิดเห็นถูกเพิ่มแล้ว", {
-        severity: "info",
-        autoHideAfter: 3000,
-      });
     } else {
       // Error is already handled by handleAsyncOperation
       showError("ไม่สามารถเพิ่มความคิดเห็นได้", {
