@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getTeams } from '@/features/party/service/server';
+import { getTeams } from '@src/features/party/service/server';
 
 /**
  * GET handler for fetching all teams

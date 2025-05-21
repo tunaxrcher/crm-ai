@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@src/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
 import { useQuests } from "../hook/api";
 import QuestTypeSection from "./QuestTypeSection";
 import CompletedQuestList from "./CompletedQuestList";
 import { formatDeadline } from "../utils";
 import { GroupedQuests } from "../types";
-import { SkeletonLoading, ErrorDisplay } from "@/components/shared";
-import { withErrorHandling } from "@/hooks";
-import { useError } from "@/components/shared/ErrorProvider";
-import useErrorHandler from "@/hooks/useErrorHandler";
+import { SkeletonLoading, ErrorDisplay } from "@src/components/shared";
+import { withErrorHandling } from "@src/hooks";
+import { useError } from "@src/components/shared/ErrorProvider";
+import useErrorHandler from "@src/hooks/useErrorHandler";
 
 function QuestPageComponent() {
   const router = useRouter();

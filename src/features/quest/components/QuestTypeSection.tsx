@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@src/components/ui/badge";
 import { Award, Clock, Clock3, ScrollText, ChevronDown, ChevronUp, ChevronRight, Check } from "lucide-react";
 import { Quest, QuestType, QuestDifficulty } from "../types";
 

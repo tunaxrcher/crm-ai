@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent } from "@src/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
+import { Badge } from "@src/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@src/components/ui/select";
 import { Award, BadgePercent, Calendar, Crown, LineChart, Medal, Receipt, Star, Trophy, TrendingUp, User, ChevronRight } from "lucide-react";
 import { useRankings } from "../hook/api";
 import { RankingPeriod, CharacterClass, RankingUser } from "../types";
-import { SkeletonLoading, ErrorDisplay } from "@/components/shared";
-import { withErrorHandling } from "@/hooks";
-import { useError } from "@/components/shared/ErrorProvider";
-import useErrorHandler from "@/hooks/useErrorHandler";
+import { SkeletonLoading, ErrorDisplay } from "@src/components/shared";
+import { withErrorHandling } from "@src/hooks";
+import { useError } from "@src/components/shared/ErrorProvider";
+import useErrorHandler from "@src/hooks/useErrorHandler";
 
 // Class config
 const classConfig = {

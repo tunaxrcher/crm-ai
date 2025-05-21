@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@src/components/ui/button";
 
 interface EmptyStateProps {
   /** Main title to display */

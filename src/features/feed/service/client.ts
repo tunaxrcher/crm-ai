@@ -1,68 +1,113 @@
-// Client-side service for Feed feature
-import {
-  FeedResponse,
-  AddCommentRequest,
-  AddCommentResponse,
-  LikeRequest,
-  LikeResponse
-} from '../types';
+// src/features/feed/service/client.ts
+import { BaseService } from "@src/lib/service/client/baseService";
 
-/**
- * Fetch feed data
- */
-export async function fetchFeed(): Promise<FeedResponse> {
-  const response = await fetch('/api/feed');
+export class FeedService extends BaseService {
+  private static instance: FeedService;
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch feed data');
+  constructor() {
+    super();
   }
 
-  return response.json();
-}
-
-/**
- * Add a comment to a feed item
- */
-export async function addComment(feedItemId: string, text: string): Promise<AddCommentResponse> {
-  const payload: AddCommentRequest = {
-    feedItemId,
-    text
-  };
-
-  const response = await fetch('/api/feed/comment', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to add comment');
+  public static getInstance() {
+    if (!FeedService.instance) {
+      FeedService.instance = new FeedService();
+    }
+    return FeedService.instance;
   }
 
-  return response.json();
-}
+  // Feed methods
+  async getFeedItems(params: {
+    page?: number;
+    limit?: number;
+    userId?: number;
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.append("page", params.page.toString());
+    if (params.limit) searchParams.append("limit", params.limit.toString());
+    if (params.userId) searchParams.append("userId", params.userId.toString());
 
-/**
- * Like a feed item
- */
-export async function likeFeedItem(feedItemId: string): Promise<LikeResponse> {
-  const payload: LikeRequest = {
-    feedItemId
-  };
-
-  const response = await fetch('/api/feed/like', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to like feed item');
+    const response = await fetch(`/api/feed?${searchParams}`);
+    if (!response.ok) throw new Error("Failed to fetch feed");
+    return response.json();
   }
 
-  return response.json();
+  async createPost(data: {
+    content: string;
+    mediaType?: "text" | "image" | "video";
+    mediaUrl?: string;
+  }) {
+    const response = await fetch("/api/feed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: 1, // TODO: Get from auth
+        type: "post",
+        ...data,
+      }),
+    });
+    if (!response.ok) throw new Error("Failed to create post");
+    return response.json();
+  }
+
+  // Story methods
+  async getStories(userId?: number) {
+    const params = userId ? `?userId=${userId}` : "";
+    const response = await fetch(`/api/stories${params}`);
+    if (!response.ok) throw new Error("Failed to fetch stories");
+    return response.json();
+  }
+
+  async markStoryAsViewed(storyId: string) {
+    const response = await fetch(`/api/stories/${storyId}/view`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: 1, // TODO: Get from auth
+      }),
+    });
+    if (!response.ok) throw new Error("Failed to mark story as viewed");
+    return response.json();
+  }
+
+  // Like methods
+  async toggleLike(feedItemId: string) {
+    const response = await fetch(`/api/feed/${feedItemId}/like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: 1, // TODO: Get from auth
+      }),
+    });
+    if (!response.ok) throw new Error("Failed to toggle like");
+    return response.json();
+  }
+
+  // Comment methods
+  async createComment(feedItemId: string, content: string) {
+    const response = await fetch(`/api/feed/${feedItemId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: 1, // TODO: Get from auth
+        content,
+      }),
+    });
+    if (!response.ok) throw new Error("Failed to create comment");
+    return response.json();
+  }
+
+  async createReplyComment(commentId: string, content: string) {
+    const response = await fetch(`/api/comments/${commentId}/replies`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: 1, // TODO: Get from auth
+        content,
+      }),
+    });
+    if (!response.ok) throw new Error("Failed to create reply");
+    return response.json();
+  }
 }
+
+export const feedService = FeedService.getInstance();

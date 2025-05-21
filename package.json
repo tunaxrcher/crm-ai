@@ -37,7 +37,9 @@
     "react-hook-form": "^7.56.4",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.4"
+    "zod": "^3.24.4",
+    "hashids": "^2.3.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@src/components/ui/card";
+import { Badge } from "@src/components/ui/badge";
 import { Award } from "lucide-react";
 import { Achievement } from "../types";
 

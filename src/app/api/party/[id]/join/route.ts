@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { joinTeam } from "@/features/party/service/server";
+import { joinTeam } from "@src/features/party/service/server";
 
 interface RouteParams {
   params: Promise<{

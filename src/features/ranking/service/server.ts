@@ -1,6 +1,6 @@
 // Server-side logic for Ranking feature
-import { mockRankings } from '@/data/ranking';
-import { mockJobClasses } from '@/data/character';
+import { mockRankings } from '@src/data/ranking';
+import { mockJobClasses } from '@src/data/character';
 import { GetRankingsParams, GetRankingsResponse } from '../types';
 
 /**

@@ -10,10 +10,10 @@ import {
   Trophy,
   Gift,
 } from "lucide-react";
-import NotificationSheet from "@/components/shared/NotificationSheet";
-import { ImageWithFallback } from "@/components/shared";
-import { LevelUpNotification, AchievementUnlockedNotification } from "@/components/ui/notification-system";
-import { useCharacter } from "@/features/character/context/CharacterContext";
+import NotificationSheet from "@src/components/shared/NotificationSheet";
+import { ImageWithFallback } from "@src/components/shared";
+import { LevelUpNotification, AchievementUnlockedNotification } from "@src/components/ui/notification-system";
+import { useCharacter } from "@src/features/character/context/CharacterContext";
 
 // Client body wrapper without notification provider
 export default function ClientBody({

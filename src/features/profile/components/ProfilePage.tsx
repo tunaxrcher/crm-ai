@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@src/components/ui/card";
+import { Badge } from "@src/components/ui/badge";
+import { Progress } from "@src/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
 import { ArrowLeft, Award, BadgePercent, Clock, Crown, Info, LineChart, Medal, Receipt, Shield, Star, Swords, Trophy, Zap } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
 import { useProfile } from "../hook/api";
-import { ErrorDisplay, SkeletonLoading } from "@/components/shared";
-import { withErrorHandling } from "@/hooks";
-import { useError } from "@/components/shared/ErrorProvider";
-import useErrorHandler from "@/hooks/useErrorHandler";
+import { ErrorDisplay, SkeletonLoading } from "@src/components/shared";
+import { withErrorHandling } from "@src/hooks";
+import { useError } from "@src/components/shared/ErrorProvider";
+import useErrorHandler from "@src/hooks/useErrorHandler";
 
 // Get class icon by class name
 const getClassIcon = (className: string) => {

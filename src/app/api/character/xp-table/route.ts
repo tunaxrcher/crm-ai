@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getXPRequirements } from '@/features/character/service/server';
+import { getXPRequirements } from '@src/features/character/service/server';
 
 export async function GET() {
   try {

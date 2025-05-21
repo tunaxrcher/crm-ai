@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@src/components/ui/skeleton";
 
 interface LoadingStateProps {
   /** Text to display while loading, defaults to "Loading..." */

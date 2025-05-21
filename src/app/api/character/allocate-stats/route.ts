@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { allocateStatPoints } from '@/features/character/service/server';
-import { AllocateStatPointsRequest } from '@/features/character/types';
+import { allocateStatPoints } from '@src/features/character/service/server';
+import { AllocateStatPointsRequest } from '@src/features/character/types';
 
 export async function POST(request: NextRequest) {
   try {

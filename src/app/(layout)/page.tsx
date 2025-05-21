@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent } from "@src/components/ui/card";
 import {
   BarChart3,
   Calendar,
@@ -16,7 +16,7 @@ import {
   ChartPieIcon,
   Timer,
 } from "lucide-react";
-import { useNotification } from "@/components/ui/notification-system";
+import { useNotification } from "@src/components/ui/notification-system";
 
 export default function Home() {
   const router = useRouter();

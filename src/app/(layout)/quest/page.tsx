@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import QuestPageComponent from "@/features/quest/components/QuestPage";
+import QuestPageComponent from "@src/features/quest/components/QuestPage";
 
 export default function QuestPage() {
   // Simple error boundary

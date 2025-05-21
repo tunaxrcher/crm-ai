@@ -1,5 +1,5 @@
 import "server-only";
-import { BaseService } from "@/lib/service/server/baseService";
+import { BaseService } from "@src/lib/service/server/baseService";
 
 import { UserRepository, userRepository } from "../repository";
 

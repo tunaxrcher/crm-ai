@@ -3,8 +3,8 @@
 import React from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { AlertCircle, RefreshCw, Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent } from "@src/components/ui/card";
 import { useRouter } from "next/navigation";
 
 /**

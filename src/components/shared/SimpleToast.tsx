@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, createContext, useContext } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@src/components/ui/button';
 import { X, Check, Info, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@src/lib/utils';
 
 // Toast notification type
 export type ToastType = 'success' | 'error' | 'info' | 'warning';

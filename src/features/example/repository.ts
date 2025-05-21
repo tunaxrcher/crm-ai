@@ -1,5 +1,5 @@
 import { User } from "@prisma/client";
-import { BaseRepository } from "@/lib/repository/baseRepository";
+import { BaseRepository } from "@src/lib/repository/baseRepository";
 
 export class UserRepository extends BaseRepository<User> {
   private static instance: UserRepository;

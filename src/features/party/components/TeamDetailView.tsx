@@ -1,19 +1,19 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent } from "@src/components/ui/card";
+import { Badge } from "@src/components/ui/badge";
+import { Progress } from "@src/components/ui/progress";
+import { Avatar, AvatarFallback } from "@src/components/ui/avatar";
+import { Input } from "@src/components/ui/input";
+import { ScrollArea } from "@src/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
 import {
   Check, ChevronLeft, Clock, Crown, Info, Shield, Target, Users
 } from "lucide-react";
 import { useTeamDetails } from "../hook/api";
 import type { Team } from "../types";
-import { LoadingState, ErrorState } from "@/components/shared";
+import { LoadingState, ErrorState } from "@src/components/shared";
 import React from "react";
 
 // Map icon string names to Lucide React components

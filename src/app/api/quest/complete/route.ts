@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { completeQuest } from '@/features/quest/service/server';
-import { CompleteQuestRequest } from '@/features/quest/types';
+import { completeQuest } from '@src/features/quest/service/server';
+import { CompleteQuestRequest } from '@src/features/quest/types';
 
 export async function POST(request: NextRequest) {
   try {

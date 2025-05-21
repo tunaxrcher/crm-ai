@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getQuestById } from '@/features/quest/service/server';
+import { getQuestById } from '@src/features/quest/service/server';
 
 export async function GET(
   request: NextRequest,

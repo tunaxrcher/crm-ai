@@ -1,11 +1,11 @@
 "use client";
 
 import { RefObject } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
 import { ChevronLeft, ChevronRight, Image as ImageIcon, Play, X } from "lucide-react";
 import { Story } from "../types";
-import { ImageWithFallback } from "@/components/shared";
-import { useError } from "@/components/shared/ErrorProvider";
+import { ImageWithFallback } from "@src/components/shared";
+import { useError } from "@src/components/shared/ErrorProvider";
 
 interface StoryListProps {
   stories: Story[];

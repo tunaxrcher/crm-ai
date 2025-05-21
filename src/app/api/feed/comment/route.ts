@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { addComment } from '@/features/feed/service/server';
-import { AddCommentRequest } from '@/features/feed/types';
+import { addComment } from '@src/features/feed/service/server';
+import { AddCommentRequest } from '@src/features/feed/types';
 
 export async function POST(request: Request) {
   try {

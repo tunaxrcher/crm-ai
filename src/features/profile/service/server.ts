@@ -1,4 +1,4 @@
-import { mockUsers } from '@/data/profile';
+import { mockUsers } from '@src/data/profile';
 import { GetProfileParams, GetProfileResponse, UserProfile } from '../types';
 
 /**

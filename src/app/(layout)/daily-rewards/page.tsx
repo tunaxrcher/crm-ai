@@ -8,9 +8,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+} from "@src/components/ui/card";
+import { Button } from "@src/components/ui/button";
+import { Progress } from "@src/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+} from "@src/components/ui/dialog";
+import { Badge } from "@src/components/ui/badge";
 import {
   Award,
   Calendar,

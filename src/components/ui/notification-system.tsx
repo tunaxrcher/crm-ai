@@ -3,11 +3,11 @@
 import type React from "react";
 import { createContext, useContext, useState, useEffect } from "react";
 import { Check, ChevronRight, Info, X, AlertTriangle, Bell, Trophy, Star, Gift, Zap, Award, Sparkles, MessageCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@src/components/ui/card";
+import { Badge } from "@src/components/ui/badge";
+import { Button } from "@src/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
+import { cn } from "@src/lib/utils";
 
 // Notification Types
 export type NotificationType =

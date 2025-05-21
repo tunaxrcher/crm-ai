@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import FeedPageComponent from "@/features/feed/components/FeedPage";
+import FeedPageComponent from "@src/features/feed/components/FeedPage";
 
 export default function FeedPage() {
   // Simple error boundary
@@ -24,7 +24,9 @@ export default function FeedPage() {
     return (
       <div className="p-4">
         <h1 className="text-2xl font-bold text-red-500">Error loading Feed</h1>
-        <p className="mt-2">{errorMessage || "There was an error loading this page"}</p>
+        <p className="mt-2">
+          {errorMessage || "There was an error loading this page"}
+        </p>
         <button
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
           onClick={() => window.location.reload()}

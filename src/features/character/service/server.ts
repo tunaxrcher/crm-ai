@@ -1,5 +1,5 @@
 // Server-side logic for Character feature
-import { mockCharacter, mockJobClasses, xpTable, characterPortrait } from '@/data/character';
+import { mockCharacter, mockJobClasses, xpTable, characterPortrait } from '@src/data/character';
 import { Character, CharacterResponse, AllocateStatPointsRequest, JobClass, LevelRequirement } from '../types';
 
 /**

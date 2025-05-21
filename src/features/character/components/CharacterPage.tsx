@@ -1,23 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@src/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@src/components/ui/dialog";
 import { AlertCircle, Award, BadgePercent, Briefcase, Clock, Info, Shield, Swords, Zap } from "lucide-react";
 import { useCharacter as useCharacterAPI, useStatAllocation, useXPTable, useJobClasses } from "../hook/api";
 import { useCharacter } from "../context/CharacterContext";
-import { useNotification } from "@/components/ui/notification-system";
+import { useNotification } from "@src/components/ui/notification-system";
 import CharacterProfile from "./CharacterProfile";
 import StatDisplay from "./StatDisplay";
 import AchievementList from "./AchievementList";
 import QuestStatistics from "./QuestStatistics";
-import { SkeletonLoading, ErrorDisplay } from "@/components/shared";
-import { withErrorHandling } from "@/hooks";
-import { useError } from "@/components/shared/ErrorProvider";
-import useErrorHandler from "@/hooks/useErrorHandler";
+import { SkeletonLoading, ErrorDisplay } from "@src/components/shared";
+import { withErrorHandling } from "@src/hooks";
+import { useError } from "@src/components/shared/ErrorProvider";
+import useErrorHandler from "@src/hooks/useErrorHandler";
 import { Stat } from "../types";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@src/components/ui/badge";
 
 function CharacterPageComponent() {
   // API character hook

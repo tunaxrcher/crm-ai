@@ -7,10 +7,10 @@ import PostList from "./PostList";
 import {
   SkeletonLoading,
   ErrorDisplay,
-  GlobalErrorBoundary
-} from "@/components/shared";
-import { useError } from "@/components/shared/ErrorProvider";
-import useErrorHandler from "@/hooks/useErrorHandler";
+  GlobalErrorBoundary,
+} from "@src/components/shared";
+import { useError } from "@src/components/shared/ErrorProvider";
+import useErrorHandler from "@src/hooks/useErrorHandler";
 
 export default function FeedPageComponent() {
   // Wrap the component with GlobalErrorBoundary
@@ -31,14 +31,18 @@ function FeedPageContent() {
     refreshFeed,
     toggleLike,
     addComment,
-    formatTimeDiff
+    formatTimeDiff,
   } = useFeed();
 
   const { showError } = useError();
   const { handleAsyncOperation } = useErrorHandler();
 
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
-  const [currentStoryIndex, setCurrentStoryIndex] = useState<number | null>(null);
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
+    {}
+  );
+  const [currentStoryIndex, setCurrentStoryIndex] = useState<number | null>(
+    null
+  );
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isClient, setIsClient] = useState(false);
   const storiesRef = useRef<HTMLDivElement>(null);
@@ -56,19 +60,20 @@ function FeedPageContent() {
 
     const currentRef = storiesRef.current;
     if (currentRef) {
-      currentRef.addEventListener('scroll', handleScroll);
+      currentRef.addEventListener("scroll", handleScroll);
     }
 
     return () => {
       if (currentRef) {
-        currentRef.removeEventListener('scroll', handleScroll);
+        currentRef.removeEventListener("scroll", handleScroll);
       }
     };
   }, []);
 
   // Handle adding a comment
   const handleAddComment = async (feedItemId: string) => {
-    if (!commentInputs[feedItemId] || commentInputs[feedItemId].trim() === '') return;
+    if (!commentInputs[feedItemId] || commentInputs[feedItemId].trim() === "")
+      return;
 
     const result = await handleAsyncOperation(async () => {
       return await addComment(feedItemId, commentInputs[feedItemId]);
@@ -76,21 +81,21 @@ function FeedPageContent() {
 
     if (result) {
       // Clear input on success
-      setCommentInputs(prev => ({
+      setCommentInputs((prev) => ({
         ...prev,
-        [feedItemId]: ''
+        [feedItemId]: "",
       }));
 
       // Show success message
       showError("ความคิดเห็นถูกเพิ่มแล้ว", {
         severity: "info",
-        autoHideAfter: 3000
+        autoHideAfter: 3000,
       });
     } else {
       // Error is already handled by handleAsyncOperation
       showError("ไม่สามารถเพิ่มความคิดเห็นได้", {
         severity: "error",
-        message: "โปรดลองอีกครั้งในภายหลัง"
+        message: "โปรดลองอีกครั้งในภายหลัง",
       });
     }
   };
@@ -105,7 +110,7 @@ function FeedPageContent() {
       showError("ไม่สามารถกดไลค์ได้", {
         severity: "warning",
         message: "โปรดลองอีกครั้งในภายหลัง",
-        autoHideAfter: 3000
+        autoHideAfter: 3000,
       });
     }
   };
@@ -114,7 +119,7 @@ function FeedPageContent() {
   const handleScrollLeft = () => {
     if (storiesRef.current) {
       const newPosition = Math.max(scrollPosition - 200, 0);
-      storiesRef.current.scrollTo({ left: newPosition, behavior: 'smooth' });
+      storiesRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
       setScrollPosition(newPosition);
     }
   };
@@ -125,7 +130,7 @@ function FeedPageContent() {
         scrollPosition + 200,
         storiesRef.current.scrollWidth - storiesRef.current.clientWidth
       );
-      storiesRef.current.scrollTo({ left: newPosition, behavior: 'smooth' });
+      storiesRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
       setScrollPosition(newPosition);
     }
   };
@@ -173,7 +178,9 @@ function FeedPageContent() {
       <div className="p-4 pb-20">
         <ErrorDisplay
           title="ไม่สามารถโหลดฟีดได้"
-          message={error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์"}
+          message={
+            error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์"
+          }
           severity="error"
           onRetry={refreshFeed}
           showRetry={true}
@@ -190,7 +197,9 @@ function FeedPageContent() {
     <div className="p-4 pb-20">
       <div className="mb-6">
         <h1 className="text-2xl font-bold ai-gradient-text">ฟีดกิจกรรม</h1>
-        <p className="text-muted-foreground">ดูว่าเพื่อนร่วมงานของคุณกำลังทำอะไรกันอยู่</p>
+        <p className="text-muted-foreground">
+          ดูว่าเพื่อนร่วมงานของคุณกำลังทำอะไรกันอยู่
+        </p>
       </div>
 
       {isRefreshing && (

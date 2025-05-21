@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Bell, X, Info } from 'lucide-react';
+import React, { useState } from "react";
+import { Bell, X, Info } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useNotification } from '@/components/ui/notification-system';
+  SheetTrigger,
+} from "@src/components/ui/sheet";
+import { Button } from "@src/components/ui/button";
+import { Badge } from "@src/components/ui/badge";
+import { useNotification } from "@src/components/ui/notification-system";
 
 export default function NotificationSheet() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +20,7 @@ export default function NotificationSheet() {
     markAsRead,
     markAllAsRead,
     removeNotification,
-    unreadCount
+    unreadCount,
   } = useNotification();
 
   // Helper to format notification time
@@ -32,11 +32,11 @@ export default function NotificationSheet() {
     const diffDays = Math.round(diffMs / 86400000);
 
     if (diffMins < 60) {
-      return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
+      return `${diffMins} ${diffMins === 1 ? "minute" : "minutes"} ago`;
     } else if (diffHours < 24) {
-      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+      return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
     } else {
-      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+      return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
     }
   };
 
@@ -47,7 +47,7 @@ export default function NotificationSheet() {
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge className="absolute -top-1 -right-1 h-4 min-w-4 p-0 flex items-center justify-center bg-red-500 text-white text-[10px]">
-              {unreadCount > 9 ? '9+' : unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}
         </Button>
@@ -75,26 +75,34 @@ export default function NotificationSheet() {
                 key={notification.id}
                 className={`relative p-3 rounded-lg border ${
                   notification.isRead
-                    ? 'bg-background border-border'
-                    : 'bg-secondary/5 border-primary/10'
+                    ? "bg-background border-border"
+                    : "bg-secondary/5 border-primary/10"
                 } hover:bg-secondary/10 transition-colors`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <Info className={`h-5 w-5 ${
-                      notification.type === 'success' ? 'text-green-400' :
-                      notification.type === 'error' ? 'text-red-400' :
-                      notification.type === 'warning' ? 'text-yellow-400' :
-                      'text-blue-400'
-                    }`} />
+                    <Info
+                      className={`h-5 w-5 ${
+                        notification.type === "success"
+                          ? "text-green-400"
+                          : notification.type === "error"
+                          ? "text-red-400"
+                          : notification.type === "warning"
+                          ? "text-yellow-400"
+                          : "text-blue-400"
+                      }`}
+                    />
                   </div>
 
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-medium text-sm">{notification.title}</h4>
+                      <h4 className="font-medium text-sm">
+                        {notification.title}
+                      </h4>
                       <span className="text-xs text-muted-foreground">
-                        {notification.timestamp && formatTime(notification.timestamp)}
+                        {notification.timestamp &&
+                          formatTime(notification.timestamp)}
                       </span>
                     </div>
                     <p className="text-sm mt-1 text-muted-foreground">

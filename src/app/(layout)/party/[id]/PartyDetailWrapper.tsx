@@ -2,13 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useTeamDetails } from "@/features/party/hook/api";
-import TeamDetailView from "@/features/party/components/TeamDetailView";
-import { Team } from "@/features/party/types";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { useTeamDetails } from "@src/features/party/hook/api";
+import TeamDetailView from "@src/features/party/components/TeamDetailView";
+import { Team } from "@src/features/party/types";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent } from "@src/components/ui/card";
 import { ChevronLeft, Info } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@src/components/ui/skeleton";
 
 interface PartyDetailWrapperProps {
   teamId: string;

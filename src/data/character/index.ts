@@ -1,5 +1,5 @@
 // Character Feature Mock Data
-import { JobClass, Character, JobLevel, LevelRequirement } from '@/features/character/types';
+import { JobClass, Character, JobLevel, LevelRequirement } from '@src/features/character/types';
 
 // Job Classes
 export const mockJobClasses: JobClass[] = [

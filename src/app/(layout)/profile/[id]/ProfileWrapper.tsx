@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import ProfilePage from "@/features/profile/components/ProfilePage";
-import { Button } from "@/components/ui/button";
+import ProfilePage from "@src/features/profile/components/ProfilePage";
+import { Button } from "@src/components/ui/button";
 
 interface ProfileWrapperProps {
   userId: string;

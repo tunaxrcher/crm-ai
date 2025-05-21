@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent } from "@src/components/ui/card";
+import { Badge } from "@src/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@src/components/ui/dialog";
+import { Input } from "@src/components/ui/input";
+import { Label } from "@src/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
 import {
   ArrowRight, ChevronLeft, ChevronRight, Info, Plus, Search, Shield, Users
 } from "lucide-react";
@@ -16,11 +16,11 @@ import { useTeams, useTeamQuests, useJoinTeam, useCreateTeam } from "../hook/api
 import type { Team } from "../types";
 import TeamDetailView from "./TeamDetailView";
 import TeamQuestItem from "./TeamQuestItem";
-import { LoadingState, ErrorDisplay, EmptyState, SkeletonLoading } from "@/components/shared";
-import { useSimpleNotification } from "@/components/shared/SimpleToast";
-import { useError } from "@/components/shared/ErrorProvider";
-import useErrorHandler from "@/hooks/useErrorHandler";
-import { withErrorHandling } from "@/hooks";
+import { LoadingState, ErrorDisplay, EmptyState, SkeletonLoading } from "@src/components/shared";
+import { useSimpleNotification } from "@src/components/shared/SimpleToast";
+import { useError } from "@src/components/shared/ErrorProvider";
+import useErrorHandler from "@src/hooks/useErrorHandler";
+import { withErrorHandling } from "@src/hooks";
 
 function PartyPageComponent() {
   const router = useRouter();

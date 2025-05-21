@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { GlobalErrorBoundary } from "@/components/shared";
+import { GlobalErrorBoundary } from "@src/components/shared";
 
 /**
  * Higher Order Component (HOC) that wraps a component with GlobalErrorBoundary

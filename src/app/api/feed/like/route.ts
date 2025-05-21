@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { likeFeedItem } from '@/features/feed/service/server';
-import { LikeRequest } from '@/features/feed/types';
+import { likeFeedItem } from '@src/features/feed/service/server';
+import { LikeRequest } from '@src/features/feed/types';
 
 export async function POST(request: Request) {
   try {

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@src/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
+import { Input } from "@src/components/ui/input";
 import {
   ChevronRight,
   UserCircle2,
@@ -15,9 +15,9 @@ import {
   Receipt,
   Briefcase
 } from "lucide-react";
-import { useJobClasses } from "@/features/character/hook/api";
-import { JobClass } from "@/features/character/types";
-import { SkeletonLoading, ErrorDisplay } from "@/components/shared";
+import { useJobClasses } from "@src/features/character/hook/api";
+import { JobClass } from "@src/features/character/types";
+import { SkeletonLoading, ErrorDisplay } from "@src/components/shared";
 
 export default function CharacterCreation() {
   const router = useRouter();

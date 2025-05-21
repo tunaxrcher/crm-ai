@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUserCharacter } from '@/features/character/service/server';
+import { getCurrentUserCharacter } from '@src/features/character/service/server';
 
 export async function GET() {
   try {

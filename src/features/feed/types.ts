@@ -1,127 +1,135 @@
-// Define all types related to Feed feature
+// src/features/feed/types.ts (เพิ่มเติม)
+import {
+  FeedItem,
+  User,
+  Like,
+  Comment,
+  ReplyComment,
+  Story,
+  StoryView,
+  QuestSubmission,
+  Quest,
+  LevelHistory,
+  CharacterAchievement,
+  Achievement,
+  JobLevel,
+  Character,
+} from "@prisma/client";
 
-export interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  title?: string;
-  level?: number;
-}
-
-export interface Comment {
-  id: string;
+// Extended types with relations
+export interface FeedItemWithRelations extends FeedItem {
   user: User;
-  text: string;
-  timestamp: Date;
-}
-
-export interface Engagement {
-  likes: number;
-  comments: Comment[];
-}
-
-export interface QuestCompletion {
-  title: string;
-  xpEarned: number;
-  statsGained: {
-    AGI?: number;
-    STR?: number;
-    DEX?: number;
-    VIT?: number;
-    INT?: number;
+  likes: (Like & { user: User })[];
+  comments: (Comment & {
+    user: User;
+    replies: (ReplyComment & { user: User })[];
+  })[];
+  questSubmission?: QuestSubmission & { quest: Quest };
+  levelHistory?: LevelHistory & {
+    character: Character & {
+      currentJobLevel: JobLevel;
+    };
   };
+  achievement?: CharacterAchievement & { achievement: Achievement };
+  hasLiked?: boolean;
+  likesCount?: number;
+  commentsCount?: number;
 }
 
-export interface LevelUp {
-  previousLevel: number;
-  newLevel: number;
-  newTitle: string;
-  statsAllocated: {
-    AGI?: number;
-    STR?: number;
-    DEX?: number;
-    VIT?: number;
-    INT?: number;
-  };
-}
-
-export interface Achievement {
-  name: string;
-  description: string;
-  icon: string;
-}
-
-export interface QuestCompletionContent {
-  quest: QuestCompletion;
-  image: string;
-  timestamp: Date;
-  engagement: Engagement;
-}
-
-export interface LevelUpContent {
-  previousLevel: number;
-  newLevel: number;
-  newTitle: string;
-  statsAllocated: {
-    AGI?: number;
-    STR?: number;
-    DEX?: number;
-    VIT?: number;
-    INT?: number;
-  };
-  timestamp: Date;
-  engagement: Engagement;
-}
-
-export interface AchievementContent {
-  achievement: Achievement;
-  timestamp: Date;
-  engagement: Engagement;
-}
-
-export type FeedItemContent = QuestCompletionContent | LevelUpContent | AchievementContent;
-
-export interface FeedItem {
-  id: string;
-  type: 'quest_complete' | 'level_up' | 'achievement';
+export interface StoryWithRelations extends Story {
   user: User;
-  content: FeedItemContent;
-}
-
-export interface StoryMedia {
-  type: 'image' | 'video';
-  url: string;
-  thumbnail?: string;
-}
-
-export interface Story {
-  id: string;
-  user: User;
-  media: StoryMedia;
-  questTitle: string;
-  viewed: boolean;
+  views: StoryView[];
+  hasViewed?: boolean;
+  viewsCount?: number;
 }
 
 export interface FeedResponse {
-  feedItems: FeedItem[];
-  stories: Story[];
+  items: FeedItemWithRelations[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
-export interface AddCommentRequest {
-  feedItemId: string;
+// Types สำหรับ UI components ที่มีอยู่แล้ว
+export interface FeedItemUI {
+  id: string;
+  type: "quest_complete" | "level_up" | "achievement" | "post";
+  user: {
+    id: number;
+    name: string;
+    avatar: string;
+    level?: number;
+    title?: string;
+  };
+  content: {
+    timestamp: string | Date;
+    engagement: {
+      likes: number;
+      comments: CommentUI[];
+    };
+    // Type-specific content
+    quest?: {
+      id: number;
+      title: string;
+      xpEarned: number;
+    };
+    image?: string;
+    previousLevel?: number;
+    newLevel?: number;
+    newTitle?: string;
+    achievement?: {
+      id: number;
+      name: string;
+      description: string;
+      icon: string;
+    };
+    text?: string;
+  };
+}
+
+export interface CommentUI {
+  id: string;
+  user: {
+    id: number;
+    name: string;
+    avatar: string;
+  };
   text: string;
+  timestamp: string | Date;
 }
 
-export interface LikeRequest {
-  feedItemId: string;
+export interface StoryUI {
+  id: string;
+  user: {
+    id: number;
+    name: string;
+    avatar: string;
+    level?: number;
+  };
+  media: {
+    type: "image" | "video";
+    url: string;
+    thumbnail?: string;
+  };
+  questTitle?: string;
+  viewed: boolean;
+  expiresAt: string | Date;
 }
 
-export interface AddCommentResponse {
-  success: boolean;
-  comment: Comment;
+// Request/Response types
+export interface CreatePostRequest {
+  content: string;
+  mediaType?: "text" | "image" | "video";
+  mediaUrl?: string;
 }
 
-export interface LikeResponse {
-  success: boolean;
-  likes: number;
+export interface CreateCommentRequest {
+  content: string;
+}
+
+export interface ToggleLikeResponse {
+  liked: boolean;
 }

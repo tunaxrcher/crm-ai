@@ -1,4 +1,4 @@
-import { BaseService } from '@/lib/service/client/baseService'
+import { BaseService } from '@src/lib/service/client/baseService'
 
 export class UserService extends BaseService {
   private static instance: UserService

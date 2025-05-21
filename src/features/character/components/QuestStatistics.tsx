@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@src/components/ui/card";
 import { ScrollText } from "lucide-react";
 import { QuestStats } from "../types";
 

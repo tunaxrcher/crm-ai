@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@src/components/ui/skeleton";
 
 interface SkeletonLoadingProps {
   /** Type of skeleton to show (feed, character, quest, ranking, party) */

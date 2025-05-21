@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStatConfig } from '@/features/profile/service/server';
+import { getStatConfig } from '@src/features/profile/service/server';
 
 export async function GET(request: NextRequest) {
   try {

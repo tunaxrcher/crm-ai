@@ -2,8 +2,8 @@
 
 import React from "react";
 import { AlertCircle, AlertTriangle, Info, XCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@src/components/ui/button";
+import { Card, CardContent } from "@src/components/ui/card";
 
 export type ErrorSeverity = "info" | "warning" | "error" | "critical";
 export type ErrorDisplaySize = "small" | "medium" | "large";

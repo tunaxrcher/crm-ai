@@ -1,5 +1,5 @@
 // Server-side logic for Quest feature
-import { mockQuests, mockCompletedQuests } from '@/data/quest';
+import { mockQuests, mockCompletedQuests } from '@src/data/quest';
 import { Quest, CompletedQuest, CompleteQuestRequest, CompleteQuestResponse, QuestsResponse } from '../types';
 
 /**

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAllJobClasses } from '@/features/character/service/server';
+import { getAllJobClasses } from '@src/features/character/service/server';
 
 export async function GET() {
   try {

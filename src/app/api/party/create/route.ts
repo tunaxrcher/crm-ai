@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createTeam } from '@/features/party/service/server';
-import type { Team } from '@/features/party/types';
+import { createTeam } from '@src/features/party/service/server';
+import type { Team } from '@src/features/party/types';
 
 /**
  * POST handler for creating a new team

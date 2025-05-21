@@ -2,7 +2,7 @@
 // This file is kept for backward compatibility with existing code
 
 // Import all data from the new structure
-import * as DataImports from '@/data';
+import * as DataImports from '@src/data';
 
 // Re-export all items with the same names
 export const {

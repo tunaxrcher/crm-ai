@@ -1,4 +1,4 @@
-import { mockTeams, mockTeamDetail, mockTeamQuests } from '@/data/party';
+import { mockTeams, mockTeamDetail, mockTeamQuests } from '@src/data/party';
 import type { Team, TeamDetail, GlobalTeamQuest } from '../types';
 
 /**

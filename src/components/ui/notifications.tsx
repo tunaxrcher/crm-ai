@@ -11,8 +11,8 @@ import {
   CheckCircle2,
   PartyPopper,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
+import { Progress } from "@src/components/ui/progress";
 
 // Demo data for preview in storybook/examples
 const demoUser = {

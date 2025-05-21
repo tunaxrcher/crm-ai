@@ -1,11 +1,11 @@
 "use client";
 
 import { Dispatch, SetStateAction } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardFooter, CardHeader } from "@src/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
+import { Badge } from "@src/components/ui/badge";
+import { Button } from "@src/components/ui/button";
+import { Input } from "@src/components/ui/input";
 import { Award, Heart, MessageSquare, Share2, ThumbsUp, Send } from "lucide-react";
 import { FeedItem } from "../types";
 

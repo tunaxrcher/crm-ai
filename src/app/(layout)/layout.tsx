@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { Kanit } from "next/font/google";
 import "./globals.css";
 import ClientBody from "./ClientBody";
-import { ToastProvider } from "@/components/shared/SimpleToast";
-import { ErrorProvider } from "@/components/shared/ErrorProvider";
-import { NotificationProvider } from "@/components/ui/notification-system";
-import { CharacterProvider } from "@/features/character/context/CharacterContext";
+import { ToastProvider } from "@src/components/shared/SimpleToast";
+import { ErrorProvider } from "@src/components/shared/ErrorProvider";
+import { NotificationProvider } from "@src/components/ui/notification-system";
+import { CharacterProvider } from "@src/features/character/context/CharacterContext";
 
 const kanit = Kanit({
   variable: "--font-kanit",
