@@ -199,9 +199,9 @@ function FeedPageContent() {
   return (
     <div className="p-4 pb-20">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold ai-gradient-text">ฟีดกิจกรรม</h1>
+        <h1 className="text-2xl font-bold ai-gradient-text">ฟีดรวมกิจกรรม</h1>
         <p className="text-muted-foreground">
-          ดูว่าเพื่อนร่วมงานของคุณกำลังทำอะไรกันอยู่
+          ดูว่าเพื่อนร่วมงานของคุณกำลังทำอะไรกัน
         </p>
       </div>
 

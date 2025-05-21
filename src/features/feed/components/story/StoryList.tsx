@@ -58,7 +58,7 @@ export default function StoryList({
   return (
     <div className="mb-6 relative">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium">สตอรี่ล่าสุด</h2>
+        <h2 className="text-sm font-medium"></h2>
         <button className="text-xs text-muted-foreground">ดูทั้งหมด</button>
       </div>
 
