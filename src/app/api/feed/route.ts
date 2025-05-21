@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const feedItem = await feedService.createFeedItem(body);
-    
+
     return NextResponse.json(feedItem);
   } catch (error) {
     console.error("Error creating feed item:", error);

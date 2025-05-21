@@ -233,6 +233,7 @@ export function useFeed() {
     async (feedItemId: string, content: string) => {
       try {
         const newComment = await feedService.createComment(feedItemId, content);
+        console.log(newComment);
 
         // Update local state
         setFeedItems((prev) =>

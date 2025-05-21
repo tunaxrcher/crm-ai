@@ -1,16 +1,16 @@
 // src/app/api/feed/[id]/comments/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { commentService } from "@src/features/feed/service/server";
+import { prisma } from "@src/lib/db";
 
 // GET /api/feed/[id]/comments - ดึงความคิดเห็นทั้งหมด
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const comments = await commentService.getCommentsByFeedItem(
-      parseInt(params.id)
-    );
+    const { id } = await context.params;
+    const comments = await commentService.getCommentsByFeedItem(parseInt(id));
     return NextResponse.json(comments);
   } catch (error) {
     console.error("Error fetching comments:", error);
@@ -24,17 +24,24 @@ export async function GET(
 // POST /api/feed/[id]/comments - สร้างความคิดเห็นใหม่
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const body = await request.json();
     const comment = await commentService.createComment({
-      feedItemId: parseInt(params.id),
+      feedItemId: parseInt(id),
       userId: body.userId,
       content: body.content,
     });
 
-    return NextResponse.json(comment);
+    const commentWithUser = await prisma.comment.findUnique({
+      where: { id: comment.id },
+      include: { user: true },
+    });
+
+
+    return NextResponse.json(commentWithUser);
   } catch (error) {
     console.error("Error creating comment:", error);
     return NextResponse.json(

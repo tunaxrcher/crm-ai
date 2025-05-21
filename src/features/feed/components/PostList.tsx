@@ -1,12 +1,24 @@
 "use client";
 
 import { Dispatch, SetStateAction } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@src/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
 import { Badge } from "@src/components/ui/badge";
 import { Button } from "@src/components/ui/button";
 import { Input } from "@src/components/ui/input";
-import { Award, Heart, MessageSquare, Share2, ThumbsUp, Send } from "lucide-react";
+import {
+  Award,
+  Heart,
+  MessageSquare,
+  Share2,
+  ThumbsUp,
+  Send,
+} from "lucide-react";
 import { FeedItem } from "../types";
 
 // Update formatTimeDiff props type to accept more date formats
@@ -25,7 +37,7 @@ export default function PostList({
   toggleLike,
   commentInputs,
   setCommentInputs,
-  handleAddComment
+  handleAddComment,
 }: PostListProps) {
   // Safety check - if feedItems is empty, show message
   if (!feedItems || feedItems.length === 0) {
@@ -38,6 +50,7 @@ export default function PostList({
 
   // Render feed item based on type
   const renderFeedItem = (item: FeedItem) => {
+    console.log(item.type);
     if (!item || !item.type || !item.user || !item.content) {
       return null; // Skip invalid feed items
     }
@@ -57,7 +70,9 @@ export default function PostList({
               <div className="flex items-center">
                 <div className="font-medium">{user.name}</div>
                 {user.level && (
-                  <Badge className="ml-2 text-xs" variant="outline">Lvl {user.level}</Badge>
+                  <Badge className="ml-2 text-xs" variant="outline">
+                    Lvl {user.level}
+                  </Badge>
                 )}
               </div>
               <div className="text-xs text-muted-foreground flex items-center justify-between">
@@ -70,56 +85,72 @@ export default function PostList({
 
         <CardContent className="pb-2">
           {/* Quest Completion */}
-          {type === 'quest_complete' && 'quest' in content && (
+          {type === "quest_complete" && "quest" in content && (
             <div>
               <div className="mb-2">
-                <span className="font-medium ai-gradient-text">Completed a quest:</span> {content.quest.title}
+                <span className="font-medium ai-gradient-text">
+                  Completed a quest:
+                </span>{" "}
+                {content.quest.title}
               </div>
 
               {content.image && (
                 <div className="mb-3 rounded-lg overflow-hidden h-40 bg-secondary/20">
-                  <img src={content.image} alt="Quest evidence" className="w-full h-full object-cover" />
+                  <img
+                    src={content.image}
+                    alt="Quest evidence"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
 
               <div className="flex items-center space-x-3 mb-2">
                 <div className="flex items-center">
                   <Award className="h-4 w-4 mr-1 text-yellow-400" />
-                  <span className="text-yellow-400 font-medium text-sm">+{content.quest.xpEarned} XP</span>
+                  <span className="text-yellow-400 font-medium text-sm">
+                    +{content.quest.xpEarned} XP
+                  </span>
                 </div>
               </div>
             </div>
           )}
 
           {/* Level Up */}
-          {type === 'level_up' && 'previousLevel' in content && 'newLevel' in content && (
-            <div>
-              <div className="mb-3 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-cyan-500/20 p-4 rounded-lg text-center">
-                <div className="text-lg ai-gradient-text font-bold mb-1">Level Up!</div>
-                <div className="text-sm mb-2">
-                  Level {content.previousLevel} → Level {content.newLevel}
-                </div>
-                <div className="text-sm">
-                  New Title: <span className="font-medium">{content.newTitle}</span>
+          {type === "level_up" &&
+            "previousLevel" in content &&
+            "newLevel" in content && (
+              <div>
+                <div className="mb-3 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-cyan-500/20 p-4 rounded-lg text-center">
+                  <div className="text-lg ai-gradient-text font-bold mb-1">
+                    Level Up!
+                  </div>
+                  <div className="text-sm mb-2">
+                    Level {content.previousLevel} → Level {content.newLevel}
+                  </div>
+                  <div className="text-sm">
+                    New Title:{" "}
+                    <span className="font-medium">{content.newTitle}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Achievement */}
-          {type === 'achievement' && 'achievement' in content && (
+          {type === "achievement" && "achievement" in content && (
             <div>
               <div className="mb-3 bg-gradient-to-r from-yellow-500/20 via-yellow-400/20 to-yellow-300/20 p-4 rounded-lg">
                 <div className="flex items-center mb-2">
-                  <div className="text-2xl mr-3">{content.achievement.icon}</div>
+                  <div className="text-2xl mr-3">
+                    {content.achievement.icon}
+                  </div>
                   <div>
                     <div className="font-bold">{content.achievement.name}</div>
-                    <div className="text-sm text-muted-foreground">Achievement Unlocked</div>
+                    <div className="text-sm text-muted-foreground">
+                      Achievement Unlocked
+                    </div>
                   </div>
                 </div>
-                <div className="text-sm">
-                  {content.achievement.description}
-                </div>
+                <div className="text-sm">{content.achievement.description}</div>
               </div>
             </div>
           )}
@@ -143,7 +174,12 @@ export default function PostList({
 
         <CardFooter className="flex flex-col pt-0">
           <div className="flex items-center justify-between w-full py-2 border-y border-border">
-            <Button variant="ghost" size="sm" className="flex-1" onClick={() => toggleLike(item.id)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1"
+              onClick={() => toggleLike(item.id)}
+            >
               <ThumbsUp className="h-4 w-4 mr-2" />
               Like
             </Button>
@@ -151,11 +187,6 @@ export default function PostList({
             <Button variant="ghost" size="sm" className="flex-1">
               <MessageSquare className="h-4 w-4 mr-2" />
               Comment
-            </Button>
-
-            <Button variant="ghost" size="sm" className="flex-1">
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
             </Button>
           </div>
 
@@ -165,13 +196,20 @@ export default function PostList({
               {content.engagement.comments.map((comment) => (
                 <div key={comment.id} className="flex items-start">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src={comment.user.avatar} alt={comment.user.name} />
-                    <AvatarFallback>{comment.user.name.slice(0, 2)}</AvatarFallback>
+                    <AvatarImage
+                      src={comment.user.avatar}
+                      alt={comment.user.name}
+                    />
+                    <AvatarFallback>
+                      {comment.user.name.slice(0, 2)}
+                    </AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1">
                     <div className="bg-secondary/30 p-2 rounded-lg">
-                      <div className="font-medium text-xs">{comment.user.name}</div>
+                      <div className="font-medium text-xs">
+                        {comment.user.name}
+                      </div>
                       <div className="text-sm">{comment.text}</div>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1 flex items-center space-x-2">
@@ -188,7 +226,10 @@ export default function PostList({
           {/* Comment input */}
           <div className="flex items-center mt-3 w-full">
             <Avatar className="h-8 w-8 mr-2">
-              <AvatarImage src="https://same-assets.com/avatars/marketing-specialist-1.png" alt="You" />
+              <AvatarImage
+                src="https://same-assets.com/avatars/marketing-specialist-1.png"
+                alt="You"
+              />
               <AvatarFallback>Y</AvatarFallback>
             </Avatar>
 
@@ -197,13 +238,15 @@ export default function PostList({
                 type="text"
                 placeholder="Write a comment..."
                 className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                value={commentInputs[item.id] || ''}
-                onChange={(e) => setCommentInputs(prev => ({
-                  ...prev,
-                  [item.id]: e.target.value
-                }))}
+                value={commentInputs[item.id] || ""}
+                onChange={(e) =>
+                  setCommentInputs((prev) => ({
+                    ...prev,
+                    [item.id]: e.target.value,
+                  }))
+                }
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleAddComment(item.id);
                   }
                 }}
@@ -214,7 +257,10 @@ export default function PostList({
                 size="icon"
                 className="rounded-full h-8 w-8"
                 onClick={() => handleAddComment(item.id)}
-                disabled={!commentInputs[item.id] || commentInputs[item.id].trim() === ''}
+                disabled={
+                  !commentInputs[item.id] ||
+                  commentInputs[item.id].trim() === ""
+                }
               >
                 <Send className="h-4 w-4" />
               </Button>
@@ -225,9 +271,5 @@ export default function PostList({
     );
   };
 
-  return (
-    <div>
-      {feedItems.map(renderFeedItem)}
-    </div>
-  );
+  return <div>{feedItems.map(renderFeedItem)}</div>;
 }

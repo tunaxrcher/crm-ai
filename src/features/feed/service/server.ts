@@ -1,7 +1,12 @@
 // src/features/feed/service/server.ts
 import "server-only";
 import { BaseService } from "@src/lib/service/server/baseService";
-import { feedRepository, storyRepository, likeRepository, commentRepository } from "../repository";
+import {
+  feedRepository,
+  storyRepository,
+  likeRepository,
+  commentRepository,
+} from "../repository";
 
 // Feed Service
 export class FeedService extends BaseService {
@@ -18,45 +23,118 @@ export class FeedService extends BaseService {
     return FeedService.instance;
   }
 
-  async getFeedItems(params: {
-    page: number;
-    limit: number;
-    userId?: number;
-  }) {
-    const { page, limit, userId } = params;
-    const skip = (page - 1) * limit;
+  // async getFeedItems(params: { page: number; limit: number; userId?: number }) {
+  //   const { page, limit, userId } = params;
+  //   const skip = (page - 1) * limit;
 
-    const [items, total] = await Promise.all([
-      feedRepository.findMany({
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: true,
-          likes: {
-            include: { user: true },
-          },
-          comments: {
-            include: {
-              user: true,
-              replies: {
-                include: { user: true },
-              },
+  //   const [items, total] = await Promise.all([
+  //     feedRepository.findMany({
+  //       skip,
+  //       take: limit,
+  //       orderBy: { createdAt: "desc" },
+  //       where: {
+  //         type: {
+  //           in: ["quest_completion", "level_up", "achievement"],
+  //         },
+  //       },
+  //       include: {
+  //         user: true,
+  //         likes: {
+  //           include: { user: true },
+  //         },
+  //         comments: {
+  //           include: {
+  //             user: true,
+  //             replies: {
+  //               include: { user: true },
+  //             },
+  //           },
+  //         },
+  //         questSubmission: {
+  //           include: { quest: true },
+  //         },
+  //         levelHistory: true,
+  //         achievement: {
+  //           include: { achievement: true },
+  //         },
+  //       },
+  //     }),
+  //     feedRepository.count(),
+  //   ]);
+
+  //   // เช็คว่า userId ที่ส่งมาได้กดไลค์หรือยัง
+  //   const itemsWithLikeStatus = items.map((item) => ({
+  //     ...item,
+  //     hasLiked: userId
+  //       ? item.likes.some((like) => like.userId === userId)
+  //       : false,
+  //     likesCount: item.likes.length,
+  //     commentsCount: item.comments.length,
+  //   }));
+
+  //   return {
+  //     items: itemsWithLikeStatus,
+  //     pagination: {
+  //       page,
+  //       limit,
+  //       total,
+  //       totalPages: Math.ceil(total / limit),
+  //     },
+  //   };
+  // }
+
+  async getFeedItems(params: { page: number; limit: number; userId?: number }) {
+    const { page, limit, userId } = params;
+
+    // Step 1: ดึงจำนวนทั้งหมดของ feed ที่ตรงเงื่อนไข
+    const total = await feedRepository.count({
+      where: {
+        type: {
+          in: ["quest_completion", "level_up", "achievement"],
+        },
+      },
+    });
+
+    // Step 2: สุ่ม offset (โดยใช้ Math.random)
+    const maxOffset = Math.max(0, total - limit);
+    const skip = Math.floor(Math.random() * (maxOffset + 1));
+
+    // Step 3: ดึง feed แบบ random
+    const items = await feedRepository.findMany({
+      skip,
+      take: limit,
+      where: {
+        type: {
+          in: ["quest_completion", "level_up", "achievement"],
+        },
+      },
+      orderBy: {
+        createdAt: "desc", // หรือจะไม่ใส่ก็ได้หากไม่อยาก bias การเรียง
+      },
+      include: {
+        user: true,
+        likes: {
+          include: { user: true },
+        },
+        comments: {
+          include: {
+            user: true,
+            replies: {
+              include: { user: true },
             },
           },
-          questSubmission: {
-            include: { quest: true },
-          },
-          levelHistory: true,
-          achievement: {
-            include: { achievement: true },
-          },
         },
-      }),
-      feedRepository.count(),
-    ]);
+        questSubmission: {
+          include: { quest: true },
+        },
+        levelHistory: true,
+        achievement: {
+          include: { achievement: true },
+        },
+      },
+    });
 
-    // เช็คว่า userId ที่ส่งมาได้กดไลค์หรือยัง
+    // Step 4: enrich ข้อมูล hasLiked, likesCount, commentsCount
     const itemsWithLikeStatus = items.map((item) => ({
       ...item,
       hasLiked: userId
@@ -66,6 +144,7 @@ export class FeedService extends BaseService {
       commentsCount: item.comments.length,
     }));
 
+    // Step 5: return พร้อม pagination
     return {
       items: itemsWithLikeStatus,
       pagination: {
@@ -131,9 +210,11 @@ export class StoryService extends BaseService {
     const stories = await storyRepository.findActiveStories({
       include: {
         user: true,
-        views: userId ? {
-          where: { userId },
-        } : false,
+        views: userId
+          ? {
+              where: { userId },
+            }
+          : false,
       },
     });
 
@@ -153,9 +234,7 @@ export class StoryService extends BaseService {
     expiresInHours?: number;
   }) {
     const expiresAt = new Date();
-    expiresAt.setHours(
-      expiresAt.getHours() + (data.expiresInHours || 24)
-    );
+    expiresAt.setHours(expiresAt.getHours() + (data.expiresInHours || 24));
 
     return storyRepository.create({
       ...data,
