@@ -11,6 +11,7 @@ import {
 } from "@src/components/shared";
 import { useError } from "@src/components/shared/ErrorProvider";
 import useErrorHandler from "@src/hooks/useErrorHandler";
+import { useIntersectionObserver } from "../hook/useIntersectionObserver";
 
 export default function FeedPageComponent() {
   // Wrap the component with GlobalErrorBoundary
@@ -32,6 +33,9 @@ function FeedPageContent() {
     toggleLike,
     addComment,
     formatTimeDiff,
+    loadMore,
+    hasMore,
+    isLoadingMore,
   } = useFeed();
 
   const { showError } = useError();
@@ -157,6 +161,11 @@ function FeedPageContent() {
     }
   };
 
+  const loadMoreRef = useIntersectionObserver({
+    callback: loadMore,
+    enabled: !isLoading && !isLoadingMore && hasMore,
+  });
+
   // Show loading state
   if (isLoading && !isRefreshing) {
     return (
@@ -224,6 +233,23 @@ function FeedPageContent() {
         setCommentInputs={setCommentInputs}
         handleAddComment={handleAddComment}
       />
+      {/* Load More Trigger & Loading State */}
+      <div ref={loadMoreRef} className="py-4">
+        {isLoadingMore && (
+          <div className="flex justify-center items-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <span className="ml-2 text-muted-foreground">
+              กำลังโหลดเพิ่มเติม...
+            </span>
+          </div>
+        )}
+
+        {!hasMore && feedItems.length > 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>คุณได้ดูฟีดทั้งหมดแล้ว</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

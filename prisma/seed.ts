@@ -1,5 +1,5 @@
 import { PrismaClient, EnumMediaType } from "@prisma/client";
-import { faker } from "@faker-js/faker/locale/th";
+import { faker } from "@faker-js/faker/locale/en";
 
 const prisma = new PrismaClient();
 
@@ -1138,7 +1138,165 @@ async function createLevelHistories(characters: any[]) {
 }
 
 // ========== ฟังก์ชันสร้าง FeedItem ==========
-async function createFeedItems(
+// async function createFeedItems(
+//   users: any[],
+//   questSubmissions: any[],
+//   levelHistories: any[],
+//   characterAchievements: any[]
+// ) {
+//   const feedItems = [];
+
+//   // ========== 1. FeedItem จากการส่ง QuestSubmission ==========
+//   for (const submission of questSubmissions) {
+//     const user = await prisma.user.findUnique({
+//       where: { id: await getUserIdFromCharacterId(submission.characterId) },
+//     });
+
+//     if (!user) continue;
+
+//     const feedItem = await prisma.feedItem.create({
+//       data: {
+//         content: `${user.name} ได้ทำเควส "${
+//           (
+//             await prisma.quest.findUnique({ where: { id: submission.questId } })
+//           )?.title
+//         }" สำเร็จและได้รับ ${submission.xpEarned} XP!`,
+//         type: "quest_completion",
+//         mediaType: submission.mediaType,
+//         mediaUrl: submission.mediaUrl,
+//         userId: user.id,
+//         questSubmissionId: submission.id,
+//       },
+//     });
+
+//     feedItems.push(feedItem);
+//   }
+
+//   // ========== 2. FeedItem จากการเลเวลอัพ ==========
+//   for (const levelHistory of levelHistories) {
+//     const user = await prisma.user.findUnique({
+//       where: { id: await getUserIdFromCharacterId(levelHistory.characterId) },
+//     });
+
+//     if (!user) continue;
+
+//     const character = await prisma.character.findUnique({
+//       where: { id: levelHistory.characterId },
+//       include: { jobClass: true },
+//     });
+
+//     if (!character) continue;
+
+//     const feedItem = await prisma.feedItem.create({
+//       data: {
+//         content: `🎉 ${user.name} (${character.jobClass.name}) ได้เลเวลอัพจาก Lv.${levelHistory.levelFrom} เป็น Lv.${levelHistory.levelTo}! 💪 STR +${levelHistory.strGained} 🧠 INT +${levelHistory.intGained} 🏃 AGI +${levelHistory.agiGained} 🎯 DEX +${levelHistory.dexGained} ❤️ VIT +${levelHistory.vitGained}`,
+//         type: "level_up",
+//         mediaType: "text",
+//         userId: user.id,
+//         levelHistoryId: levelHistory.id,
+//       },
+//     });
+
+//     feedItems.push(feedItem);
+//   }
+
+//   // ========== 3. FeedItem จากการได้รับ Achievement ==========
+//   for (const charAchievement of characterAchievements) {
+//     const achievement = await prisma.achievement.findUnique({
+//       where: { id: charAchievement.achievementId },
+//     });
+
+//     if (!achievement) continue;
+
+//     const feedItem = await prisma.feedItem.create({
+//       data: {
+//         content: `${achievement.icon} ยินดีด้วย! ${
+//           (
+//             await prisma.user.findUnique({
+//               where: { id: charAchievement.userId },
+//             })
+//           )?.name
+//         } ได้รับความสำเร็จ "${achievement.name}" - ${achievement.description}`,
+//         type: "achievement",
+//         mediaType: "text",
+//         userId: charAchievement.userId,
+//         achievementId: charAchievement.id,
+//       },
+//     });
+
+//     feedItems.push(feedItem);
+//   }
+
+//   // ========== 4. FeedItem ประเภทโพสต์ทั่วไป ==========
+//   const postTypes = [
+//     { type: "post", content: () => faker.lorem.paragraph({ min: 1, max: 4 }) },
+//     {
+//       type: "post",
+//       content: () =>
+//         `ขอเเชร์เทคนิค: ${faker.lorem.paragraph({ min: 2, max: 5 })}`,
+//     },
+//     {
+//       type: "post",
+//       content: () =>
+//         `ปัญหาที่เจอวันนี้: ${faker.lorem.paragraph({ min: 1, max: 3 })}`,
+//     },
+//     {
+//       type: "post",
+//       content: () =>
+//         `"${faker.lorem.sentence({
+//           min: 5,
+//           max: 10,
+//         })}" - ${faker.person.fullName()}`,
+//     },
+//     {
+//       type: "post",
+//       content: () =>
+//         `ชอบประโยคนี้มาก: "${faker.lorem.sentence({ min: 5, max: 10 })}"`,
+//     },
+//     {
+//       type: "post",
+//       content: () =>
+//         `วันนี้ทำงานเสร็จเร็วมาก! ${faker.lorem.sentence({ min: 3, max: 8 })}`,
+//     },
+//     {
+//       type: "post",
+//       content: () =>
+//         `เพิ่งเรียนรู้เทคนิคใหม่: ${faker.lorem.paragraph({ min: 1, max: 2 })}`,
+//     },
+//   ];
+
+//   // สร้างโพสต์ทั่วไปอีก 10 โพสต์
+//   for (let i = 0; i < 10; i++) {
+//     const user = faker.helpers.arrayElement(users);
+//     const postType = faker.helpers.arrayElement(postTypes);
+//     const useImage = faker.datatype.boolean({ probability: 0.3 });
+
+//     const feedItem = await prisma.feedItem.create({
+//       data: {
+//         content: postType.content(),
+//         type: postType.type,
+//         mediaType: useImage ? "image" : "text",
+//         mediaUrl: useImage
+//           ? `https://source.unsplash.com/featured/?${faker.word.adjective()},${faker.word.noun()}`
+//           : null,
+//         userId: user.id,
+//       },
+//     });
+
+//     feedItems.push(feedItem);
+//   }
+
+//   return feedItems;
+// }
+function shuffleArray<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+export async function createFeedItems(
   users: any[],
   questSubmissions: any[],
   levelHistories: any[],
@@ -1261,20 +1419,11 @@ async function createFeedItems(
     {
       type: "post",
       content: () =>
-        `${faker.person.fullName()} แนะนำหนังสือดีมาก: "${faker.lorem.words({
-          min: 2,
-          max: 5,
-        })}" ใครอ่านแล้วบ้าง?`,
-    },
-    {
-      type: "post",
-      content: () =>
         `เพิ่งเรียนรู้เทคนิคใหม่: ${faker.lorem.paragraph({ min: 1, max: 2 })}`,
     },
   ];
 
-  // สร้างโพสต์ทั่วไปอีก 15 โพสต์
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 10; i++) {
     const user = faker.helpers.arrayElement(users);
     const postType = faker.helpers.arrayElement(postTypes);
     const useImage = faker.datatype.boolean({ probability: 0.3 });
@@ -1294,7 +1443,8 @@ async function createFeedItems(
     feedItems.push(feedItem);
   }
 
-  return feedItems;
+  // คละลำดับ feedItems ก่อนส่งกลับ
+  return shuffleArray(feedItems);
 }
 
 // ========== ฟังก์ชันสร้าง Story ==========

@@ -9,6 +9,41 @@ export function useFeed() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Load more function
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    try {
+      setIsLoadingMore(true);
+
+      const feedResponse = await feedService.getFeedItems({
+        page: page + 1,
+        limit: 10,
+        userId: 1, // TODO: Get from auth
+      });
+
+      const transformedFeed = feedResponse.items.map(transformApiToFeedItem);
+
+      if (transformedFeed.length === 0) {
+        setHasMore(false);
+      } else {
+        setFeedItems((prev) => [...prev, ...transformedFeed]);
+        setPage((prev) => prev + 1);
+      }
+
+      // Check if there are more pages
+      setHasMore(
+        feedResponse.pagination.page < feedResponse.pagination.totalPages
+      );
+    } catch (err) {
+      console.error("Load more failed:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [page, hasMore, isLoadingMore]);
 
   // Mock data transformer - แปลงข้อมูลจาก API ให้ตรงกับ types ที่ UI ใช้อยู่
   const transformApiToFeedItem = (apiItem: any): FeedItem => {
@@ -287,5 +322,8 @@ export function useFeed() {
     toggleLike,
     addComment,
     formatTimeDiff,
+    loadMore,
+    hasMore,
+    isLoadingMore,
   };
 }
