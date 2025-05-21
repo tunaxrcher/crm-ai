@@ -1,0 +1,621 @@
+// This is your Prisma schema file
+// Learn more about it at https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum EnumQuestStatus {
+  active
+  completed
+  failed
+  expired
+}
+
+enum EnumMediaType {
+  text
+  image
+  video
+}
+
+// ================ User ================
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+  password  String?
+  name      String
+  avatar    String?
+  bio       String?  @db.Text
+  level     Int      @default(1)
+  xp        Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  character      Character?
+  feedItems      FeedItem[]
+  stories        Story[]
+  comments       Comment[]
+  likes          Like[]
+  notifications  Notification[]
+  parties        PartyMember[]
+  achievements   CharacterAchievement[]
+  assignedQuests AssignedQuest[]
+  storyViews     StoryView[]
+  replyComments  ReplyComment[]
+  rankings       Ranking[]
+
+  // Token Relations
+  userToken         UserToken?
+  tokenTransactions TokenTransaction[]
+  tokenPurchases    TokenPurchase[]
+  questTokens       QuestToken[]
+  questStreak       QuestStreak?
+}
+
+// ================ Job Class System ================
+model JobClass {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  imageUrl    String? // ภาพไอคอนหลักของอาชีพ
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  levels     JobLevel[]
+  characters Character[]
+  rankings   Ranking[]
+}
+
+model JobLevel {
+  id                     Int      @id @default(autoincrement())
+  level                  Int // From 1 to 6
+  requiredCharacterLevel Int
+  title                  String // Title for this job level
+  description            String?  @db.Text
+  imageUrl               String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Relations
+  jobClass   JobClass    @relation(fields: [jobClassId], references: [id], onDelete: Cascade)
+  jobClassId Int
+  characters Character[]
+
+  @@unique([jobClassId, level])
+}
+
+// ================ Character System ================
+model Character {
+  id          Int    @id @default(autoincrement())
+  name        String
+  level       Int    @default(1)
+  currentXP   Int    @default(0)
+  nextLevelXP Int    @default(1000)
+  totalXP     Int    @default(0)
+  statPoints  Int    @default(0)
+  statAGI     Int    @default(10)
+  statSTR     Int    @default(10)
+  statDEX     Int    @default(10)
+  statVIT     Int    @default(10)
+  statINT     Int    @default(10)
+
+  // ภาพตัวละคร
+  currentPortraitUrl String? // URL ของภาพตัวละครปัจจุบัน
+  customPortrait     Boolean @default(false) // ใช้ภาพตัวเองหรือไม่
+  originalFaceImage  String? // ภาพต้นฉบับที่ผู้ใช้อัปโหลด (ถ้ามี)
+  generatedPortraits Json? // เก็บเป็น JSON: {"1": "url1", "10": "url2", ...}
+  levelHistory       Json? // เก็บประวัติว่าเลเวลอัพเมื่อไหร่ ได้ stat อะไรบ้าง
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId           Int                    @unique
+  jobClass         JobClass               @relation(fields: [jobClassId], references: [id])
+  jobClassId       Int
+  currentJobLevel  JobLevel               @relation(fields: [jobLevelId], references: [id])
+  jobLevelId       Int
+  achievements     CharacterAchievement[]
+  assignedQuests   AssignedQuest[]
+  questSubmissions QuestSubmission[]
+  rankings         Ranking[]
+  levelHistories   LevelHistory[]
+
+  // Token boost status
+  activeTokenBoost Float     @default(1.0) // ตัวคูณ token ที่ active อยู่
+  tokenBoostExpiry DateTime? // เวลาหมดอายุของ boost
+
+  // Token relations
+  questTokens    QuestToken[]
+  tokenPurchases TokenPurchase[]
+}
+
+// ประวัติการเลเวลอัพ
+model LevelHistory {
+  id          Int      @id @default(autoincrement())
+  characterId Int
+  levelFrom   Int
+  levelTo     Int
+  agiGained   Int
+  strGained   Int
+  dexGained   Int
+  vitGained   Int
+  intGained   Int
+  reasoning   String?  @db.Text // เหตุผลจาก AI ว่าทำไมได้รับสถานะนี้
+  recordedAt  DateTime @default(now())
+
+  character Character @relation(fields: [characterId], references: [id])
+
+  feedItems FeedItem[] // ความสัมพันธ์กับโพสต์ในฟีด
+}
+
+model CharacterAchievement {
+  id       Int      @id @default(autoincrement())
+  earnedOn DateTime @default(now())
+
+  // Relations
+  character     Character   @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  characterId   Int
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  achievementId Int
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  feedItems     FeedItem[]
+
+  @@unique([characterId, achievementId])
+}
+
+model Achievement {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  icon        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  characters CharacterAchievement[]
+}
+
+model LevelRequirement {
+  id         Int      @id @default(autoincrement())
+  level      Int      @unique
+  requiredXP Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
+// ================ Feed System ================
+model FeedItem {
+  id        Int           @id @default(autoincrement())
+  content   String        @db.Text
+  type      String // quest_completion, level_up, achievement, post
+  mediaType EnumMediaType @default(text)
+  mediaUrl  String? // URL to image or video (nullable if text)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // เพิ่มฟิลด์และความสัมพันธ์
+  questSubmissionId Int?
+  levelHistoryId    Int?
+  achievementId     Int?
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   Int
+  likes    Like[]
+  comments Comment[]
+
+  questSubmission QuestSubmission?      @relation(fields: [questSubmissionId], references: [id])
+  levelHistory    LevelHistory?         @relation(fields: [levelHistoryId], references: [id])
+  achievement     CharacterAchievement? @relation(fields: [achievementId], references: [id])
+}
+
+model Story {
+  id        Int           @id @default(autoincrement())
+  content   String?       @db.Text
+  type      EnumMediaType @default(text)
+  mediaUrl  String? // URL to image or video (nullable if text)
+  text      String?       @db.Text
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relations
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  views  StoryView[]
+}
+
+model StoryView {
+  id       Int      @id @default(autoincrement())
+  viewedAt DateTime @default(now())
+
+  // Relations
+  story   Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  storyId Int
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+
+  @@unique([storyId, userId])
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // Relations
+  feedItem   FeedItem @relation(fields: [feedItemId], references: [id], onDelete: Cascade)
+  feedItemId Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+
+  @@unique([feedItemId, userId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  feedItem   FeedItem       @relation(fields: [feedItemId], references: [id], onDelete: Cascade)
+  feedItemId Int
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  replies    ReplyComment[]
+}
+
+model ReplyComment {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  commentId Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+}
+
+// ================ Party System ================
+model Party {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  imageUrl    String?
+  isPublic    Boolean  @default(true)
+  maxMembers  Int      @default(5)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  members        PartyMember[]
+  partyQuests    PartyQuest[]
+  assignedQuests AssignedQuest[]
+}
+
+model PartyMember {
+  id       Int      @id @default(autoincrement())
+  role     String // leader, member
+  joinedAt DateTime @default(now())
+
+  // Relations
+  party   Party @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId Int
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+
+  @@unique([partyId, userId])
+}
+
+// ================ Quest System ================
+model Quest {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String
+  type            String // daily, weekly, special
+  difficultyLevel Int
+  xpReward        Int
+  imageUrl        String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  partyQuests      PartyQuest[]
+  assignedQuests   AssignedQuest[]
+  questSubmissions QuestSubmission[]
+
+  // Token reward configuration
+  baseTokenReward Int   @default(10) // token พื้นฐาน
+  maxTokenReward  Int? // token สูงสุดที่เป็นไปได้
+  tokenMultiplier Float @default(1.0) // ตัวคูณตามความยาก
+
+  // Token relations
+  questTokens QuestToken[]
+}
+
+model AssignedQuest {
+  id         Int             @id @default(autoincrement())
+  assignedAt DateTime        @default(now())
+  expiresAt  DateTime?
+  status     EnumQuestStatus @default(active)
+
+  // Relations
+  quest       Quest     @relation(fields: [questId], references: [id])
+  questId     Int
+  character   Character @relation(fields: [characterId], references: [id])
+  characterId Int
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  party       Party?    @relation(fields: [partyId], references: [id])
+  partyId     Int?
+
+  @@unique([questId, characterId])
+}
+
+model QuestSubmission {
+  id          Int           @id @default(autoincrement())
+  mediaType   EnumMediaType
+  mediaUrl    String?
+  description String?       @db.Text // AI สรุปกิจกรรม
+  tags        Json? // Tags จาก AI
+
+  // คะแนนประเมินจาก AI
+  ratingAGI Int?
+  ratingSTR Int?
+  ratingDEX Int?
+  ratingVIT Int?
+  ratingINT Int?
+
+  xpEarned    Int
+  submittedAt DateTime @default(now())
+
+  // Relations
+  character   Character  @relation(fields: [characterId], references: [id])
+  characterId Int
+  quest       Quest      @relation(fields: [questId], references: [id])
+  questId     Int
+  feedItems   FeedItem[]
+}
+
+model PartyQuest {
+  id          Int       @id @default(autoincrement())
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  status      String // in_progress, completed, failed
+
+  // Relations
+  party   Party @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  partyId Int
+  quest   Quest @relation(fields: [questId], references: [id])
+  questId Int
+
+  @@unique([partyId, questId])
+}
+
+// ================ Ranking System ================
+model Ranking {
+  id        Int      @id @default(autoincrement())
+  score     Int
+  position  Int?
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  jobClass   JobClass @relation(fields: [jobClassId], references: [id])
+  jobClassId Int
+
+  // เพิ่มความสัมพันธ์กับ User/Character
+  userId      Int?
+  characterId Int?
+  user        User?      @relation(fields: [userId], references: [id])
+  character   Character? @relation(fields: [characterId], references: [id])
+}
+
+// ================ Notification System ================
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String // quest, achievement, level_up, system
+  title     String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+}
+
+// ================ Token System ================
+
+// ตารางเก็บข้อมูล Token ของผู้ใช้
+model UserToken {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @unique
+  currentTokens     Int      @default(0) // จำนวน token ปัจจุบัน
+  totalEarnedTokens Int      @default(0) // จำนวน token ที่ได้รับทั้งหมด
+  totalSpentTokens  Int      @default(0) // จำนวน token ที่ใช้ไปทั้งหมด
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions TokenTransaction[] // ประวัติการได้รับ/ใช้ token
+  questTokens  QuestToken[] // ประวัติการได้ token จากเควส
+}
+
+// ประวัติการทำเควสและ Token ที่ได้รับ
+model QuestToken {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  questId      Int
+  characterId  Int
+  tokensEarned Int // จำนวน token ที่ได้รับ
+  bonusTokens  Int      @default(0) // token พิเศษ (ถ้ามี)
+  multiplier   Float    @default(1.0) // ตัวคูณ token (จาก buff/event)
+  completedAt  DateTime @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "QuestToken_userId_user_fkey")
+  userToken UserToken @relation(fields: [userId], references: [userId], map: "QuestToken_userId_userToken_fkey")
+  quest     Quest     @relation(fields: [questId], references: [id])
+  character Character @relation(fields: [characterId], references: [id])
+
+  @@index([completedAt])
+  @@index([userId, questId])
+}
+
+// ประวัติการได้รับ/ใช้ Token ทั้งหมด
+model TokenTransaction {
+  id            Int                      @id @default(autoincrement())
+  userId        Int
+  amount        Int // จำนวน token (+ = ได้รับ, - = ใช้)
+  type          EnumTokenTransactionType
+  description   String? // คำอธิบายเพิ่มเติม
+  referenceId   Int? // ID อ้างอิง (questId, shopItemId, etc.)
+  referenceType String? // ประเภทการอ้างอิง
+  balanceBefore Int // ยอด token ก่อนทำรายการ
+  balanceAfter  Int // ยอด token หลังทำรายการ
+  createdAt     DateTime                 @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "TokenTransaction_userId_user_fkey")
+  userToken UserToken @relation(fields: [userId], references: [userId], map: "TokenTransaction_userId_userToken_fkey")
+}
+
+// Token Shop - สินค้าที่แลกด้วย Token
+model TokenShopItem {
+  id                 Int                   @id @default(autoincrement())
+  name               String
+  description        String?               @db.Text
+  category           String // category ของสินค้า
+  itemType           EnumTokenShopItemType
+  price              Int // ราคาเป็น token
+  imageUrl           String?
+  metadata           Json? // ข้อมูลเพิ่มเติม (effect, duration, etc.)
+  stock              Int? // จำนวนสินค้า (null = ไม่จำกัด)
+  isActive           Boolean               @default(true)
+  validFrom          DateTime? // วันที่เริ่มขาย
+  validUntil         DateTime? // วันที่หมดอายุ
+  minLevel           Int? // เลเวลขั้นต่ำที่ซื้อได้
+  maxPurchasePerUser Int? // จำกัดการซื้อต่อคน
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  // Relations
+  purchases TokenPurchase[] // ประวัติการซื้อ
+}
+
+// ประวัติการซื้อสินค้าด้วย Token
+model TokenPurchase {
+  id          Int                @id @default(autoincrement())
+  userId      Int
+  shopItemId  Int
+  quantity    Int                @default(1)
+  totalPrice  Int // ราคารวม
+  status      EnumPurchaseStatus @default(pending)
+  appliedAt   DateTime? // เวลาที่ใช้งาน (สำหรับ buff/item)
+  expiresAt   DateTime? // เวลาหมดอายุ (สำหรับ buff)
+  purchasedAt DateTime           @default(now())
+
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character   Character     @relation(fields: [characterId], references: [id])
+  characterId Int
+  shopItem    TokenShopItem @relation(fields: [shopItemId], references: [id])
+}
+
+// Quest Completion Streak - สำหรับ bonus token
+model QuestStreak {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @unique
+  currentStreak     Int       @default(0) // จำนวนวันติดต่อกัน
+  longestStreak     Int       @default(0) // สถิติสูงสุด
+  lastCompletedDate DateTime? @db.Date // วันที่ทำเควสล่าสุด
+  weeklyQuests      Int       @default(0) // จำนวนเควสที่ทำในสัปดาห์นี้
+  monthlyQuests     Int       @default(0) // จำนวนเควสที่ทำในเดือนนี้
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Token Multiplier Events - สำหรับ event พิเศษ
+// model TokenMultiplierEvent {
+//   id          Int      @id @default(autoincrement())
+//   name        String
+//   description String?  @db.Text
+//   multiplier  Float // ตัวคูณ token (1.5x, 2x, etc.)
+//   questTypes  String[] // ประเภทเควสที่ได้รับ multiplier
+//   startDate   DateTime
+//   endDate     DateTime
+//   isActive    Boolean  @default(true)
+//   createdAt   DateTime @default(now())
+//   updatedAt   DateTime @updatedAt
+// }
+// แก้ไขส่วนของ TokenMultiplierEvent
+model TokenMultiplierEvent {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  multiplier  Float // ตัวคูณ token (1.5x, 2x, etc.)
+  questTypes  Json // ประเภทเควสที่ได้รับ multiplier (stored as JSON array)
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Enums สำหรับ Token System
+enum EnumTokenTransactionType {
+  quest_completion // ได้จากทำเควส
+  streak_bonus // โบนัสจากทำติดต่อกัน
+  weekly_bonus // โบนัสรายสัปดาห์
+  monthly_bonus // โบนัสรายเดือน
+  achievement_reward // รางวัลจาก achievement
+  level_up_reward // รางวัลจากการเลเวลอัพ
+  first_quest_bonus // โบนัสเควสแรกของวัน
+  perfect_rating_bonus // โบนัสจากการได้คะแนนเต็ม
+  party_bonus // โบนัสจากการทำเควสกับปาร์ตี้
+  shop_purchase // ใช้ซื้อของในร้าน
+  admin_grant // แอดมินให้
+  admin_deduct // แอดมินหัก
+  event_reward // รางวัลจาก event
+  referral_bonus // โบนัสจากการชวนเพื่อน
+}
+
+enum EnumTokenShopItemType {
+  xp_boost // เพิ่ม XP
+  token_boost // เพิ่ม token ที่ได้รับ
+  stat_reset // รีเซ็ต stat points
+  stat_boost // เพิ่ม stat ชั่วคราว
+  portrait_unlock // ปลดล็อกภาพตัวละคร
+  title_unlock // ปลดล็อกฉายา
+  cosmetic // เครื่องประดับ
+  consumable // ไอเทมใช้แล้วหมดไป
+  quest_skip // ข้ามเควส
+  quest_refresh // รีเฟรชเควส
+}
+
+enum EnumPurchaseStatus {
+  pending // รอดำเนินการ
+  completed // เสร็จสิ้น
+  cancelled // ยกเลิก
+  refunded // คืนเงิน
+  expired // หมดอายุ
+}
