@@ -29,8 +29,8 @@ function QuestPageComponent() {
   const [activeTab, setActiveTab] = useState('active')
   const [expandedTypes, setExpandedTypes] = useState({
     daily: true,
-    weekly: true,
-    'no-deadline': true,
+    weekly: false,
+    'no-deadline': false,
   })
 
   // Use error handler context

@@ -1,5 +1,5 @@
 // Define all types related to Quest feature
-
+import type { ReactElement } from 'react'
 export type QuestType = 'daily' | 'weekly' | 'no-deadline'
 export type QuestDifficulty = 'easy' | 'medium' | 'hard'
 
@@ -44,7 +44,7 @@ export interface CompletedQuest {
 export interface QuestTypeInfo {
   label: string
   description: string
-  icon: JSX.Element
+  icon: ReactElement
 }
 
 export interface GroupedQuests {

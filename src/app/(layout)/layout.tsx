@@ -17,9 +17,8 @@ const kanit = Kanit({
 })
 
 export const metadata: Metadata = {
-  title: 'AI CRM RPG System',
-  description:
-    'A next-generation CRM system with RPG elements and AI integration',
+  title: 'เอไอ & CRM',
+  description: 'ทดลอง',
 }
 
 export default function RootLayout({

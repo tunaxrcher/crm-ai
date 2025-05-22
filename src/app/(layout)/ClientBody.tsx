@@ -80,7 +80,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="antialiased">
       {!isCharacterCreation && (
-        <header className="fixed top-0 left-0 right-0 z-10 h-14 bg-card border-b border-border flex items-center justify-between px-4 max-w-md mx-auto">
+        <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4 max-w-md mx-auto">
           <Link href="/">
             <ImageWithFallback
               src="/auto-import-evx-logo.png"
@@ -110,7 +110,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
       </main>
 
       {!isCharacterCreation && (
-        <footer className="mobile-footer">
+        <footer className="mobile-footer z-50">
           <Link
             href="/character"
             className={`footer-icon ${

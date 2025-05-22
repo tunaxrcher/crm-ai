@@ -49,7 +49,7 @@ function FeedPageContent() {
   )
   const [scrollPosition, setScrollPosition] = useState(0)
   const [isClient, setIsClient] = useState(false)
-  const storiesRef = useRef<HTMLDivElement>(null)
+  const storiesRef = useRef<HTMLDivElement | null>(null)
 
   // This prevents hydration mismatch by only running client-side code after mount
   useEffect(() => {

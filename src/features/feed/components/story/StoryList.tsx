@@ -18,7 +18,7 @@ interface StoryListProps {
   stories: StoryUI[]
   isClient: boolean
   scrollPosition: number
-  storiesRef: RefObject<HTMLDivElement>
+  storiesRef: RefObject<HTMLDivElement | null>
   handleScrollLeft: () => void
   handleScrollRight: () => void
   openStory: (index: number) => void
