@@ -1,22 +1,24 @@
-"use client";
+'use client'
 
-import React from "react";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
-import { AlertCircle, RefreshCw, Home } from "lucide-react";
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent } from "@src/components/ui/card";
-import { useRouter } from "next/navigation";
+import React from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { Button } from '@src/components/ui/button'
+import { Card, CardContent } from '@src/components/ui/card'
+import { AlertCircle, Home, RefreshCw } from 'lucide-react'
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 
 /**
  * Error fallback component to be rendered when an error occurs within an ErrorBoundary
  */
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleNavigateHome = () => {
-    router.push("/");
-    resetErrorBoundary();
-  };
+    router.push('/')
+    resetErrorBoundary()
+  }
 
   return (
     <Card className="w-full overflow-hidden my-4">
@@ -31,13 +33,13 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
           ขออภัย ระบบเกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง
         </p>
 
-        {process.env.NODE_ENV === "development" && (
+        {process.env.NODE_ENV === 'development' && (
           <div className="bg-red-900/20 p-4 rounded-md mb-4 w-full max-w-md overflow-auto text-left">
             <p className="text-red-500 font-mono text-sm break-words">
               {error.message}
             </p>
             <p className="text-red-400/70 font-mono text-xs mt-2 break-words">
-              {error.stack?.split("\n").slice(0, 3).join("\n")}
+              {error.stack?.split('\n').slice(0, 3).join('\n')}
             </p>
           </div>
         )}
@@ -48,19 +50,22 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
             ลองใหม่
           </Button>
 
-          <Button variant="outline" onClick={handleNavigateHome} className="flex items-center">
+          <Button
+            variant="outline"
+            onClick={handleNavigateHome}
+            className="flex items-center">
             <Home className="mr-2 h-4 w-4" />
             กลับสู่หน้าหลัก
           </Button>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 interface GlobalErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: React.ReactNode
+  fallback?: React.ReactNode
 }
 
 /**
@@ -75,11 +80,10 @@ export default function GlobalErrorBoundary({
       FallbackComponent={fallback ? () => <>{fallback}</> : ErrorFallback}
       onError={(error, info) => {
         // ในอนาคตสามารถเพิ่มการ log ไปยัง error tracking service เช่น Sentry ได้
-        console.error("Error caught by GlobalErrorBoundary:", error);
-        console.error("Component stack:", info.componentStack);
-      }}
-    >
+        console.error('Error caught by GlobalErrorBoundary:', error)
+        console.error('Component stack:', info.componentStack)
+      }}>
       {children}
     </ErrorBoundary>
-  );
+  )
 }

@@ -1,59 +1,100 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@src/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@src/components/ui/dialog";
-import { AlertCircle, Award, BadgePercent, Briefcase, Clock, Info, Shield, Swords, Zap } from "lucide-react";
-import { useCharacter as useCharacterAPI, useStatAllocation, useXPTable, useJobClasses } from "../hook/api";
-import { useCharacter } from "../context/CharacterContext";
-import { useNotification } from "@src/components/ui/notification-system";
-import CharacterProfile from "./CharacterProfile";
-import StatDisplay from "./StatDisplay";
-import AchievementList from "./AchievementList";
-import QuestStatistics from "./QuestStatistics";
-import { SkeletonLoading, ErrorDisplay } from "@src/components/shared";
-import { withErrorHandling } from "@src/hooks";
-import { useError } from "@src/components/shared/ErrorProvider";
-import useErrorHandler from "@src/hooks/useErrorHandler";
-import { Stat } from "../types";
-import { Badge } from "@src/components/ui/badge";
+import { useEffect, useState } from 'react'
+
+import { ErrorDisplay, SkeletonLoading } from '@src/components/shared'
+import { useError } from '@src/components/shared/ErrorProvider'
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@src/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@src/components/ui/dialog'
+import { useNotification } from '@src/components/ui/notification-system'
+import { withErrorHandling } from '@src/hooks'
+import useErrorHandler from '@src/hooks/useErrorHandler'
+import {
+  AlertCircle,
+  Award,
+  BadgePercent,
+  Briefcase,
+  Clock,
+  Info,
+  Shield,
+  Swords,
+  Zap,
+} from 'lucide-react'
+
+import { useCharacter } from '../context/CharacterContext'
+import {
+  useCharacter as useCharacterAPI,
+  useJobClasses,
+  useStatAllocation,
+  useXPTable,
+} from '../hook/api'
+import { Stat } from '../types'
+import AchievementList from './AchievementList'
+import CharacterProfile from './CharacterProfile'
+import QuestStatistics from './QuestStatistics'
+import StatDisplay from './StatDisplay'
 
 function CharacterPageComponent() {
   // API character hook
-  const { character: apiCharacter, portrait, jobClass, isLoading: apiLoading, error, refetchCharacter } = useCharacterAPI();
-  const { allocateStats, isAllocating } = useStatAllocation();
-  const { xpTable, isLoading: xpTableLoading } = useXPTable();
-  const { jobClasses, isLoading: jobClassesLoading } = useJobClasses();
-  const { showError } = useError();
-  const { handleAsyncOperation } = useErrorHandler();
+  const {
+    character: apiCharacter,
+    portrait,
+    jobClass,
+    isLoading: apiLoading,
+    error,
+    refetchCharacter,
+  } = useCharacterAPI()
+  const { allocateStats, isAllocating } = useStatAllocation()
+  const { xpTable, isLoading: xpTableLoading } = useXPTable()
+  const { jobClasses, isLoading: jobClassesLoading } = useJobClasses()
+  const { showError } = useError()
+  const { handleAsyncOperation } = useErrorHandler()
 
   // Character context
-  const { character: contextCharacter, addXp, showLevelUpAnimation } = useCharacter();
+  const {
+    character: contextCharacter,
+    addXp,
+    showLevelUpAnimation,
+  } = useCharacter()
 
   // Notification system
-  const { addNotification } = useNotification();
+  const { addNotification } = useNotification()
 
   // State for stat allocation dialog
-  const [showLevelDialog, setShowLevelDialog] = useState(false);
-  const [tempStats, setTempStats] = useState<Stat | null>(null);
-  const [statPoints, setStatPoints] = useState(0);
+  const [showLevelDialog, setShowLevelDialog] = useState(false)
+  const [tempStats, setTempStats] = useState<Stat | null>(null)
+  const [statPoints, setStatPoints] = useState(0)
 
   // State for progression modal
-  const [showProgressionDialog, setShowProgressionDialog] = useState(false);
+  const [showProgressionDialog, setShowProgressionDialog] = useState(false)
 
   // Use the API character as the source of truth for display and stat allocation
-  const character = apiCharacter;
-  const isLoading = apiLoading || xpTableLoading || jobClassesLoading;
+  const character = apiCharacter
+  const isLoading = apiLoading || xpTableLoading || jobClassesLoading
 
   // Set initial values once character is loaded
   useEffect(() => {
     if (character && !tempStats) {
-      setTempStats({ ...character.stats });
-      setStatPoints(character.statPoints);
+      setTempStats({ ...character.stats })
+      setStatPoints(character.statPoints)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [character]);
+  }, [character])
 
   // Show loading state
   if (isLoading || !character || !tempStats) {
@@ -61,7 +102,7 @@ function CharacterPageComponent() {
       <div className="p-4 pb-20">
         <SkeletonLoading type="character" text="กำลังโหลดข้อมูลตัวละคร..." />
       </div>
-    );
+    )
   }
 
   // Show error state with improved error component
@@ -77,128 +118,150 @@ function CharacterPageComponent() {
           technicalDetails={error}
         />
       </div>
-    );
+    )
   }
 
   // XP percentage calculation
-  const xpPercentage = Math.round((character.currentXP / character.nextLevelXP) * 100);
+  const xpPercentage = Math.round(
+    (character.currentXP / character.nextLevelXP) * 100
+  )
 
   // Get stat abbreviation description
   const getStatDescription = (stat: string) => {
-    switch(stat) {
-      case 'AGI': return 'ความเร็ว, การตอบสนอง';
-      case 'STR': return 'ความสามารถในการรับมือกับงานหนัก';
-      case 'DEX': return 'ความแม่นยำ, ความถูกต้อง';
-      case 'VIT': return 'ความสม่ำเสมอ, ความอดทน';
-      case 'INT': return 'การวางแผน, การวิเคราะห์';
-      default: return '';
+    switch (stat) {
+      case 'AGI':
+        return 'ความเร็ว, การตอบสนอง'
+      case 'STR':
+        return 'ความสามารถในการรับมือกับงานหนัก'
+      case 'DEX':
+        return 'ความแม่นยำ, ความถูกต้อง'
+      case 'VIT':
+        return 'ความสม่ำเสมอ, ความอดทน'
+      case 'INT':
+        return 'การวางแผน, การวิเคราะห์'
+      default:
+        return ''
     }
-  };
+  }
 
   // Handle stat point allocation
   const allocatePoint = (stat: keyof typeof tempStats) => {
     if (statPoints > 0) {
-      setTempStats(prev => ({
+      setTempStats((prev) => ({
         ...prev!,
-        [stat]: prev![stat] + 1
-      }));
-      setStatPoints(prev => prev - 1);
+        [stat]: prev![stat] + 1,
+      }))
+      setStatPoints((prev) => prev - 1)
     }
-  };
+  }
 
   // Handle stat point deallocation
   const deallocatePoint = (stat: keyof typeof tempStats) => {
     if (tempStats[stat] > character.stats[stat]) {
-      setTempStats(prev => ({
+      setTempStats((prev) => ({
         ...prev!,
-        [stat]: prev![stat] - 1
-      }));
-      setStatPoints(prev => prev + 1);
+        [stat]: prev![stat] - 1,
+      }))
+      setStatPoints((prev) => prev + 1)
     }
-  };
+  }
 
   // Get stat icon
   const getStatIcon = (stat: string) => {
-    switch(stat) {
-      case 'AGI': return <Zap className="h-5 w-5" />;
-      case 'STR': return <Swords className="h-5 w-5" />;
-      case 'DEX': return <BadgePercent className="h-5 w-5" />;
-      case 'VIT': return <Clock className="h-5 w-5" />;
-      case 'INT': return <Shield className="h-5 w-5" />;
-      default: return null;
+    switch (stat) {
+      case 'AGI':
+        return <Zap className="h-5 w-5" />
+      case 'STR':
+        return <Swords className="h-5 w-5" />
+      case 'DEX':
+        return <BadgePercent className="h-5 w-5" />
+      case 'VIT':
+        return <Clock className="h-5 w-5" />
+      case 'INT':
+        return <Shield className="h-5 w-5" />
+      default:
+        return null
     }
-  };
+  }
 
   const confirmStatAllocation = async () => {
     const result = await handleAsyncOperation(async () => {
-      return await allocateStats(character.id, tempStats);
-    });
+      return await allocateStats(character.id, tempStats)
+    })
 
     if (result) {
-      setShowLevelDialog(false);
-      showError("อัพเดทสถิติตัวละครสำเร็จ", {
-        severity: "info",
-        autoHideAfter: 3000
-      });
+      setShowLevelDialog(false)
+      showError('อัพเดทสถิติตัวละครสำเร็จ', {
+        severity: 'info',
+        autoHideAfter: 3000,
+      })
     } else {
-      showError("ไม่สามารถอัปเดตสถิติได้", {
-        severity: "error",
-        message: "โปรดลองอีกครั้งในภายหลัง"
-      });
+      showError('ไม่สามารถอัปเดตสถิติได้', {
+        severity: 'error',
+        message: 'โปรดลองอีกครั้งในภายหลัง',
+      })
     }
-  };
+  }
 
   const handleAllocateStats = () => {
     // Reset the temporary stats to current character stats before showing dialog
-    setTempStats({ ...character.stats });
-    setStatPoints(character.statPoints);
-    setShowLevelDialog(true);
-  };
+    setTempStats({ ...character.stats })
+    setStatPoints(character.statPoints)
+    setShowLevelDialog(true)
+  }
 
   // Show job progression info
   const openProgressionDialog = () => {
-    setShowProgressionDialog(true);
-  };
+    setShowProgressionDialog(true)
+  }
 
   // Add a button to test notifications in development
   const testNotifications = () => {
     // Add XP notification
     addNotification({
-      type: "reward",
-      title: "Development Test",
-      message: "Testing XP notification system",
+      type: 'reward',
+      title: 'Development Test',
+      message: 'Testing XP notification system',
       duration: 3000,
-    });
+    })
 
     // Add XP to character which will trigger level up if enough
-    addXp(50);
+    addXp(50)
 
     // Show level up animation
     setTimeout(() => {
-      showLevelUpAnimation();
-    }, 1500);
-  };
+      showLevelUpAnimation()
+    }, 1500)
+  }
 
   // Find next job level if not max already
-  const nextJobLevel = jobClass && character.currentJobLevel < 6
-    ? jobClass.levels[character.currentJobLevel]
-    : null;
+  const nextJobLevel =
+    jobClass && character.currentJobLevel < 6
+      ? jobClass.levels[character.currentJobLevel]
+      : null
 
   // Calculate XP progress to next job level
   const calculateProgressToNextJobLevel = () => {
-    if (!nextJobLevel || !xpTable.length) return { xpNeeded: 0, percentage: 100 };
+    if (!nextJobLevel || !xpTable.length)
+      return { xpNeeded: 0, percentage: 100 }
 
-    const currentLevelXP = xpTable.find(x => x.level === character.level)?.requiredXP || 0;
-    const nextLevelXP = xpTable.find(x => x.level === nextJobLevel.requiredCharacterLevel)?.requiredXP || 0;
+    const currentLevelXP =
+      xpTable.find((x) => x.level === character.level)?.requiredXP || 0
+    const nextLevelXP =
+      xpTable.find((x) => x.level === nextJobLevel.requiredCharacterLevel)
+        ?.requiredXP || 0
 
-    const xpNeeded = nextLevelXP - currentLevelXP;
-    const currentProgress = character.totalXP - currentLevelXP;
-    const percentage = Math.min(100, Math.round((currentProgress / xpNeeded) * 100));
+    const xpNeeded = nextLevelXP - currentLevelXP
+    const currentProgress = character.totalXP - currentLevelXP
+    const percentage = Math.min(
+      100,
+      Math.round((currentProgress / xpNeeded) * 100)
+    )
 
-    return { xpNeeded, percentage };
-  };
+    return { xpNeeded, percentage }
+  }
 
-  const { xpNeeded, percentage } = calculateProgressToNextJobLevel();
+  const { xpNeeded, percentage } = calculateProgressToNextJobLevel()
 
   return (
     <div className="p-4 pb-20">
@@ -238,18 +301,18 @@ function CharacterPageComponent() {
             อาชีพและความก้าวหน้า
           </CardTitle>
           <CardDescription>
-            {jobClass?.description || "อาชีพและความเชี่ยวชาญของคุณ"}
+            {jobClass?.description || 'อาชีพและความเชี่ยวชาญของคุณ'}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className="font-medium">{character.jobClassName}</h3>
-              <p className="text-sm text-muted-foreground">
-                {character.title}
-              </p>
+              <p className="text-sm text-muted-foreground">{character.title}</p>
             </div>
-            <Badge className="bg-blue-500 hover:bg-blue-600">Class {character.currentJobLevel}</Badge>
+            <Badge className="bg-blue-500 hover:bg-blue-600">
+              Class {character.currentJobLevel}
+            </Badge>
           </div>
 
           {nextJobLevel ? (
@@ -265,7 +328,8 @@ function CharacterPageComponent() {
                   Level {character.level}
                 </span>
                 <span className="text-muted-foreground">
-                  Level {nextJobLevel.requiredCharacterLevel} ({nextJobLevel.title})
+                  Level {nextJobLevel.requiredCharacterLevel} (
+                  {nextJobLevel.title})
                 </span>
               </div>
             </>
@@ -280,8 +344,7 @@ function CharacterPageComponent() {
             variant="outline"
             size="sm"
             className="w-full mt-3"
-            onClick={openProgressionDialog}
-          >
+            onClick={openProgressionDialog}>
             <Info className="h-4 w-4 mr-2" />
             ดูรายละเอียดอาชีพทั้งหมด
           </Button>
@@ -305,8 +368,7 @@ function CharacterPageComponent() {
             <Button
               variant="outline"
               onClick={testNotifications}
-              className="w-full"
-            >
+              className="w-full">
               Test Notifications
             </Button>
           </CardContent>
@@ -332,7 +394,9 @@ function CharacterPageComponent() {
                   </div>
                   <div>
                     <div className="font-medium">{stat}</div>
-                    <div className="text-xs text-muted-foreground">{getStatDescription(stat)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {getStatDescription(stat)}
+                    </div>
                   </div>
                 </div>
 
@@ -341,9 +405,11 @@ function CharacterPageComponent() {
                     size="icon"
                     variant="outline"
                     className="h-8 w-8"
-                    disabled={tempStats[stat as keyof Stat] <= character.stats[stat as keyof Stat]}
-                    onClick={() => deallocatePoint(stat as keyof Stat)}
-                  >
+                    disabled={
+                      tempStats[stat as keyof Stat] <=
+                      character.stats[stat as keyof Stat]
+                    }
+                    onClick={() => deallocatePoint(stat as keyof Stat)}>
                     -
                   </Button>
 
@@ -361,8 +427,7 @@ function CharacterPageComponent() {
                     variant="outline"
                     className="h-8 w-8"
                     disabled={statPoints <= 0}
-                    onClick={() => allocatePoint(stat as keyof Stat)}
-                  >
+                    onClick={() => allocatePoint(stat as keyof Stat)}>
                     +
                   </Button>
                 </div>
@@ -372,24 +437,28 @@ function CharacterPageComponent() {
             <div className="bg-secondary/20 p-3 rounded-lg mt-4">
               <div className="text-sm font-medium mb-1">คำแนะนำจาก AI</div>
               <div className="text-sm text-muted-foreground">
-                จากภารกิจล่าสุดของคุณ ควรพิจารณาลงทุนใน <span className="text-blue-400">INT</span> และ <span className="text-blue-400">DEX</span> เพื่อเพิ่มทักษะด้านการตลาดของคุณ
+                จากภารกิจล่าสุดของคุณ ควรพิจารณาลงทุนใน{' '}
+                <span className="text-blue-400">INT</span> และ{' '}
+                <span className="text-blue-400">DEX</span>{' '}
+                เพื่อเพิ่มทักษะด้านการตลาดของคุณ
               </div>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setTempStats({ ...character.stats });
-              setStatPoints(character.statPoints);
-              setShowLevelDialog(false);
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTempStats({ ...character.stats })
+                setStatPoints(character.statPoints)
+                setShowLevelDialog(false)
+              }}>
               ยกเลิก
             </Button>
             <Button
               className="ai-gradient-bg"
               disabled={statPoints === character.statPoints || isAllocating}
-              onClick={confirmStatAllocation}
-            >
+              onClick={confirmStatAllocation}>
               {isAllocating ? 'กำลังบันทึก...' : 'ยืนยันการจัดสรร'}
             </Button>
           </DialogFooter>
@@ -397,7 +466,9 @@ function CharacterPageComponent() {
       </Dialog>
 
       {/* Job Progression Dialog */}
-      <Dialog open={showProgressionDialog} onOpenChange={setShowProgressionDialog}>
+      <Dialog
+        open={showProgressionDialog}
+        onOpenChange={setShowProgressionDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>ระบบอาชีพ</DialogTitle>
@@ -409,56 +480,57 @@ function CharacterPageComponent() {
           <div className="space-y-4 mt-2">
             <h3 className="font-semibold flex items-center">
               <Briefcase className="h-4 w-4 mr-2 text-blue-400" />
-              {jobClass?.name || "อาชีพปัจจุบัน"}
+              {jobClass?.name || 'อาชีพปัจจุบัน'}
             </h3>
 
             <div className="text-sm text-muted-foreground mb-4">
-              {jobClass?.description || "รายละเอียดอาชีพ"}
+              {jobClass?.description || 'รายละเอียดอาชีพ'}
             </div>
 
             <div className="space-y-3">
               {jobClass?.levels.map((level, index) => {
-                const isCurrentLevel = character.currentJobLevel === level.level;
-                const isLocked = character.level < level.requiredCharacterLevel;
+                const isCurrentLevel = character.currentJobLevel === level.level
+                const isLocked = character.level < level.requiredCharacterLevel
 
                 return (
                   <div
                     key={level.level}
                     className={`relative border rounded-md p-3 ${
-                      isCurrentLevel ? 'border-blue-500 bg-blue-500/10' :
-                      isLocked ? 'border-gray-600 bg-gray-800/30 opacity-60' : 'border-gray-600'
-                    }`}
-                  >
+                      isCurrentLevel
+                        ? 'border-blue-500 bg-blue-500/10'
+                        : isLocked
+                          ? 'border-gray-600 bg-gray-800/30 opacity-60'
+                          : 'border-gray-600'
+                    }`}>
                     <div className="flex justify-between items-center">
                       <div>
                         <span className="text-xs font-medium block mb-1">
                           {isLocked ? '🔒 ' : ''}
-                          Class {level.level}: Level {level.requiredCharacterLevel}
+                          Class {level.level}: Level{' '}
+                          {level.requiredCharacterLevel}
                         </span>
-                        <span className="text-base font-semibold block">{level.title}</span>
+                        <span className="text-base font-semibold block">
+                          {level.title}
+                        </span>
                       </div>
 
                       {isCurrentLevel && (
-                        <Badge className="bg-blue-500">
-                          ปัจจุบัน
-                        </Badge>
+                        <Badge className="bg-blue-500">ปัจจุบัน</Badge>
                       )}
                     </div>
                   </div>
-                );
+                )
               })}
             </div>
           </div>
 
           <DialogFooter>
-            <Button onClick={() => setShowProgressionDialog(false)}>
-              ปิด
-            </Button>
+            <Button onClick={() => setShowProgressionDialog(false)}>ปิด</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
-export default withErrorHandling(CharacterPageComponent);
+export default withErrorHandling(CharacterPageComponent)

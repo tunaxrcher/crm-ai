@@ -1,10 +1,10 @@
 // src/hooks/useIntersectionObserver.ts
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react'
 
 interface UseIntersectionObserverProps {
-  callback: () => void;
-  options?: IntersectionObserverInit;
-  enabled?: boolean;
+  callback: () => void
+  options?: IntersectionObserverInit
+  enabled?: boolean
 }
 
 export function useIntersectionObserver({
@@ -12,26 +12,26 @@ export function useIntersectionObserver({
   options = { threshold: 0.1 },
   enabled = true,
 }: UseIntersectionObserverProps) {
-  const targetRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) return
 
-    const target = targetRef.current;
-    if (!target) return;
+    const target = targetRef.current
+    if (!target) return
 
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
-        callback();
+        callback()
       }
-    }, options);
+    }, options)
 
-    observer.observe(target);
+    observer.observe(target)
 
     return () => {
-      observer.disconnect();
-    };
-  }, [callback, options, enabled]);
+      observer.disconnect()
+    }
+  }, [callback, options, enabled])
 
-  return targetRef;
+  return targetRef
 }

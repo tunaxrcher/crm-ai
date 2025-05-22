@@ -1,17 +1,19 @@
-"use client";
+'use client'
 
-import { useState, useRef, useEffect } from "react";
-import { useFeed } from "../hook/api";
-import StoryList from "./story/StoryList";
-import PostList from "./post/PostList";
+import { useEffect, useRef, useState } from 'react'
+
 import {
-  SkeletonLoading,
   ErrorDisplay,
   GlobalErrorBoundary,
-} from "@src/components/shared";
-import { useError } from "@src/components/shared/ErrorProvider";
-import useErrorHandler from "@src/hooks/useErrorHandler";
-import { useIntersectionObserver } from "../hook/useIntersectionObserver";
+  SkeletonLoading,
+} from '@src/components/shared'
+import { useError } from '@src/components/shared/ErrorProvider'
+import useErrorHandler from '@src/hooks/useErrorHandler'
+
+import { useFeed } from '../hook/api'
+import { useIntersectionObserver } from '../hook/useIntersectionObserver'
+import PostList from './post/PostList'
+import StoryList from './story/StoryList'
 
 export default function FeedPageComponent() {
   // Wrap the component with GlobalErrorBoundary
@@ -19,7 +21,7 @@ export default function FeedPageComponent() {
     <GlobalErrorBoundary>
       <FeedPageContent />
     </GlobalErrorBoundary>
-  );
+  )
 }
 
 function FeedPageContent() {
@@ -36,111 +38,109 @@ function FeedPageContent() {
     loadMore,
     hasMore,
     isLoadingMore,
-  } = useFeed();
+  } = useFeed()
 
-  const { showError } = useError();
-  const { handleAsyncOperation } = useErrorHandler();
+  const { showError } = useError()
+  const { handleAsyncOperation } = useErrorHandler()
 
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>(
-    {}
-  );
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
   const [currentStoryIndex, setCurrentStoryIndex] = useState<number | null>(
     null
-  );
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [isClient, setIsClient] = useState(false);
-  const storiesRef = useRef<HTMLDivElement>(null);
+  )
+  const [scrollPosition, setScrollPosition] = useState(0)
+  const [isClient, setIsClient] = useState(false)
+  const storiesRef = useRef<HTMLDivElement>(null)
 
   // This prevents hydration mismatch by only running client-side code after mount
   useEffect(() => {
-    setIsClient(true);
+    setIsClient(true)
 
     // Add scroll event listener to storiesRef
     const handleScroll = () => {
       if (storiesRef.current) {
-        setScrollPosition(storiesRef.current.scrollLeft);
+        setScrollPosition(storiesRef.current.scrollLeft)
       }
-    };
+    }
 
-    const currentRef = storiesRef.current;
+    const currentRef = storiesRef.current
     if (currentRef) {
-      currentRef.addEventListener("scroll", handleScroll);
+      currentRef.addEventListener('scroll', handleScroll)
     }
 
     return () => {
       if (currentRef) {
-        currentRef.removeEventListener("scroll", handleScroll);
+        currentRef.removeEventListener('scroll', handleScroll)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   // Handle adding a comment
   const handleAddComment = async (feedItemId: string) => {
-    if (!commentInputs[feedItemId] || commentInputs[feedItemId].trim() === "")
-      return;
+    if (!commentInputs[feedItemId] || commentInputs[feedItemId].trim() === '')
+      return
 
     const result = await handleAsyncOperation(async () => {
-      return await addComment(feedItemId, commentInputs[feedItemId]);
-    });
+      return await addComment(feedItemId, commentInputs[feedItemId])
+    })
 
     if (result) {
       // Clear input on success
       setCommentInputs((prev) => ({
         ...prev,
-        [feedItemId]: "",
-      }));
+        [feedItemId]: '',
+      }))
     } else {
       // Error is already handled by handleAsyncOperation
-      showError("ไม่สามารถเพิ่มความคิดเห็นได้", {
-        severity: "error",
-        message: "โปรดลองอีกครั้งในภายหลัง",
-      });
+      showError('ไม่สามารถเพิ่มความคิดเห็นได้', {
+        severity: 'error',
+        message: 'โปรดลองอีกครั้งในภายหลัง',
+      })
     }
-  };
+  }
 
   // Handle liking a post with error handling
   const handleToggleLike = async (feedItemId: string) => {
     const result = await handleAsyncOperation(async () => {
-      return await toggleLike(feedItemId);
-    });
+      return await toggleLike(feedItemId)
+    })
 
     if (!result) {
-      showError("ไม่สามารถกดไลค์ได้", {
-        severity: "warning",
-        message: "โปรดลองอีกครั้งในภายหลัง",
+      showError('ไม่สามารถกดไลค์ได้', {
+        severity: 'warning',
+        message: 'โปรดลองอีกครั้งในภายหลัง',
         autoHideAfter: 3000,
-      });
+      })
     }
-  };
+  }
 
   // Handle horizontal scroll for stories
   const handleScrollLeft = () => {
     if (storiesRef.current) {
-      const newPosition = Math.max(scrollPosition - 200, 0);
-      storiesRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
-      setScrollPosition(newPosition);
+      const newPosition = Math.max(scrollPosition - 200, 0)
+      storiesRef.current.scrollTo({ left: newPosition, behavior: 'smooth' })
+      setScrollPosition(newPosition)
     }
-  };
+  }
 
   const handleScrollRight = () => {
     if (storiesRef.current) {
       const newPosition = Math.min(
         scrollPosition + 200,
         storiesRef.current.scrollWidth - storiesRef.current.clientWidth
-      );
-      storiesRef.current.scrollTo({ left: newPosition, behavior: "smooth" });
-      setScrollPosition(newPosition);
+      )
+      storiesRef.current.scrollTo({ left: newPosition, behavior: 'smooth' })
+      setScrollPosition(newPosition)
     }
-  };
+  }
 
   // Story navigation functions
   const openStory = (index: number) => {
-    setCurrentStoryIndex(index);
-  };
+    setCurrentStoryIndex(index)
+  }
 
   const closeStory = () => {
-    setCurrentStoryIndex(null);
-  };
+    setCurrentStoryIndex(null)
+  }
 
   const nextStory = () => {
     if (
@@ -149,22 +149,22 @@ function FeedPageContent() {
       stories.length > 0 &&
       currentStoryIndex < stories.length - 1
     ) {
-      setCurrentStoryIndex(currentStoryIndex + 1);
+      setCurrentStoryIndex(currentStoryIndex + 1)
     } else {
-      closeStory();
+      closeStory()
     }
-  };
+  }
 
   const prevStory = () => {
     if (currentStoryIndex !== null && currentStoryIndex > 0) {
-      setCurrentStoryIndex(currentStoryIndex - 1);
+      setCurrentStoryIndex(currentStoryIndex - 1)
     }
-  };
+  }
 
   const loadMoreRef = useIntersectionObserver({
     callback: loadMore,
     enabled: !isLoading && !isLoadingMore && hasMore,
-  });
+  })
 
   // Show loading state
   if (isLoading && !isRefreshing) {
@@ -172,7 +172,7 @@ function FeedPageContent() {
       <div className="p-4 pb-20">
         <SkeletonLoading type="feed" text="กำลังโหลดฟีด..." />
       </div>
-    );
+    )
   }
 
   // Show error state with improved error component
@@ -182,7 +182,7 @@ function FeedPageContent() {
         <ErrorDisplay
           title="ไม่สามารถโหลดฟีดได้"
           message={
-            error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์"
+            error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์'
           }
           severity="error"
           onRetry={refreshFeed}
@@ -190,11 +190,11 @@ function FeedPageContent() {
           technicalDetails={error}
         />
       </div>
-    );
+    )
   }
 
   // Ensure stories is not undefined
-  const safeStories = stories || [];
+  const safeStories = stories || []
 
   return (
     <div className="p-4 pb-20">
@@ -251,5 +251,5 @@ function FeedPageContent() {
         )}
       </div>
     </div>
-  );
+  )
 }

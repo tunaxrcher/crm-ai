@@ -1,20 +1,34 @@
-"use client";
+'use client'
 
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent } from "@src/components/ui/card";
-import { Badge } from "@src/components/ui/badge";
-import { Progress } from "@src/components/ui/progress";
-import { Avatar, AvatarFallback } from "@src/components/ui/avatar";
-import { Input } from "@src/components/ui/input";
-import { ScrollArea } from "@src/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
+import React from 'react'
+
+import { ErrorState, LoadingState } from '@src/components/shared'
+import { Avatar, AvatarFallback } from '@src/components/ui/avatar'
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
+import { Card, CardContent } from '@src/components/ui/card'
+import { Input } from '@src/components/ui/input'
+import { Progress } from '@src/components/ui/progress'
+import { ScrollArea } from '@src/components/ui/scroll-area'
 import {
-  Check, ChevronLeft, Clock, Crown, Info, Shield, Target, Users
-} from "lucide-react";
-import { useTeamDetails } from "../hook/api";
-import type { Team } from "../types";
-import { LoadingState, ErrorState } from "@src/components/shared";
-import React from "react";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@src/components/ui/tabs'
+import {
+  Check,
+  ChevronLeft,
+  Clock,
+  Crown,
+  Info,
+  Shield,
+  Target,
+  Users,
+} from 'lucide-react'
+
+import { useTeamDetails } from '../hook/api'
+import type { Team } from '../types'
 
 // Map icon string names to Lucide React components
 const benefitIconMap: Record<string, React.ReactNode> = {
@@ -25,83 +39,88 @@ const benefitIconMap: Record<string, React.ReactNode> = {
   Check: <Check className="h-5 w-5 text-green-400" />,
   Clock: <Clock className="h-5 w-5 text-blue-400" />,
   // Add more mappings as needed
-};
-
-interface TeamDetailViewProps {
-  team: Team;
-  onBack: () => void;
-  onJoin: (team: Team) => void;
 }
 
-export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewProps) {
+interface TeamDetailViewProps {
+  team: Team
+  onBack: () => void
+  onJoin: (team: Team) => void
+}
+
+export default function TeamDetailView({
+  team,
+  onBack,
+  onJoin,
+}: TeamDetailViewProps) {
   // Fetch detailed information about the team
-  const { team: teamDetail, loading, error } = useTeamDetails(team.id);
+  const { team: teamDetail, loading, error } = useTeamDetails(team.id)
 
   // Get difficulty badge (helper function)
   const getDifficultyBadge = (difficulty: string | undefined) => {
-    if (!difficulty) return null;
+    if (!difficulty) return null
 
     switch (difficulty) {
       case 'easy':
-        return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">{difficulty}</Badge>;
+        return (
+          <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+            {difficulty}
+          </Badge>
+        )
       case 'medium':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">{difficulty}</Badge>;
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
+            {difficulty}
+          </Badge>
+        )
       case 'hard':
-        return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">{difficulty}</Badge>;
+        return (
+          <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
+            {difficulty}
+          </Badge>
+        )
       default:
-        return <Badge>{difficulty}</Badge>;
+        return <Badge>{difficulty}</Badge>
     }
-  };
+  }
 
   if (loading) {
     return (
       <div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mb-4"
-          onClick={onBack}
-        >
+        <Button variant="outline" size="sm" className="mb-4" onClick={onBack}>
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to Teams
         </Button>
 
-        <LoadingState text="Loading team details..." itemCount={3} itemHeight={80} />
+        <LoadingState
+          text="Loading team details..."
+          itemCount={3}
+          itemHeight={80}
+        />
       </div>
-    );
+    )
   }
 
   if (error || !teamDetail) {
     return (
       <div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="mb-4"
-          onClick={onBack}
-        >
+        <Button variant="outline" size="sm" className="mb-4" onClick={onBack}>
           <ChevronLeft className="h-4 w-4 mr-1" />
           Back to Teams
         </Button>
 
-        <ErrorState
+        {/* <ErrorState
           title="Team Not Found"
           message={error?.message || "Failed to load team details"}
           onRetry={onBack}
           actionText="Return to Teams"
-        />
+        /> */}
       </div>
-    );
+    )
   }
 
   return (
     <div className="space-y-4">
-      <Button
-        variant="outline"
-        size="sm"
-        className="mb-2"
-        onClick={onBack}
-      >
+      <Button variant="outline" size="sm" className="mb-2" onClick={onBack}>
         <ChevronLeft className="h-4 w-4 mr-1" />
         Back to Teams
       </Button>
@@ -115,18 +134,26 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
               </div>
 
               <div className="space-y-1">
-                <h3 className="text-xl font-medium">{teamDetail?.name ?? ""}</h3>
-                <p className="text-sm text-muted-foreground">{teamDetail?.description ?? ""}</p>
+                <h3 className="text-xl font-medium">
+                  {teamDetail?.name ?? ''}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {teamDetail?.description ?? ''}
+                </p>
 
                 <div className="flex items-center text-xs text-muted-foreground space-x-2 mt-1">
-                  <span>Level {teamDetail?.level ?? ""}</span>
+                  <span>Level {teamDetail?.level ?? ''}</span>
                   <span>•</span>
                   <span>
-                    {teamDetail?.members?.length ?? 0}/{team?.maxMembers ?? 0} members
+                    {teamDetail?.members?.length ?? 0}/{team?.maxMembers ?? 0}{' '}
+                    members
                   </span>
                   <span>•</span>
                   <span>
-                    Led by {teamDetail?.members?.find(m => m.isLeader)?.name || team?.leader?.name || ""}
+                    Led by{' '}
+                    {teamDetail?.members?.find((m) => m.isLeader)?.name ||
+                      team?.leader?.name ||
+                      ''}
                   </span>
                 </div>
               </div>
@@ -135,9 +162,8 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
             <Button
               className="ai-gradient-bg"
               onClick={() => onJoin(team)}
-              disabled={team?.isFull}
-            >
-              {team?.isFull ? "Team Full" : "Request to Join"}
+              disabled={team?.isFull}>
+              {team?.isFull ? 'Team Full' : 'Request to Join'}
             </Button>
           </div>
         </CardContent>
@@ -183,10 +209,9 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                               member.status === 'online'
                                 ? 'text-green-400'
                                 : member.status === 'away'
-                                ? 'text-yellow-400'
-                                : 'text-muted-foreground'
-                            }`}
-                          >
+                                  ? 'text-yellow-400'
+                                  : 'text-muted-foreground'
+                            }`}>
                             {member.status}
                           </Badge>
                         )}
@@ -209,7 +234,10 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                           <span className="font-medium">Specialties:</span>
                           <div className="ml-1 flex flex-wrap gap-1">
                             {member.specialties.map((specialty, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs">
                                 {specialty}
                               </Badge>
                             ))}
@@ -220,8 +248,12 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
 
                     {member.questContribution !== undefined && (
                       <div className="text-right">
-                        <div className="font-medium text-yellow-400">{member.questContribution}%</div>
-                        <div className="text-xs text-muted-foreground">Contribution</div>
+                        <div className="font-medium text-yellow-400">
+                          {member.questContribution}%
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Contribution
+                        </div>
                       </div>
                     )}
                   </div>
@@ -230,40 +262,49 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
             ))}
           </div>
 
-          {teamDetail?.pendingRequests && teamDetail.pendingRequests.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-medium mb-3">Pending Requests</h3>
+          {teamDetail?.pendingRequests &&
+            teamDetail.pendingRequests.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-3">Pending Requests</h3>
 
-              <div className="space-y-3">
-                {teamDetail.pendingRequests.map((request) => (
-                  <Card key={request.id} className="overflow-hidden bg-secondary/5">
-                    <CardContent className="p-3">
-                      <div className="flex items-center">
-                        <Avatar className="h-10 w-10 mr-3">
-                          <AvatarFallback>{request.avatar}</AvatarFallback>
-                        </Avatar>
+                <div className="space-y-3">
+                  {teamDetail.pendingRequests.map((request) => (
+                    <Card
+                      key={request.id}
+                      className="overflow-hidden bg-secondary/5">
+                      <CardContent className="p-3">
+                        <div className="flex items-center">
+                          <Avatar className="h-10 w-10 mr-3">
+                            <AvatarFallback>{request.avatar}</AvatarFallback>
+                          </Avatar>
 
-                        <div className="flex-1">
-                          <div className="font-medium">{request.name}</div>
-                          <div className="flex items-center text-xs text-muted-foreground mt-1">
-                            <span>Level {request.level}</span>
-                            <span className="mx-2">•</span>
-                            <span>{request.role}</span>
+                          <div className="flex-1">
+                            <div className="font-medium">{request.name}</div>
+                            <div className="flex items-center text-xs text-muted-foreground mt-1">
+                              <span>Level {request.level}</span>
+                              <span className="mx-2">•</span>
+                              <span>{request.role}</span>
+                            </div>
+                            <div className="text-sm mt-1">
+                              {request.message}
+                            </div>
                           </div>
-                          <div className="text-sm mt-1">{request.message}</div>
-                        </div>
 
-                        <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" className="h-8">Decline</Button>
-                          <Button size="sm" className="h-8 bg-green-500">Accept</Button>
+                          <div className="flex space-x-2">
+                            <Button size="sm" variant="outline" className="h-8">
+                              Decline
+                            </Button>
+                            <Button size="sm" className="h-8 bg-green-500">
+                              Accept
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </TabsContent>
 
         {/* Quests Tab */}
@@ -284,7 +325,9 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
 
                           <div>
                             <h3 className="font-medium">{quest.title}</h3>
-                            <p className="text-sm text-muted-foreground">{quest.description}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {quest.description}
+                            </p>
                           </div>
                         </div>
 
@@ -300,7 +343,10 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                           <div className="flex items-center text-xs text-muted-foreground space-x-2">
                             <span>{quest.deadline}</span>
                             <span>•</span>
-                            <span>{quest.participants}/{quest.requiredParticipants} participants</span>
+                            <span>
+                              {quest.participants}/{quest.requiredParticipants}{' '}
+                              participants
+                            </span>
                             <span>•</span>
                             {getDifficultyBadge(quest.difficulty)}
                           </div>
@@ -308,13 +354,19 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                           <div className="space-y-1">
                             <h4 className="text-xs font-medium">Rewards:</h4>
                             <div className="flex items-center text-xs space-x-2">
-                              <span className="text-blue-400">{quest.reward?.xp} XP</span>
+                              <span className="text-blue-400">
+                                {quest.reward?.xp} XP
+                              </span>
                               <span>•</span>
-                              <span className="text-yellow-400">{quest.reward?.points} Points</span>
+                              <span className="text-yellow-400">
+                                {quest.reward?.points} Points
+                              </span>
                               {quest.reward?.buff && (
                                 <>
                                   <span>•</span>
-                                  <span className="text-purple-400">{quest.reward.buff}</span>
+                                  <span className="text-purple-400">
+                                    {quest.reward.buff}
+                                  </span>
                                 </>
                               )}
                             </div>
@@ -322,10 +374,7 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                         </div>
                       </div>
 
-                      <Button
-                        size="sm"
-                        className="mt-1"
-                      >
+                      <Button size="sm" className="mt-1">
                         Contribute
                       </Button>
                     </div>
@@ -333,14 +382,17 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                 </Card>
               ))
             ) : (
-              <p className="text-muted-foreground">No active quests at the moment.</p>
+              <p className="text-muted-foreground">
+                No active quests at the moment.
+              </p>
             )}
           </div>
 
           <h3 className="text-lg font-medium mt-6">Completed Quests</h3>
 
           <div className="space-y-3">
-            {teamDetail?.completedQuests && teamDetail.completedQuests.length > 0 ? (
+            {teamDetail?.completedQuests &&
+            teamDetail.completedQuests.length > 0 ? (
               teamDetail.completedQuests.map((quest) => (
                 <Card key={quest.id} className="overflow-hidden bg-secondary/5">
                   <CardContent className="p-4">
@@ -351,16 +403,22 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
 
                       <div className="flex-1">
                         <h3 className="font-medium">{quest.title}</h3>
-                        <p className="text-sm text-muted-foreground">{quest.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {quest.description}
+                        </p>
 
                         <div className="flex items-center text-xs text-muted-foreground mt-2 space-x-2">
                           <span>Completed {quest.completedOn}</span>
                           <span>•</span>
                           <span>{quest.participants} participants</span>
                           <span>•</span>
-                          <span className="text-blue-400">{quest.reward?.xp} XP</span>
+                          <span className="text-blue-400">
+                            {quest.reward?.xp} XP
+                          </span>
                           <span>•</span>
-                          <span className="text-yellow-400">{quest.reward?.points} Points</span>
+                          <span className="text-yellow-400">
+                            {quest.reward?.points} Points
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -385,7 +443,9 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                   </div>
 
                   <Badge variant="outline">
-                    {teamDetail?.members?.filter(m => m.status === 'online').length || 0} online
+                    {teamDetail?.members?.filter((m) => m.status === 'online')
+                      .length || 0}{' '}
+                    online
                   </Badge>
                 </div>
 
@@ -400,15 +460,21 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
 
                           <div className="flex-1">
                             <div className="flex items-center">
-                              <span className="font-medium text-sm">{message.userName}</span>
-                              <span className="text-xs text-muted-foreground ml-2">{message.timestamp}</span>
+                              <span className="font-medium text-sm">
+                                {message.userName}
+                              </span>
+                              <span className="text-xs text-muted-foreground ml-2">
+                                {message.timestamp}
+                              </span>
                             </div>
                             <p className="text-sm mt-1">{message.message}</p>
                           </div>
                         </div>
                       ))
                     ) : (
-                      <p className="text-muted-foreground text-center py-10">No messages yet. Be the first to say hello!</p>
+                      <p className="text-muted-foreground text-center py-10">
+                        No messages yet. Be the first to say hello!
+                      </p>
                     )}
                   </div>
                 </ScrollArea>
@@ -434,21 +500,30 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
               <h3 className="font-medium mb-3">Team Benefits</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {teamDetail?.benefits && teamDetail.benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 bg-secondary/10 rounded-lg">
-                    <div className="p-2 bg-secondary/20 rounded-lg">
-                      {/* Render icon from string if present, fallback to Shield */}
-                      {typeof benefit.icon === "string"
-                        ? (benefitIconMap[benefit.icon] || <Shield className="h-5 w-5 text-blue-400" />)
-                        : (benefit.icon || <Shield className="h-5 w-5 text-blue-400" />)}
-                    </div>
+                {teamDetail?.benefits &&
+                  teamDetail.benefits.map((benefit, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start space-x-3 p-3 bg-secondary/10 rounded-lg">
+                      <div className="p-2 bg-secondary/20 rounded-lg">
+                        {/* Render icon from string if present, fallback to Shield */}
+                        {typeof benefit.icon === 'string'
+                          ? benefitIconMap[benefit.icon] || (
+                              <Shield className="h-5 w-5 text-blue-400" />
+                            )
+                          : benefit.icon || (
+                              <Shield className="h-5 w-5 text-blue-400" />
+                            )}
+                      </div>
 
-                    <div>
-                      <div className="font-medium">{benefit.title}</div>
-                      <div className="text-xs text-muted-foreground">{benefit.description}</div>
+                      <div>
+                        <div className="font-medium">{benefit.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {benefit.description}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </CardContent>
           </Card>
@@ -460,22 +535,46 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
               <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span>Level {teamDetail?.level ?? ""}</span>
-                    <span>{teamDetail?.xp ?? 0}/{teamDetail?.xpToNextLevel ?? 0} XP</span>
+                    <span>Level {teamDetail?.level ?? ''}</span>
+                    <span>
+                      {teamDetail?.xp ?? 0}/{teamDetail?.xpToNextLevel ?? 0} XP
+                    </span>
                   </div>
-                  <Progress value={(teamDetail?.xp && teamDetail?.xpToNextLevel) ? (teamDetail.xp/teamDetail.xpToNextLevel) * 100 : 0} className="h-2" />
-                  <p className="text-xs text-muted-foreground">{teamDetail?.xpToNextLevel && teamDetail?.xp ? teamDetail.xpToNextLevel - teamDetail.xp : 0} XP needed for next level</p>
+                  <Progress
+                    value={
+                      teamDetail?.xp && teamDetail?.xpToNextLevel
+                        ? (teamDetail.xp / teamDetail.xpToNextLevel) * 100
+                        : 0
+                    }
+                    className="h-2"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {teamDetail?.xpToNextLevel && teamDetail?.xp
+                      ? teamDetail.xpToNextLevel - teamDetail.xp
+                      : 0}{' '}
+                    XP needed for next level
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div className="bg-secondary/10 p-3 rounded-lg text-center">
-                    <div className="text-lg font-bold">{(teamDetail?.completedQuests?.length || 0) + 3}</div>
-                    <div className="text-xs text-muted-foreground">Quests Completed</div>
+                    <div className="text-lg font-bold">
+                      {(teamDetail?.completedQuests?.length || 0) + 3}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Quests Completed
+                    </div>
                   </div>
 
                   <div className="bg-secondary/10 p-3 rounded-lg text-center">
-                    <div className="text-lg font-bold">{teamDetail?.achievements?.filter(a => a.completed).length || 0}/{teamDetail?.achievements?.length || 0}</div>
-                    <div className="text-xs text-muted-foreground">Achievements</div>
+                    <div className="text-lg font-bold">
+                      {teamDetail?.achievements?.filter((a) => a.completed)
+                        .length || 0}
+                      /{teamDetail?.achievements?.length || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Achievements
+                    </div>
                   </div>
                 </div>
               </div>
@@ -487,7 +586,8 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
               <h3 className="font-medium mb-3">Team Achievements</h3>
 
               <div className="space-y-3">
-                {teamDetail?.achievements && teamDetail.achievements.length > 0 ? (
+                {teamDetail?.achievements &&
+                teamDetail.achievements.length > 0 ? (
                   teamDetail.achievements.map((achievement, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -497,16 +597,25 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
                           ) : (
                             <Clock className="h-4 w-4 mr-2 text-blue-400" />
                           )}
-                          <span className="font-medium">{achievement.title}</span>
+                          <span className="font-medium">
+                            {achievement.title}
+                          </span>
                         </div>
                         <span className="text-xs">{achievement.progress}%</span>
                       </div>
 
-                      <p className="text-xs text-muted-foreground">{achievement.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {achievement.description}
+                      </p>
 
                       <div className="space-y-1">
-                        <Progress value={achievement.progress} className="h-1.5" />
-                        <p className="text-xs text-muted-foreground">Reward: {achievement.reward}</p>
+                        <Progress
+                          value={achievement.progress}
+                          className="h-1.5"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Reward: {achievement.reward}
+                        </p>
                       </div>
                     </div>
                   ))
@@ -519,5 +628,5 @@ export default function TeamDetailView({ team, onBack, onJoin }: TeamDetailViewP
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }

@@ -1,62 +1,71 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Progress } from "@src/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
-import { useQuests } from "../hook/api";
-import QuestTypeSection from "./QuestTypeSection";
-import CompletedQuestList from "./CompletedQuestList";
-import { formatDeadline } from "../utils";
-import { GroupedQuests } from "../types";
-import { SkeletonLoading, ErrorDisplay } from "@src/components/shared";
-import { withErrorHandling } from "@src/hooks";
-import { useError } from "@src/components/shared/ErrorProvider";
-import useErrorHandler from "@src/hooks/useErrorHandler";
+import { useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { ErrorDisplay, SkeletonLoading } from '@src/components/shared'
+import { useError } from '@src/components/shared/ErrorProvider'
+import { Progress } from '@src/components/ui/progress'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@src/components/ui/tabs'
+import { withErrorHandling } from '@src/hooks'
+import useErrorHandler from '@src/hooks/useErrorHandler'
+
+import { useQuests } from '../hook/api'
+import { GroupedQuests } from '../types'
+import { formatDeadline } from '../utils'
+import CompletedQuestList from './CompletedQuestList'
+import QuestTypeSection from './QuestTypeSection'
 
 function QuestPageComponent() {
-  const router = useRouter();
-  const { groupedQuests, completedQuests, isLoading, error, refetchQuests } = useQuests();
-  const [activeTab, setActiveTab] = useState("active");
+  const router = useRouter()
+  const { groupedQuests, completedQuests, isLoading, error, refreshQuests } =
+    useQuests()
+  const [activeTab, setActiveTab] = useState('active')
   const [expandedTypes, setExpandedTypes] = useState({
     daily: true,
     weekly: true,
-    'no-deadline': true
-  });
+    'no-deadline': true,
+  })
 
   // Use error handler context
-  const { showError } = useError();
-  const { handleAsyncOperation } = useErrorHandler();
+  const { showError } = useError()
+  const { handleAsyncOperation } = useErrorHandler()
 
   // Safe default values in case of undefined data
   const safeGroupedQuests: GroupedQuests = groupedQuests || {
     daily: [],
     weekly: [],
-    'no-deadline': []
-  };
+    'no-deadline': [],
+  }
 
-  const safeCompletedQuests = completedQuests || [];
+  const safeCompletedQuests = completedQuests || []
 
   // Toggle expanded state for quest types
   const toggleExpanded = (type: 'daily' | 'weekly' | 'no-deadline') => {
-    setExpandedTypes(prev => ({
+    setExpandedTypes((prev) => ({
       ...prev,
-      [type]: !prev[type]
-    }));
-  };
+      [type]: !prev[type],
+    }))
+  }
 
   // Navigate to quest detail page with error handling
   const navigateToQuest = async (questId: string) => {
     try {
-      router.push(`/quest/${questId}`);
+      router.push(`/quest/${questId}`)
     } catch (error) {
-      showError("ไม่สามารถนำทางไปยังรายละเอียดภารกิจได้", {
-        message: "โปรดลองอีกครั้งในภายหลัง",
-        severity: "error"
-      });
-      console.error("Navigation error:", error);
+      showError('ไม่สามารถนำทางไปยังรายละเอียดภารกิจได้', {
+        message: 'โปรดลองอีกครั้งในภายหลัง',
+        severity: 'error',
+      })
+      console.error('Navigation error:', error)
     }
-  };
+  }
 
   // Show loading state
   if (isLoading) {
@@ -64,7 +73,7 @@ function QuestPageComponent() {
       <div className="p-4 pb-20">
         <SkeletonLoading type="quest" text="กำลังโหลดภารกิจ..." />
       </div>
-    );
+    )
   }
 
   // Show error state with improved error component
@@ -75,20 +84,21 @@ function QuestPageComponent() {
           title="ไม่สามารถโหลดข้อมูลภารกิจได้"
           message="เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์ โปรดลองใหม่อีกครั้ง"
           severity="error"
-          onRetry={refetchQuests}
+          onRetry={refreshQuests}
           showRetry={true}
           technicalDetails={error}
         />
       </div>
-    );
+    )
   }
 
   // Calculate daily quests completion percentage
-  const dailyQuests = safeGroupedQuests.daily;
-  const completedDailyQuests = dailyQuests.filter(q => q.completed);
-  const dailyQuestsPercentage = dailyQuests.length > 0
-    ? Math.round((completedDailyQuests.length / dailyQuests.length) * 100)
-    : 0;
+  const dailyQuests = safeGroupedQuests.daily
+  const completedDailyQuests = dailyQuests.filter((q) => q.completed)
+  const dailyQuestsPercentage =
+    dailyQuests.length > 0
+      ? Math.round((completedDailyQuests.length / dailyQuests.length) * 100)
+      : 0
 
   return (
     <div className="p-4 pb-20">
@@ -117,13 +127,19 @@ function QuestPageComponent() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold ai-gradient-text">ภารกิจ</h1>
-          <p className="text-muted-foreground">ทำภารกิจเพื่อรับ XP และเลเวลอัพ</p>
+          <p className="text-muted-foreground">
+            ทำภารกิจเพื่อรับ XP และเลเวลอัพ
+          </p>
         </div>
 
         <div className="flex items-center space-x-2">
           <div className="text-right">
-            <p className="text-xs text-muted-foreground">ภารกิจประจำวันที่เสร็จแล้ว</p>
-            <p className="font-semibold">{completedDailyQuests.length}/{dailyQuests.length}</p>
+            <p className="text-xs text-muted-foreground">
+              ภารกิจประจำวันที่เสร็จแล้ว
+            </p>
+            <p className="font-semibold">
+              {completedDailyQuests.length}/{dailyQuests.length}
+            </p>
           </div>
           <Progress value={dailyQuestsPercentage} className="w-16 h-2" />
         </div>
@@ -178,8 +194,8 @@ function QuestPageComponent() {
         </TabsContent>
       </Tabs>
     </div>
-  );
+  )
 }
 
 // ใช้ Higher Order Component เพื่อเพิ่ม error boundary
-export default withErrorHandling(QuestPageComponent);
+export default withErrorHandling(QuestPageComponent)

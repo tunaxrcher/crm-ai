@@ -1,4 +1,4 @@
-import type { Team, TeamDetail, GlobalTeamQuest } from '../types';
+import type { GlobalTeamQuest, Team, TeamDetail } from '../types'
 
 /**
  * Get list of all teams from the API
@@ -10,17 +10,17 @@ export async function getTeams(): Promise<Team[]> {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch teams: ${response.status}`);
+      throw new Error(`Failed to fetch teams: ${response.status}`)
     }
 
-    const data = await response.json();
-    return data.teams;
+    const data = await response.json()
+    return data.teams
   } catch (error) {
-    console.error('Error fetching teams:', error);
-    throw error;
+    console.error('Error fetching teams:', error)
+    throw error
   }
 }
 
@@ -34,17 +34,17 @@ export async function getTeamDetails(teamId: string): Promise<TeamDetail> {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch team details: ${response.status}`);
+      throw new Error(`Failed to fetch team details: ${response.status}`)
     }
 
-    const data = await response.json();
-    return data.team;
+    const data = await response.json()
+    return data.team
   } catch (error) {
-    console.error(`Error fetching team details for ${teamId}:`, error);
-    throw error;
+    console.error(`Error fetching team details for ${teamId}:`, error)
+    throw error
   }
 }
 
@@ -58,24 +58,27 @@ export async function getTeamQuests(): Promise<GlobalTeamQuest[]> {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch team quests: ${response.status}`);
+      throw new Error(`Failed to fetch team quests: ${response.status}`)
     }
 
-    const data = await response.json();
-    return data.quests;
+    const data = await response.json()
+    return data.quests
   } catch (error) {
-    console.error('Error fetching team quests:', error);
-    throw error;
+    console.error('Error fetching team quests:', error)
+    throw error
   }
 }
 
 /**
  * Send a request to join a team
  */
-export async function joinTeam(teamId: string, message: string): Promise<{ success: boolean; message: string }> {
+export async function joinTeam(
+  teamId: string,
+  message: string
+): Promise<{ success: boolean; message: string }> {
   try {
     const response = await fetch(`/api/party/${teamId}/join`, {
       method: 'POST',
@@ -83,16 +86,16 @@ export async function joinTeam(teamId: string, message: string): Promise<{ succe
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message }),
-    });
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to send join request: ${response.status}`);
+      throw new Error(`Failed to send join request: ${response.status}`)
     }
 
-    return await response.json();
+    return await response.json()
   } catch (error) {
-    console.error(`Error joining team ${teamId}:`, error);
-    throw error;
+    console.error(`Error joining team ${teamId}:`, error)
+    throw error
   }
 }
 
@@ -100,11 +103,11 @@ export async function joinTeam(teamId: string, message: string): Promise<{ succe
  * Create a new team
  */
 export async function createTeam(teamData: {
-  name: string;
-  description: string;
-  isPrivate: boolean;
-  tags: string[];
-  maxMembers: number;
+  name: string
+  description: string
+  isPrivate: boolean
+  tags: string[]
+  maxMembers: number
 }): Promise<{ success: boolean; teamId?: string; message: string }> {
   try {
     const response = await fetch('/api/party/create', {
@@ -113,15 +116,15 @@ export async function createTeam(teamData: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(teamData),
-    });
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to create team: ${response.status}`);
+      throw new Error(`Failed to create team: ${response.status}`)
     }
 
-    return await response.json();
+    return await response.json()
   } catch (error) {
-    console.error('Error creating team:', error);
-    throw error;
+    console.error('Error creating team:', error)
+    throw error
   }
 }

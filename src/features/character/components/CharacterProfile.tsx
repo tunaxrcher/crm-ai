@@ -1,17 +1,18 @@
-"use client";
+'use client'
 
-import { Button } from "@src/components/ui/button";
-import { Progress } from "@src/components/ui/progress";
-import { Badge } from "@src/components/ui/badge";
-import { Award, Briefcase } from "lucide-react";
-import { Character, JobClass } from "../types";
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
+import { Progress } from '@src/components/ui/progress'
+import { Award, Briefcase } from 'lucide-react'
+
+import { Character, JobClass } from '../types'
 
 interface CharacterProfileProps {
-  character: Character;
-  portrait: string;
-  jobClass?: JobClass | null;
-  xpPercentage: number;
-  onAllocateStats: () => void;
+  character: Character
+  portrait: string
+  jobClass?: JobClass | null
+  xpPercentage: number
+  onAllocateStats: () => void
 }
 
 export default function CharacterProfile({
@@ -19,7 +20,7 @@ export default function CharacterProfile({
   portrait,
   jobClass,
   xpPercentage,
-  onAllocateStats
+  onAllocateStats,
 }: CharacterProfileProps) {
   return (
     <div className="flex flex-col items-center mb-6">
@@ -30,12 +31,15 @@ export default function CharacterProfile({
             alt={character.name}
             className="w-full h-full object-cover"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://same-assets.com/placeholder-avatar.png";
+              ;(e.target as HTMLImageElement).src =
+                'https://same-assets.com/placeholder-avatar.png'
             }}
           />
         </div>
         <div className="absolute -bottom-2 -right-2 bg-card rounded-full p-1 border-2 border-background ai-gradient-border">
-          <Badge className="ai-gradient-bg border-0">Lvl {character.level}</Badge>
+          <Badge className="ai-gradient-bg border-0">
+            Lvl {character.level}
+          </Badge>
         </div>
       </div>
 
@@ -56,7 +60,12 @@ export default function CharacterProfile({
           <div className="text-xs ml-2 text-muted-foreground">
             {character.currentJobLevel < 6 && (
               <>
-                Next Class: <span className="text-primary">Lvl {jobClass.levels[character.currentJobLevel]?.requiredCharacterLevel || "???"}</span>
+                Next Class:{' '}
+                <span className="text-primary">
+                  Lvl{' '}
+                  {jobClass.levels[character.currentJobLevel]
+                    ?.requiredCharacterLevel || '???'}
+                </span>
               </>
             )}
           </div>
@@ -64,9 +73,13 @@ export default function CharacterProfile({
       </div>
 
       <div className="mt-2 flex items-center w-full max-w-xs">
-        <span className="text-xs text-muted-foreground mr-2">Level {character.level}</span>
+        <span className="text-xs text-muted-foreground mr-2">
+          Level {character.level}
+        </span>
         <Progress value={xpPercentage} className="h-2 flex-1" />
-        <span className="text-xs text-muted-foreground ml-2">Level {character.level + 1}</span>
+        <span className="text-xs text-muted-foreground ml-2">
+          Level {character.level + 1}
+        </span>
       </div>
 
       <div className="mt-2 flex items-center text-sm">
@@ -80,11 +93,10 @@ export default function CharacterProfile({
         <Button
           variant="outline"
           className="mt-4 ai-gradient-text ai-gradient-border"
-          onClick={onAllocateStats}
-        >
+          onClick={onAllocateStats}>
           จัดสรร {character.statPoints} คะแนนสถิติ
         </Button>
       )}
     </div>
-  );
+  )
 }

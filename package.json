@@ -29,6 +29,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "11.0.3",
+    "hashids": "^2.3.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.475.0",
     "next": "^15.2.0",
     "react": "^18.3.1",
@@ -38,12 +40,13 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.4",
-    "hashids": "^2.3.0",
-    "jsonwebtoken": "^9.0.2"
+    "prettier": "^3.5.3",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@eslint/eslintrc": "^3",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "22.15.19",
     "@types/react": "18.2.43",
     "@types/react-dom": "18.3.7",

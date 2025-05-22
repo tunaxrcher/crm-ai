@@ -1,27 +1,28 @@
-"use client";
+'use client'
 
-import React from "react";
-import { Skeleton } from "@src/components/ui/skeleton";
+import React from 'react'
+
+import { Skeleton } from '@src/components/ui/skeleton'
 
 interface LoadingStateProps {
   /** Text to display while loading, defaults to "Loading..." */
-  text?: string;
+  text?: string
   /** Number of skeleton items to show, defaults to 3 */
-  itemCount?: number;
+  itemCount?: number
   /** Height of each skeleton item in pixels, defaults to 64 */
-  itemHeight?: number;
+  itemHeight?: number
   /** Custom class name for the container */
-  className?: string;
+  className?: string
 }
 
 /**
  * A reusable loading state component with customizable options
  */
 export default function LoadingState({
-  text = "Loading...",
+  text = 'Loading...',
   itemCount = 3,
   itemHeight = 64,
-  className = "",
+  className = '',
 }: LoadingStateProps) {
   return (
     <div className={`w-full space-y-4 ${className}`}>
@@ -39,5 +40,5 @@ export default function LoadingState({
         ))}
       </div>
     </div>
-  );
+  )
 }

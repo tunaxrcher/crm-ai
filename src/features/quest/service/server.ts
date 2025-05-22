@@ -1,6 +1,13 @@
 // Server-side logic for Quest feature
-import { mockQuests, mockCompletedQuests } from '@src/data/quest';
-import { Quest, CompletedQuest, CompleteQuestRequest, CompleteQuestResponse, QuestsResponse } from '../types';
+import { mockCompletedQuests, mockQuests } from '@src/data/quest'
+
+import {
+  CompleteQuestRequest,
+  CompleteQuestResponse,
+  CompletedQuest,
+  Quest,
+  QuestsResponse,
+} from '../types'
 
 /**
  * Get all quests for the current user
@@ -9,33 +16,33 @@ import { Quest, CompletedQuest, CompleteQuestRequest, CompleteQuestResponse, Que
  */
 export async function getAllQuests(): Promise<QuestsResponse> {
   try {
-    console.log('[Server] Fetching all quests...');
+    console.log('[Server] Fetching all quests...')
 
     // Mocking API request delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
     // Validate mock data
     if (!Array.isArray(mockQuests) || !Array.isArray(mockCompletedQuests)) {
-      console.error('Invalid mock data format');
+      console.error('Invalid mock data format')
       // Return empty arrays to prevent errors
       return {
         activeQuests: [],
-        completedQuests: []
-      };
+        completedQuests: [],
+      }
     }
 
     // Return mock data
     return {
-      activeQuests: mockQuests,
-      completedQuests: mockCompletedQuests
-    };
+      activeQuests: mockQuests as any,
+      completedQuests: mockCompletedQuests as any,
+    }
   } catch (error) {
-    console.error('Error getting quests:', error);
+    console.error('Error getting quests:', error)
     // Return empty arrays to prevent errors
     return {
       activeQuests: [],
-      completedQuests: []
-    };
+      completedQuests: [],
+    }
   }
 }
 
@@ -46,25 +53,25 @@ export async function getAllQuests(): Promise<QuestsResponse> {
  */
 export async function getQuestById(id: string): Promise<Quest | null> {
   try {
-    console.log(`[Server] Fetching quest with ID: ${id}`);
+    console.log(`[Server] Fetching quest with ID: ${id}`)
 
     // Mocking API request delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
     if (!id) {
-      console.error('Quest ID is required');
-      return null;
+      console.error('Quest ID is required')
+      return null
     }
 
     // Find the quest in the mock data
     const quest = Array.isArray(mockQuests)
-      ? mockQuests.find(q => q && q.id === id)
-      : null;
+      ? mockQuests.find((q) => q && q.id === id)
+      : null
 
-    return quest || null;
+    return quest as any
   } catch (error) {
-    console.error(`Error getting quest ${id}:`, error);
-    return null;
+    console.error(`Error getting quest ${id}:`, error)
+    return null
   }
 }
 
@@ -73,24 +80,26 @@ export async function getQuestById(id: string): Promise<Quest | null> {
  * @param request - The request containing questId and completion data
  * @returns Promise<CompleteQuestResponse> The result of completing the quest
  */
-export async function completeQuest(request: CompleteQuestRequest): Promise<CompleteQuestResponse> {
+export async function completeQuest(
+  request: CompleteQuestRequest
+): Promise<CompleteQuestResponse> {
   try {
-    console.log(`[Server] Completing quest with ID: ${request?.questId}`);
+    console.log(`[Server] Completing quest with ID: ${request?.questId}`)
 
     // Mocking API request delay
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
     if (!request || !request.questId) {
-      throw new Error('Quest ID is required');
+      throw new Error('Quest ID is required')
     }
 
     // Find the quest in the mock data
     const quest = Array.isArray(mockQuests)
-      ? mockQuests.find(q => q && q.id === request.questId)
-      : null;
+      ? mockQuests.find((q) => q && q.id === request.questId)
+      : null
 
     if (!quest) {
-      throw new Error(`Quest not found with ID: ${request.questId}`);
+      throw new Error(`Quest not found with ID: ${request.questId}`)
     }
 
     // In a real app, we would update the database
@@ -99,20 +108,20 @@ export async function completeQuest(request: CompleteQuestRequest): Promise<Comp
       id: `completed-${quest.id}`,
       title: quest.title,
       description: quest.description,
-      type: quest.type,
+      type: quest.type as any,
       completedOn: new Date(),
       xpEarned: quest.rewards.xp,
-      statsGained: quest.rewards.stats
-    };
+      statsGained: quest.rewards.stats,
+    }
 
     return {
       success: true,
       quest: completedQuest,
       xpGained: quest.rewards.xp,
-      statsGained: quest.rewards.stats
-    };
+      statsGained: quest.rewards.stats,
+    }
   } catch (error) {
-    console.error(`Error completing quest:`, error);
-    throw error; // Re-throw to handle in API route
+    console.error(`Error completing quest:`, error)
+    throw error // Re-throw to handle in API route
   }
 }

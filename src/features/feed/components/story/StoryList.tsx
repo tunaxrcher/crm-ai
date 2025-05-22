@@ -1,24 +1,31 @@
-"use client";
+'use client'
 
-import { RefObject } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
-import { ChevronLeft, ChevronRight, Image as ImageIcon, Play, X } from "lucide-react";
-import { Story } from "../types";
-import { ImageWithFallback } from "@src/components/shared";
-import { useError } from "@src/components/shared/ErrorProvider";
+import { RefObject } from 'react'
+
+import { ImageWithFallback } from '@src/components/shared'
+import { useError } from '@src/components/shared/ErrorProvider'
+import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
+import { StoryUI } from '@src/features/feed/types'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Play,
+  X,
+} from 'lucide-react'
 
 interface StoryListProps {
-  stories: Story[];
-  isClient: boolean;
-  scrollPosition: number;
-  storiesRef: RefObject<HTMLDivElement>;
-  handleScrollLeft: () => void;
-  handleScrollRight: () => void;
-  openStory: (index: number) => void;
-  currentStoryIndex: number | null;
-  closeStory: () => void;
-  prevStory: () => void;
-  nextStory: () => void;
+  stories: StoryUI[]
+  isClient: boolean
+  scrollPosition: number
+  storiesRef: RefObject<HTMLDivElement>
+  handleScrollLeft: () => void
+  handleScrollRight: () => void
+  openStory: (index: number) => void
+  currentStoryIndex: number | null
+  closeStory: () => void
+  prevStory: () => void
+  nextStory: () => void
 }
 
 export default function StoryList({
@@ -32,28 +39,29 @@ export default function StoryList({
   currentStoryIndex,
   closeStory,
   prevStory,
-  nextStory
+  nextStory,
 }: StoryListProps) {
-  const { showError } = useError();
+  const { showError } = useError()
 
   // กรณีที่ไม่มีข้อมูลสตอรี่หรือ currentStoryIndex ไม่ถูกต้อง
   const handleStoryError = () => {
-    showError("ไม่สามารถโหลดสตอรี่ได้", {
-      severity: "warning",
-      message: "ไม่พบข้อมูลสตอรี่หรือข้อมูลไม่ถูกต้อง",
-      autoHideAfter: 3000
-    });
-    closeStory();
-  };
+    showError('ไม่สามารถโหลดสตอรี่ได้', {
+      severity: 'warning',
+      message: 'ไม่พบข้อมูลสตอรี่หรือข้อมูลไม่ถูกต้อง',
+      autoHideAfter: 3000,
+    })
+    closeStory()
+  }
 
   // Validate currentStoryIndex ก่อนดึงข้อมูล
-  const isValidCurrentStory = currentStoryIndex !== null &&
-                             stories.length > 0 &&
-                             currentStoryIndex >= 0 &&
-                             currentStoryIndex < stories.length;
+  const isValidCurrentStory =
+    currentStoryIndex !== null &&
+    stories.length > 0 &&
+    currentStoryIndex >= 0 &&
+    currentStoryIndex < stories.length
 
   // ตรวจสอบ currentStory ให้ปลอดภัย
-  const currentStory = isValidCurrentStory ? stories[currentStoryIndex] : null;
+  const currentStory = isValidCurrentStory ? stories[currentStoryIndex] : null
 
   return (
     <div className="mb-6 relative">
@@ -66,8 +74,7 @@ export default function StoryList({
         {isClient && scrollPosition > 0 && (
           <button
             className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-background/80 rounded-full p-1"
-            onClick={handleScrollLeft}
-          >
+            onClick={handleScrollLeft}>
             <ChevronLeft className="h-4 w-4" />
           </button>
         )}
@@ -77,19 +84,22 @@ export default function StoryList({
           className="flex overflow-x-auto pb-2 space-x-3 no-scrollbar"
           style={{ scrollBehavior: 'smooth' }}
           onScroll={(e) => {
-            const target = e.currentTarget;
+            const target = e.currentTarget
             if (target && isClient) {
               // จะไม่ใช้ setScrollPosition ที่นี่เพราะ prop นี้ควรถูกควบคุมจาก parent
             }
-          }}
-        >
+          }}>
           {stories.map((story, index) => (
             <div
               key={story.id}
               className="flex-shrink-0 w-20 cursor-pointer"
-              onClick={() => openStory(index)}
-            >
-              <div className={`relative w-20 h-20 rounded-full mb-1 ${story.viewed ? 'border-2 border-gray-500' : 'border-2 ai-gradient-border'}`}>
+              onClick={() => openStory(index)}>
+              <div
+                className={`relative w-20 h-20 rounded-full mb-1 ${
+                  story.viewed
+                    ? 'border-2 border-gray-500'
+                    : 'border-2 ai-gradient-border'
+                }`}>
                 <Avatar className="w-full h-full">
                   <AvatarImage src={story.user.avatar} alt={story.user.name} />
                   <AvatarFallback>{story.user.name.slice(0, 2)}</AvatarFallback>
@@ -107,19 +117,24 @@ export default function StoryList({
                   </div>
                 )}
               </div>
-              <div className="text-xs text-center truncate">{story.user.name.split(' ')[0]}</div>
+              <div className="text-xs text-center truncate">
+                {story.user.name.split(' ')[0]}
+              </div>
             </div>
           ))}
         </div>
 
-        {isClient && scrollPosition < (storiesRef.current?.scrollWidth || 0) - (storiesRef.current?.clientWidth || 0) - 10 && (
-          <button
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-background/80 rounded-full p-1"
-            onClick={handleScrollRight}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        )}
+        {isClient &&
+          scrollPosition <
+            (storiesRef.current?.scrollWidth || 0) -
+              (storiesRef.current?.clientWidth || 0) -
+              10 && (
+            <button
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-background/80 rounded-full p-1"
+              onClick={handleScrollRight}>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
       </div>
 
       {/* Story Viewer Modal */}
@@ -128,8 +143,7 @@ export default function StoryList({
           {/* Close button */}
           <button
             className="absolute top-4 right-4 z-10 text-white bg-black/20 p-2 rounded-full"
-            onClick={closeStory}
-          >
+            onClick={closeStory}>
             <X className="h-6 w-6" />
           </button>
 
@@ -139,13 +153,22 @@ export default function StoryList({
             <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent">
               <div className="flex items-center">
                 <Avatar className="h-10 w-10 mr-3">
-                  <AvatarImage src={currentStory.user.avatar} alt={currentStory.user.name} />
-                  <AvatarFallback>{currentStory.user.name.slice(0, 2)}</AvatarFallback>
+                  <AvatarImage
+                    src={currentStory.user.avatar}
+                    alt={currentStory.user.name}
+                  />
+                  <AvatarFallback>
+                    {currentStory.user.name.slice(0, 2)}
+                  </AvatarFallback>
                 </Avatar>
 
                 <div>
-                  <div className="text-white font-medium">{currentStory.user.name}</div>
-                  <div className="text-xs text-gray-300">{currentStory.questTitle}</div>
+                  <div className="text-white font-medium">
+                    {currentStory.user.name}
+                  </div>
+                  <div className="text-xs text-gray-300">
+                    {currentStory.questTitle}
+                  </div>
                 </div>
               </div>
             </div>
@@ -162,7 +185,7 @@ export default function StoryList({
                     fallbackSrc="/placeholder-image.png"
                     className="max-w-full max-h-full object-contain"
                     onError={() => {
-                      console.error("Failed to load story image");
+                      console.error('Failed to load story image')
                     }}
                   />
                 </div>
@@ -170,7 +193,9 @@ export default function StoryList({
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="relative w-full max-h-full">
                     <ImageWithFallback
-                      src={currentStory.media.thumbnail || "/placeholder-image.png"}
+                      src={
+                        currentStory.media.thumbnail || '/placeholder-image.png'
+                      }
                       alt="Video thumbnail"
                       width={600}
                       height={800}
@@ -189,20 +214,18 @@ export default function StoryList({
             <button
               className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/20 p-2 rounded-full"
               onClick={prevStory}
-              disabled={currentStoryIndex === 0}
-            >
+              disabled={currentStoryIndex === 0}>
               <ChevronLeft className="h-6 w-6 text-white" />
             </button>
 
             <button
               className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/20 p-2 rounded-full"
-              onClick={nextStory}
-            >
+              onClick={nextStory}>
               <ChevronRight className="h-6 w-6 text-white" />
             </button>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

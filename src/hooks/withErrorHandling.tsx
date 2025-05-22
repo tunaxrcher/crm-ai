@@ -1,7 +1,8 @@
-"use client";
+'use client'
 
-import React from "react";
-import { GlobalErrorBoundary } from "@src/components/shared";
+import React from 'react'
+
+import { GlobalErrorBoundary } from '@src/components/shared'
 
 /**
  * Higher Order Component (HOC) that wraps a component with GlobalErrorBoundary
@@ -11,17 +12,17 @@ export default function withErrorHandling<P extends object>(
   Component: React.ComponentType<P>,
   fallback?: React.ReactNode
 ): React.FC<P> {
-  const displayName = Component.displayName || Component.name || "Component";
+  const displayName = Component.displayName || Component.name || 'Component'
 
   const WithErrorHandling: React.FC<P> = (props) => {
     return (
       <GlobalErrorBoundary fallback={fallback}>
         <Component {...props} />
       </GlobalErrorBoundary>
-    );
-  };
+    )
+  }
 
-  WithErrorHandling.displayName = `withErrorHandling(${displayName})`;
+  WithErrorHandling.displayName = `withErrorHandling(${displayName})`
 
-  return WithErrorHandling;
+  return WithErrorHandling
 }

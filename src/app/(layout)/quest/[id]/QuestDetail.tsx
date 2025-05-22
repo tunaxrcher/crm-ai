@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@src/components/ui/button";
+import { useEffect, useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@src/components/ui/card";
-import { Badge } from "@src/components/ui/badge";
-import { Progress } from "@src/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
+} from '@src/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@src/components/ui/dialog";
+} from '@src/components/ui/dialog'
+import { useNotification } from '@src/components/ui/notification-system'
+import { Progress } from '@src/components/ui/progress'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@src/components/ui/tabs'
+import { useCharacter } from '@src/features/character/context/CharacterContext'
+import { formatDeadline } from '@src/features/quest/utils'
 import {
   ArrowLeft,
   Award,
@@ -33,63 +43,60 @@ import {
   Sparkles,
   Upload,
   X,
-} from "lucide-react";
-import { formatDeadline } from "@src/features/quest/utils";
-import { useNotification } from "@src/components/ui/notification-system";
-import { useCharacter } from "@src/features/character/context/CharacterContext";
+} from 'lucide-react'
 
+import { mockAIAnalysis } from './mockAIAnalysis'
 // Import mock data
-import { mockQuests } from "./mockQuestDetail";
-import { mockAIAnalysis } from "./mockAIAnalysis";
+import { mockQuests } from './mockQuestDetail'
 
 // Function to determine difficulty badge color
 const getDifficultyBadge = (difficulty: string) => {
   switch (difficulty) {
-    case "easy":
+    case 'easy':
       return (
         <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
           {difficulty}
         </Badge>
-      );
-    case "medium":
+      )
+    case 'medium':
       return (
         <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
           {difficulty}
         </Badge>
-      );
-    case "hard":
+      )
+    case 'hard':
       return (
         <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
           {difficulty}
         </Badge>
-      );
+      )
     default:
-      return <Badge>{difficulty}</Badge>;
+      return <Badge>{difficulty}</Badge>
   }
-};
+}
 
 // Function to determine quest type icon
 const getQuestTypeIcon = (type: string) => {
   switch (type) {
-    case "daily":
-      return <Clock className="h-4 w-4 mr-1 text-blue-400" />;
-    case "weekly":
-      return <Clock className="h-4 w-4 mr-1 text-purple-400" />;
-    case "no-deadline":
-      return <MessageSquare className="h-4 w-4 mr-1 text-green-400" />;
+    case 'daily':
+      return <Clock className="h-4 w-4 mr-1 text-blue-400" />
+    case 'weekly':
+      return <Clock className="h-4 w-4 mr-1 text-purple-400" />
+    case 'no-deadline':
+      return <MessageSquare className="h-4 w-4 mr-1 text-green-400" />
     default:
-      return <MessageSquare className="h-4 w-4 mr-1" />;
+      return <MessageSquare className="h-4 w-4 mr-1" />
   }
-};
+}
 
 // Error Boundary Component
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<Error | null>(null)
 
   // This effect is a workaround for error boundaries in client components
   useEffect(() => {
-    setError(null);
-  }, [children]);
+    setError(null)
+  }, [children])
 
   if (error) {
     return (
@@ -97,39 +104,39 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
         <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
         <p className="text-muted-foreground mb-4">{error.message}</p>
       </div>
-    );
+    )
   }
 
   // Try-catch for rendering children
   try {
-    return <>{children}</>;
+    return <>{children}</>
   } catch (err: any) {
-    setError(err);
-    return null;
+    setError(err)
+    return null
   }
 }
 
 // Props interface for the component
 interface QuestDetailProps {
-  questId: string;
+  questId: string
 }
 
 export default function QuestDetail({ questId }: QuestDetailProps) {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState("details");
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showAIResult, setShowAIResult] = useState(false);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [aiAnalysisProgress, setAiAnalysisProgress] = useState(0);
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState('details')
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showAIResult, setShowAIResult] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+  const [aiAnalysisProgress, setAiAnalysisProgress] = useState(0)
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Notification system
-  const { addNotification } = useNotification();
+  const { addNotification } = useNotification()
 
   // Character context for XP and achievements
-  const { addXp, unlockAchievement } = useCharacter();
+  const { addXp, unlockAchievement } = useCharacter()
 
   // Check if questId is valid
   if (!questId) {
@@ -140,17 +147,16 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
           No valid quest ID was provided.
         </p>
         <Button
-          onClick={() => router.push("/quest")}
-          className="ai-gradient-bg"
-        >
+          onClick={() => router.push('/quest')}
+          className="ai-gradient-bg">
           Back to Quests
         </Button>
       </div>
-    );
+    )
   }
 
   // Get quest data
-  const quest = mockQuests[questId as keyof typeof mockQuests];
+  const quest = mockQuests[questId as keyof typeof mockQuests]
 
   // Handle if quest doesn't exist
   if (!quest) {
@@ -161,98 +167,100 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
           The quest with ID "{questId}" doesn't exist.
         </p>
         <Button
-          onClick={() => router.push("/quest")}
-          className="ai-gradient-bg"
-        >
+          onClick={() => router.push('/quest')}
+          className="ai-gradient-bg">
           Back to Quests
         </Button>
       </div>
-    );
+    )
   }
 
   // Handle file change for upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setUploadedImage(imageUrl);
+      const imageUrl = URL.createObjectURL(file)
+      setUploadedImage(imageUrl)
     }
-  };
+  }
 
   // Handle simulated AI evaluation
   const handleSubmitQuest = () => {
-    setIsLoading(true);
-    setAiAnalysisProgress(0);
+    setIsLoading(true)
+    setAiAnalysisProgress(0)
 
     // Simulate AI processing with progress updates
     const interval = setInterval(() => {
       setAiAnalysisProgress((prev) => {
-        const newProgress = prev + Math.random() * 15;
-        return newProgress >= 100 ? 100 : newProgress;
-      });
-    }, 300);
+        const newProgress = prev + Math.random() * 15
+        return newProgress >= 100 ? 100 : newProgress
+      })
+    }, 300)
 
     // Simulate AI evaluation completion after 3-5 seconds
-    setTimeout(() => {
-      clearInterval(interval);
-      setAiAnalysisProgress(100);
+    setTimeout(
+      () => {
+        clearInterval(interval)
+        setAiAnalysisProgress(100)
 
-      setTimeout(() => {
-        setIsLoading(false);
-        setAiAnalysis(mockAIAnalysis);
-        setShowAIResult(true);
-      }, 500);
-    }, 3000 + Math.random() * 2000);
-  };
+        setTimeout(() => {
+          setIsLoading(false)
+          setAiAnalysis(mockAIAnalysis)
+          setShowAIResult(true)
+        }, 500)
+      },
+      3000 + Math.random() * 2000
+    )
+  }
 
   // Function to handle confirmation of AI evaluation
   const handleConfirmSubmission = () => {
-    setShowAIResult(false);
-  
+    setShowAIResult(false)
+
     // Add XP to character
-    const xpEarned = aiAnalysis?.xpEarned || quest.rewards.xp;
-    addXp(xpEarned);
-  
+    const xpEarned = aiAnalysis?.xpEarned || quest.rewards.xp
+    addXp(xpEarned)
+
     // Manually show XP gain notification
     addNotification({
-      type: "reward",
-      title: "XP Gained",
+      type: 'reward',
+      title: 'XP Gained',
       message: `You earned ${xpEarned} XP!`,
       duration: 3000,
-    });
-  
+    })
+
     // Send a notification when quest is completed
     addNotification({
-      type: "success",
-      title: "Quest Completed",
+      type: 'success',
+      title: 'Quest Completed',
       message: `You've successfully completed "${quest.title}"`,
       duration: 5000,
       action: {
-        label: "View Rewards",
+        label: 'View Rewards',
         onClick: () => {
-          router.push("/character");
+          router.push('/character')
         },
       },
-    });
-  
+    })
+
     // Show success dialog
-    setShowSuccessDialog(true);
-  
+    setShowSuccessDialog(true)
+
     // Check if quest has isSpecial property and if it's true
     if ('isSpecial' in quest && quest.isSpecial) {
-      unlockAchievement("first-quest");
+      unlockAchievement('first-quest')
     }
-  
+
     // Special case for the first quest to unlock the "First Steps" achievement
-    if (questId === "q1") {
-      unlockAchievement("first-quest");
+    if (questId === 'q1') {
+      unlockAchievement('first-quest')
     }
-  };
+  }
   // Navigate back to quests after successful submission
   const handleSuccessClose = () => {
-    setShowSuccessDialog(false);
-    router.push("/quest");
-  };
+    setShowSuccessDialog(false)
+    router.push('/quest')
+  }
 
   return (
     <ErrorBoundary>
@@ -263,8 +271,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
               variant="ghost"
               size="sm"
               className="flex items-center"
-              onClick={() => router.push("/quest")}
-            >
+              onClick={() => router.push('/quest')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               <span>Back</span>
             </Button>
@@ -309,7 +316,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                   <span>
                     {quest.deadline
                       ? formatDeadline(quest.deadline)
-                      : "No deadline"}
+                      : 'No deadline'}
                   </span>
                 </div>
               </CardContent>
@@ -364,8 +371,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                       ([stat, value]) => (
                         <div
                           key={stat}
-                          className="bg-secondary/30 p-2 rounded-lg flex flex-col items-center"
-                        >
+                          className="bg-secondary/30 p-2 rounded-lg flex flex-col items-center">
                           <span className="text-xs font-medium">{stat}</span>
                           <span className="text-sm">+{value}</span>
                         </div>
@@ -398,8 +404,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                         variant="destructive"
                         size="sm"
                         className="absolute top-2 right-2"
-                        onClick={() => setUploadedImage(null)}
-                      >
+                        onClick={() => setUploadedImage(null)}>
                         Remove
                       </Button>
                     </div>
@@ -435,29 +440,25 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                     <Button
                       className="w-full ai-gradient-bg"
                       disabled={!uploadedImage || isLoading}
-                      onClick={handleSubmitQuest}
-                    >
+                      onClick={handleSubmitQuest}>
                       {isLoading ? (
                         <span className="flex items-center">
                           <svg
                             className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
-                            viewBox="0 0 24 24"
-                          >
+                            viewBox="0 0 24 24">
                             <circle
                               className="opacity-25"
                               cx="12"
                               cy="12"
                               r="10"
                               stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
+                              strokeWidth="4"></circle>
                             <path
                               className="opacity-75"
                               fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
                           Processing...
                         </span>
@@ -623,8 +624,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
               </Button>
               <Button
                 className="ai-gradient-bg"
-                onClick={handleConfirmSubmission}
-              >
+                onClick={handleConfirmSubmission}>
                 Confirm Submission
               </Button>
             </DialogFooter>
@@ -656,8 +656,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
 
               <Button
                 onClick={handleSuccessClose}
-                className="ai-gradient-bg w-full"
-              >
+                className="ai-gradient-bg w-full">
                 Back to Quests
               </Button>
             </div>
@@ -665,5 +664,5 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
         </Dialog>
       </div>
     </ErrorBoundary>
-  );
+  )
 }

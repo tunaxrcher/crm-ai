@@ -1,7 +1,10 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Button } from "@src/components/ui/button";
+import { useState } from 'react'
+
+import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
 import {
   Card,
   CardContent,
@@ -9,16 +12,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@src/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@src/components/ui/tabs";
-import { Badge } from "@src/components/ui/badge";
-import { Progress } from "@src/components/ui/progress";
-import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
+} from '@src/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -27,7 +21,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@src/components/ui/dialog";
+} from '@src/components/ui/dialog'
+import { Progress } from '@src/components/ui/progress'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@src/components/ui/tabs'
 import {
   Award,
   Clock,
@@ -39,217 +40,217 @@ import {
   Star,
   Trophy,
   Unlock,
-} from "lucide-react";
+} from 'lucide-react'
 
 // Mock reward data
 const mockRewards = [
   {
-    id: "reward-1",
-    name: "XP Boost",
-    description: "Gain 50% more XP from your next 3 quests",
+    id: 'reward-1',
+    name: 'XP Boost',
+    description: 'Gain 50% more XP from your next 3 quests',
     icon: <Sparkles className="h-10 w-10 text-purple-400" />,
     cost: 500,
-    type: "buff",
+    type: 'buff',
     unlocked: true,
   },
   {
-    id: "reward-2",
-    name: "Time Extension",
-    description: "Extend the deadline of any quest by 24 hours",
+    id: 'reward-2',
+    name: 'Time Extension',
+    description: 'Extend the deadline of any quest by 24 hours',
     icon: <Clock className="h-10 w-10 text-blue-400" />,
     cost: 300,
-    type: "buff",
+    type: 'buff',
     unlocked: true,
   },
   {
-    id: "reward-3",
-    name: "Title: The Diligent",
-    description: "Special title to display on your profile",
+    id: 'reward-3',
+    name: 'Title: The Diligent',
+    description: 'Special title to display on your profile',
     icon: <Trophy className="h-10 w-10 text-yellow-400" />,
     cost: 1000,
-    type: "title",
+    type: 'title',
     unlocked: true,
   },
   {
-    id: "reward-4",
-    name: "Custom Avatar Frame",
-    description: "Unique frame for your character portrait",
+    id: 'reward-4',
+    name: 'Custom Avatar Frame',
+    description: 'Unique frame for your character portrait',
     icon: <Award className="h-10 w-10 text-green-400" />,
     cost: 2000,
-    type: "cosmetic",
+    type: 'cosmetic',
     unlocked: false,
     requiredLevel: 15,
   },
   {
-    id: "reward-5",
-    name: "Stat Reset",
-    description: "Reset and reallocate all your stat points",
+    id: 'reward-5',
+    name: 'Stat Reset',
+    description: 'Reset and reallocate all your stat points',
     icon: <Unlock className="h-10 w-10 text-red-400" />,
     cost: 1500,
-    type: "special",
+    type: 'special',
     unlocked: false,
     requiredLevel: 20,
   },
-];
+]
 
 // Mock achievements data
 const mockAchievements = [
   {
-    id: "achievement-1",
-    name: "First Quest",
-    description: "Complete your first quest",
-    icon: "🏆",
+    id: 'achievement-1',
+    name: 'First Quest',
+    description: 'Complete your first quest',
+    icon: '🏆',
     progress: 100,
     completed: true,
     reward: {
-      type: "xp",
+      type: 'xp',
       amount: 100,
     },
   },
   {
-    id: "achievement-2",
-    name: "Daily Streak",
-    description: "Complete quests for 7 consecutive days",
-    icon: "⚡",
+    id: 'achievement-2',
+    name: 'Daily Streak',
+    description: 'Complete quests for 7 consecutive days',
+    icon: '⚡',
     progress: 71, // 5 out of 7 days
     completed: false,
     reward: {
-      type: "title",
-      name: "The Consistent",
+      type: 'title',
+      name: 'The Consistent',
     },
   },
   {
-    id: "achievement-3",
-    name: "Level Up",
-    description: "Reach level 10",
-    icon: "🌟",
+    id: 'achievement-3',
+    name: 'Level Up',
+    description: 'Reach level 10',
+    icon: '🌟',
     progress: 80, // Level 8 out of 10
     completed: false,
     reward: {
-      type: "points",
+      type: 'points',
       amount: 500,
     },
   },
   {
-    id: "achievement-4",
-    name: "Marketing Guru",
-    description: "Complete 20 marketing quests",
-    icon: "📢",
+    id: 'achievement-4',
+    name: 'Marketing Guru',
+    description: 'Complete 20 marketing quests',
+    icon: '📢',
     progress: 65, // 13 out of 20 quests
     completed: false,
     reward: {
-      type: "buff",
-      name: "Marketing Excellence",
-      description: "+10% to DEX and INT stats for 7 days",
+      type: 'buff',
+      name: 'Marketing Excellence',
+      description: '+10% to DEX and INT stats for 7 days',
     },
   },
   {
-    id: "achievement-5",
-    name: "Team Player",
-    description: "Participate in 5 team quests",
-    icon: "👥",
+    id: 'achievement-5',
+    name: 'Team Player',
+    description: 'Participate in 5 team quests',
+    icon: '👥',
     progress: 60, // 3 out of 5 team quests
     completed: false,
     reward: {
-      type: "points",
+      type: 'points',
       amount: 300,
     },
   },
   {
-    id: "achievement-6",
-    name: "Flawless Execution",
-    description: "Complete a quest with perfect ratings in all stats",
-    icon: "✨",
+    id: 'achievement-6',
+    name: 'Flawless Execution',
+    description: 'Complete a quest with perfect ratings in all stats',
+    icon: '✨',
     progress: 0,
     completed: false,
     reward: {
-      type: "title",
-      name: "The Perfect",
+      type: 'title',
+      name: 'The Perfect',
     },
   },
-];
+]
 
 // Mock inventory data
 const mockInventory = [
   {
-    id: "inventory-1",
-    name: "XP Boost",
-    description: "Gain 50% more XP from your next 3 quests",
+    id: 'inventory-1',
+    name: 'XP Boost',
+    description: 'Gain 50% more XP from your next 3 quests',
     icon: <Sparkles className="h-6 w-6 text-purple-400" />,
     quantity: 2,
-    type: "buff",
+    type: 'buff',
     usable: true,
   },
   {
-    id: "inventory-2",
-    name: "Title: The Diligent",
-    description: "Special title to display on your profile",
+    id: 'inventory-2',
+    name: 'Title: The Diligent',
+    description: 'Special title to display on your profile',
     icon: <Trophy className="h-6 w-6 text-yellow-400" />,
     quantity: 1,
-    type: "title",
+    type: 'title',
     usable: true,
     active: false,
   },
-];
+]
 
 export default function RewardPage() {
-  const [activeTab, setActiveTab] = useState("rewards");
-  const [selectedReward, setSelectedReward] = useState<any>(null);
-  const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
-  const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null);
-  const [isInventoryDialogOpen, setIsInventoryDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('rewards')
+  const [selectedReward, setSelectedReward] = useState<any>(null)
+  const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false)
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState<any>(null)
+  const [isInventoryDialogOpen, setIsInventoryDialogOpen] = useState(false)
 
   // Mock user points
-  const userPoints = 750;
-  const userLevel = 8;
+  const userPoints = 750
+  const userLevel = 8
 
   // Format reward type badge
   const getRewardTypeBadge = (type: string) => {
     switch (type) {
-      case "buff":
+      case 'buff':
         return (
           <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
             {type}
           </Badge>
-        );
-      case "title":
+        )
+      case 'title':
         return (
           <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
             {type}
           </Badge>
-        );
-      case "cosmetic":
+        )
+      case 'cosmetic':
         return (
           <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
             {type}
           </Badge>
-        );
-      case "special":
+        )
+      case 'special':
         return (
           <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
             {type}
           </Badge>
-        );
+        )
       default:
-        return <Badge>{type}</Badge>;
+        return <Badge>{type}</Badge>
     }
-  };
+  }
 
   // Format achievement reward description
   const getAchievementRewardText = (reward: any) => {
     switch (reward.type) {
-      case "xp":
-        return `${reward.amount} XP`;
-      case "points":
-        return `${reward.amount} Points`;
-      case "title":
-        return `Title: ${reward.name}`;
-      case "buff":
-        return reward.description;
+      case 'xp':
+        return `${reward.amount} XP`
+      case 'points':
+        return `${reward.amount} Points`
+      case 'title':
+        return `Title: ${reward.name}`
+      case 'buff':
+        return reward.description
       default:
-        return "";
+        return ''
     }
-  };
+  }
 
   return (
     <div className="p-4 pb-20">
@@ -539,5 +540,5 @@ export default function RewardPage() {
         </DialogContent>
       </Dialog> */}
     </div>
-  );
+  )
 }

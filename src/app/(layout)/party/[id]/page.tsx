@@ -1,11 +1,11 @@
-import PartyDetailWrapper from "./PartyDetailWrapper";
+import PartyDetailWrapper from './PartyDetailWrapper'
 
 export default async function Page({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }) {
-  const { id } = await params;
+  const { id } = await params
 
-  return <PartyDetailWrapper teamId={id} />;
+  return <PartyDetailWrapper teamId={id} />
 }

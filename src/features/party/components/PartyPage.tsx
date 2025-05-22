@@ -1,171 +1,231 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent } from "@src/components/ui/card";
-import { Badge } from "@src/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@src/components/ui/dialog";
-import { Input } from "@src/components/ui/input";
-import { Label } from "@src/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
+import { useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
 import {
-  ArrowRight, ChevronLeft, ChevronRight, Info, Plus, Search, Shield, Users
-} from "lucide-react";
-import { useTeams, useTeamQuests, useJoinTeam, useCreateTeam } from "../hook/api";
-import type { Team } from "../types";
-import TeamDetailView from "./TeamDetailView";
-import TeamQuestItem from "./TeamQuestItem";
-import { LoadingState, ErrorDisplay, EmptyState, SkeletonLoading } from "@src/components/shared";
-import { useSimpleNotification } from "@src/components/shared/SimpleToast";
-import { useError } from "@src/components/shared/ErrorProvider";
-import useErrorHandler from "@src/hooks/useErrorHandler";
-import { withErrorHandling } from "@src/hooks";
+  EmptyState,
+  ErrorDisplay,
+  LoadingState,
+  SkeletonLoading,
+} from '@src/components/shared'
+import { useError } from '@src/components/shared/ErrorProvider'
+import { useSimpleNotification } from '@src/components/shared/SimpleToast'
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
+import { Card, CardContent } from '@src/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@src/components/ui/dialog'
+import { Input } from '@src/components/ui/input'
+import { Label } from '@src/components/ui/label'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@src/components/ui/tabs'
+import { withErrorHandling } from '@src/hooks'
+import useErrorHandler from '@src/hooks/useErrorHandler'
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Plus,
+  Search,
+  Shield,
+  Users,
+} from 'lucide-react'
+
+import {
+  useCreateTeam,
+  useJoinTeam,
+  useTeamQuests,
+  useTeams,
+} from '../hook/api'
+import type { Team } from '../types'
+import TeamDetailView from './TeamDetailView'
+import TeamQuestItem from './TeamQuestItem'
 
 function PartyPageComponent() {
-  const router = useRouter();
+  const router = useRouter()
   // Use the SimpleNotification from our shared components
-  const { addNotification } = useSimpleNotification();
+  const { addNotification } = useSimpleNotification()
 
   // Use error handler context
-  const { showError } = useError();
-  const { handleAsyncOperation } = useErrorHandler();
+  const { showError } = useError()
+  const { handleAsyncOperation } = useErrorHandler()
 
   // State for UI
-  const [activeTab, setActiveTab] = useState("browse");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showTeamDetail, setShowTeamDetail] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false);
-  const [showJoinTeamDialog, setShowJoinTeamDialog] = useState(false);
-  const [teamJoinMessage, setTeamJoinMessage] = useState("");
+  const [activeTab, setActiveTab] = useState('browse')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showTeamDetail, setShowTeamDetail] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
+  const [showCreateTeamDialog, setShowCreateTeamDialog] = useState(false)
+  const [showJoinTeamDialog, setShowJoinTeamDialog] = useState(false)
+  const [teamJoinMessage, setTeamJoinMessage] = useState('')
   const [newTeamData, setNewTeamData] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     isPrivate: false,
-    tags: ["tag1", "tag2"],
-    maxMembers: 5
-  });
+    tags: ['tag1', 'tag2'],
+    maxMembers: 5,
+  })
 
   // API Hooks
-  const { teams, loading: teamsLoading, error: teamsError, refetchTeams } = useTeams();
-  const { quests, loading: questsLoading, error: questsError, refetchQuests } = useTeamQuests();
-  const { requestJoin, loading: joinLoading } = useJoinTeam();
-  const { create: createTeam, loading: createLoading } = useCreateTeam();
+  const {
+    teams,
+    loading: teamsLoading,
+    error: teamsError,
+    refetch: refetchTeams,
+  } = useTeams()
+  const {
+    quests,
+    loading: questsLoading,
+    error: questsError,
+    refetch: refetchQuests,
+  } = useTeamQuests()
+  const { requestJoin, loading: joinLoading } = useJoinTeam()
+  const { create: createTeam, loading: createLoading } = useCreateTeam()
 
   // Filter teams based on search query
   const filteredTeams = teams.filter((team) => {
-    if (!searchQuery) return true;
+    if (!searchQuery) return true
 
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.toLowerCase()
     return (
       team.name.toLowerCase().includes(query) ||
       team.description.toLowerCase().includes(query) ||
-      team.tags.some(tag => tag.includes(query))
-    );
-  });
+      team.tags.some((tag) => tag.includes(query))
+    )
+  })
 
   // Handle join team
   const handleJoinTeam = (team: Team) => {
     if (team.isFull) {
       showError(`ทีม ${team.name} เต็มแล้ว`, {
-        message: "ไม่สามารถเข้าร่วมทีมนี้ได้ในขณะนี้",
-        severity: "warning",
-        autoHideAfter: 5000
-      });
-      return;
+        message: 'ไม่สามารถเข้าร่วมทีมนี้ได้ในขณะนี้',
+        severity: 'warning',
+        autoHideAfter: 5000,
+      })
+      return
     }
 
-    setSelectedTeam(team);
-    setShowJoinTeamDialog(true);
-  };
+    setSelectedTeam(team)
+    setShowJoinTeamDialog(true)
+  }
 
   // Handle submit join request with error handling
   const handleSubmitJoinRequest = async () => {
-    if (!selectedTeam) return;
+    if (!selectedTeam) return
 
     const result = await handleAsyncOperation(async () => {
-      return await requestJoin(selectedTeam.id, teamJoinMessage);
-    });
+      return await requestJoin(selectedTeam.id, teamJoinMessage)
+    })
 
     if (result) {
       showError(`ส่งคำขอเข้าร่วมทีม ${selectedTeam.name} เรียบร้อยแล้ว`, {
-        severity: "info",
-        autoHideAfter: 3000
-      });
+        severity: 'info',
+        autoHideAfter: 3000,
+      })
 
-      setShowJoinTeamDialog(false);
-      setTeamJoinMessage("");
+      setShowJoinTeamDialog(false)
+      setTeamJoinMessage('')
     }
-  };
+  }
 
   // View team details
   const handleViewTeamDetails = (team: Team) => {
-    setSelectedTeam(team);
-    setShowTeamDetail(true);
-  };
+    setSelectedTeam(team)
+    setShowTeamDetail(true)
+  }
 
   // Back to teams list
   const handleBackToTeams = () => {
-    setShowTeamDetail(false);
-    setSelectedTeam(null);
-  };
+    setShowTeamDetail(false)
+    setSelectedTeam(null)
+  }
 
   // Handle create team with error handling
   const handleCreateTeam = async () => {
-    if (newTeamData.name.trim() === "") {
-      showError("กรุณาระบุชื่อทีม", {
-        severity: "warning",
-        autoHideAfter: 3000
-      });
-      return;
+    if (newTeamData.name.trim() === '') {
+      showError('กรุณาระบุชื่อทีม', {
+        severity: 'warning',
+        autoHideAfter: 3000,
+      })
+      return
     }
 
     const result = await handleAsyncOperation(async () => {
-      return await createTeam(newTeamData);
-    });
+      return await createTeam(newTeamData)
+    })
 
     if (result) {
-      showError("สร้างทีมสำเร็จแล้ว", {
-        message: "ทีมของคุณพร้อมรับสมาชิกแล้ว",
-        severity: "success",
-        autoHideAfter: 3000
-      });
+      // showError("สร้างทีมสำเร็จแล้ว", {
+      //   severity: "success",
+      //   autoHideAfter: 3000
+      // });
 
-      setShowCreateTeamDialog(false);
+      setShowCreateTeamDialog(false)
       setNewTeamData({
-        name: "",
-        description: "",
+        name: '',
+        description: '',
         isPrivate: false,
-        tags: ["tag1", "tag2"],
-        maxMembers: 5
-      });
+        tags: ['tag1', 'tag2'],
+        maxMembers: 5,
+      })
     }
-  };
+  }
 
   // Handle input changes for team creation
-  const handleTeamDataChange = (field: string, value: string | boolean | number | string[]) => {
-    setNewTeamData(prev => ({
+  const handleTeamDataChange = (
+    field: string,
+    value: string | boolean | number | string[]
+  ) => {
+    setNewTeamData((prev) => ({
       ...prev,
-      [field]: value
-    }));
-  };
+      [field]: value,
+    }))
+  }
 
   // Get activity badge (helper function)
   const getActivityBadge = (activity: string) => {
     switch (activity) {
       case 'very-active':
-        return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">Very Active</Badge>;
+        return (
+          <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+            Very Active
+          </Badge>
+        )
       case 'active':
-        return <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">Active</Badge>;
+        return (
+          <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
+            Active
+          </Badge>
+        )
       case 'semi-active':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">Semi-Active</Badge>;
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
+            Semi-Active
+          </Badge>
+        )
       case 'inactive':
-        return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">Inactive</Badge>;
+        return (
+          <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
+            Inactive
+          </Badge>
+        )
       default:
-        return <Badge>Unknown</Badge>;
+        return <Badge>Unknown</Badge>
     }
-  };
+  }
 
   return (
     <div className="p-4 pb-20">
@@ -174,8 +234,7 @@ function PartyPageComponent() {
           variant="ghost"
           size="icon"
           className="mr-2"
-          onClick={() => router.back()}
-        >
+          onClick={() => router.back()}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
 
@@ -199,8 +258,7 @@ function PartyPageComponent() {
               <Button
                 size="sm"
                 className="ai-gradient-bg"
-                onClick={() => setShowCreateTeamDialog(true)}
-              >
+                onClick={() => setShowCreateTeamDialog(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 สร้างทีม
               </Button>
@@ -251,19 +309,26 @@ function PartyPageComponent() {
                                 )}
                               </div>
 
-                              <p className="text-sm text-muted-foreground">{team.description}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {team.description}
+                              </p>
 
                               <div className="flex items-center text-xs text-muted-foreground space-x-2">
                                 <span>Level {team.level}</span>
                                 <span>•</span>
-                                <span>{team.members}/{team.maxMembers} สมาชิก</span>
+                                <span>
+                                  {team.members}/{team.maxMembers} สมาชิก
+                                </span>
                                 <span>•</span>
                                 <span>นำโดย {team.leader.name}</span>
                               </div>
 
                               <div className="flex flex-wrap gap-2 mt-2">
                                 {team.tags.map((tag, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">
+                                  <Badge
+                                    key={index}
+                                    variant="outline"
+                                    className="text-xs">
                                     {tag}
                                   </Badge>
                                 ))}
@@ -277,19 +342,21 @@ function PartyPageComponent() {
                               size="sm"
                               variant="outline"
                               className="flex items-center"
-                              onClick={() => handleViewTeamDetails(team)}
-                            >
+                              onClick={() => handleViewTeamDetails(team)}>
                               รายละเอียด
                               <ChevronRight className="ml-1 h-4 w-4" />
                             </Button>
 
                             <Button
                               size="sm"
-                              className={team.isFull ? "bg-secondary/50 text-muted-foreground cursor-not-allowed" : "ai-gradient-bg"}
+                              className={
+                                team.isFull
+                                  ? 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
+                                  : 'ai-gradient-bg'
+                              }
                               onClick={() => handleJoinTeam(team)}
-                              disabled={team.isFull}
-                            >
-                              {team.isFull ? "เต็ม" : "เข้าร่วม"}
+                              disabled={team.isFull}>
+                              {team.isFull ? 'เต็ม' : 'เข้าร่วม'}
                             </Button>
                           </div>
                         </div>
@@ -343,21 +410,21 @@ function PartyPageComponent() {
               <Card className="mb-4">
                 <CardContent className="p-6 text-center">
                   <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">คุณยังไม่ได้อยู่ในทีม</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    คุณยังไม่ได้อยู่ในทีม
+                  </h3>
                   <p className="text-muted-foreground mb-4">
                     เข้าร่วมทีมที่มีอยู่หรือสร้างทีมของคุณเองเพื่อสนุกกับการเล่นเป็นทีม
                   </p>
                   <div className="flex justify-center space-x-4">
                     <Button
                       variant="outline"
-                      onClick={() => setActiveTab("browse")}
-                    >
+                      onClick={() => setActiveTab('browse')}>
                       ค้นหาทีม
                     </Button>
                     <Button
                       className="ai-gradient-bg"
-                      onClick={() => setShowCreateTeamDialog(true)}
-                    >
+                      onClick={() => setShowCreateTeamDialog(true)}>
                       สร้างทีมของคุณ
                     </Button>
                   </div>
@@ -376,7 +443,9 @@ function PartyPageComponent() {
                       <Shield className="h-5 w-5 mr-2 text-blue-400 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium">ภารกิจพิเศษ</p>
-                        <p className="text-xs text-muted-foreground">เข้าถึงภารกิจเฉพาะทีมที่ให้รางวัลดีกว่า</p>
+                        <p className="text-xs text-muted-foreground">
+                          เข้าถึงภารกิจเฉพาะทีมที่ให้รางวัลดีกว่า
+                        </p>
                       </div>
                     </div>
 
@@ -384,7 +453,9 @@ function PartyPageComponent() {
                       <ArrowRight className="h-5 w-5 mr-2 text-purple-400 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium">โบนัส XP</p>
-                        <p className="text-xs text-muted-foreground">รับ XP โบนัสเมื่อทำภารกิจสำเร็จเป็นทีม</p>
+                        <p className="text-xs text-muted-foreground">
+                          รับ XP โบนัสเมื่อทำภารกิจสำเร็จเป็นทีม
+                        </p>
                       </div>
                     </div>
 
@@ -392,7 +463,9 @@ function PartyPageComponent() {
                       <Users className="h-5 w-5 mr-2 text-green-400 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium">แชทของทีม</p>
-                        <p className="text-xs text-muted-foreground">สื่อสารและประสานงานกับสมาชิกในทีมของคุณ</p>
+                        <p className="text-xs text-muted-foreground">
+                          สื่อสารและประสานงานกับสมาชิกในทีมของคุณ
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -403,11 +476,19 @@ function PartyPageComponent() {
         </div>
       ) : (
         // Team detail view (rendered when a team is selected)
-        selectedTeam && <TeamDetailView team={selectedTeam} onBack={handleBackToTeams} onJoin={handleJoinTeam} />
+        selectedTeam && (
+          <TeamDetailView
+            team={selectedTeam}
+            onBack={handleBackToTeams}
+            onJoin={handleJoinTeam}
+          />
+        )
       )}
 
       {/* Create Team Dialog */}
-      <Dialog open={showCreateTeamDialog} onOpenChange={setShowCreateTeamDialog}>
+      <Dialog
+        open={showCreateTeamDialog}
+        onOpenChange={setShowCreateTeamDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>สร้างทีมใหม่</DialogTitle>
@@ -433,7 +514,9 @@ function PartyPageComponent() {
                 id="team-description"
                 placeholder="อธิบายจุดมุ่งหมายและเป้าหมายของทีม"
                 value={newTeamData.description}
-                onChange={(e) => handleTeamDataChange('description', e.target.value)}
+                onChange={(e) =>
+                  handleTeamDataChange('description', e.target.value)
+                }
               />
             </div>
 
@@ -441,11 +524,17 @@ function PartyPageComponent() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateTeamDialog(false)} disabled={createLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateTeamDialog(false)}
+              disabled={createLoading}>
               ยกเลิก
             </Button>
-            <Button onClick={handleCreateTeam} className="ai-gradient-bg" disabled={createLoading}>
-              {createLoading ? "กำลังสร้าง..." : "สร้างทีม"}
+            <Button
+              onClick={handleCreateTeam}
+              className="ai-gradient-bg"
+              disabled={createLoading}>
+              {createLoading ? 'กำลังสร้าง...' : 'สร้างทีม'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -456,9 +545,7 @@ function PartyPageComponent() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>เข้าร่วม {selectedTeam?.name}</DialogTitle>
-            <DialogDescription>
-              ส่งคำขอเข้าร่วมทีมนี้
-            </DialogDescription>
+            <DialogDescription>ส่งคำขอเข้าร่วมทีมนี้</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -487,18 +574,24 @@ function PartyPageComponent() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowJoinTeamDialog(false)} disabled={joinLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setShowJoinTeamDialog(false)}
+              disabled={joinLoading}>
               ยกเลิก
             </Button>
-            <Button onClick={handleSubmitJoinRequest} className="ai-gradient-bg" disabled={joinLoading}>
-              {joinLoading ? "กำลังส่ง..." : "ส่งคำขอ"}
+            <Button
+              onClick={handleSubmitJoinRequest}
+              className="ai-gradient-bg"
+              disabled={joinLoading}>
+              {joinLoading ? 'กำลังส่ง...' : 'ส่งคำขอ'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 // ใช้ Higher Order Component เพื่อเพิ่ม error boundary
-export default withErrorHandling(PartyPageComponent);
+export default withErrorHandling(PartyPageComponent)

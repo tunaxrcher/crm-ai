@@ -1,13 +1,14 @@
-"use client";
+'use client'
 
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent } from "@src/components/ui/card";
-import { Badge } from "@src/components/ui/badge";
-import { Target } from "lucide-react";
-import type { GlobalTeamQuest } from "../types";
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
+import { Card, CardContent } from '@src/components/ui/card'
+import { Target } from 'lucide-react'
+
+import type { GlobalTeamQuest } from '../types'
 
 interface TeamQuestItemProps {
-  quest: GlobalTeamQuest;
+  quest: GlobalTeamQuest
 }
 
 export default function TeamQuestItem({ quest }: TeamQuestItemProps) {
@@ -15,15 +16,27 @@ export default function TeamQuestItem({ quest }: TeamQuestItemProps) {
   const getDifficultyBadge = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
-        return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">{difficulty}</Badge>;
+        return (
+          <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+            {difficulty}
+          </Badge>
+        )
       case 'medium':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">{difficulty}</Badge>;
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
+            {difficulty}
+          </Badge>
+        )
       case 'hard':
-        return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">{difficulty}</Badge>;
+        return (
+          <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
+            {difficulty}
+          </Badge>
+        )
       default:
-        return <Badge>{difficulty}</Badge>;
+        return <Badge>{difficulty}</Badge>
     }
-  };
+  }
 
   return (
     <Card className="overflow-hidden quest-item-hover cursor-pointer">
@@ -37,7 +50,9 @@ export default function TeamQuestItem({ quest }: TeamQuestItemProps) {
 
               <div>
                 <h3 className="font-medium">{quest.title}</h3>
-                <p className="text-sm text-muted-foreground">{quest.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {quest.description}
+                </p>
               </div>
             </div>
 
@@ -64,7 +79,9 @@ export default function TeamQuestItem({ quest }: TeamQuestItemProps) {
                 <div className="flex items-center text-xs space-x-2">
                   <span className="text-blue-400">{quest.rewards.xp} XP</span>
                   <span>•</span>
-                  <span className="text-yellow-400">{quest.rewards.points} Points</span>
+                  <span className="text-yellow-400">
+                    {quest.rewards.points} Points
+                  </span>
                   <span>•</span>
                   <span className="text-purple-400">{quest.rewards.buff}</span>
                 </div>
@@ -72,14 +89,11 @@ export default function TeamQuestItem({ quest }: TeamQuestItemProps) {
             </div>
           </div>
 
-          <Button
-            size="sm"
-            className="mt-1"
-          >
+          <Button size="sm" className="mt-1">
             Start Quest
           </Button>
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

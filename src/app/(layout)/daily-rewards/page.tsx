@@ -1,16 +1,18 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@src/components/ui/card";
-import { Button } from "@src/components/ui/button";
-import { Progress } from "@src/components/ui/progress";
+} from '@src/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -18,8 +20,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@src/components/ui/dialog";
-import { Badge } from "@src/components/ui/badge";
+} from '@src/components/ui/dialog'
+import { Progress } from '@src/components/ui/progress'
 import {
   Award,
   Calendar,
@@ -33,45 +35,45 @@ import {
   Star,
   Trophy,
   Zap,
-} from "lucide-react";
+} from 'lucide-react'
 
 // Type definitions
-type RewardType = "xp" | "points" | "buff" | "item" | "title" | "exclusive";
+type RewardType = 'xp' | 'points' | 'buff' | 'item' | 'title' | 'exclusive'
 
 interface BaseReward {
-  type: RewardType;
+  type: RewardType
 }
 
 interface XPReward extends BaseReward {
-  type: "xp";
-  amount: number;
+  type: 'xp'
+  amount: number
 }
 
 interface PointsReward extends BaseReward {
-  type: "points";
-  amount: number;
+  type: 'points'
+  amount: number
 }
 
 interface BuffReward extends BaseReward {
-  type: "buff";
-  name: string;
-  description: string;
+  type: 'buff'
+  name: string
+  description: string
 }
 
 interface ItemReward extends BaseReward {
-  type: "item";
-  name: string;
-  description: string;
+  type: 'item'
+  name: string
+  description: string
 }
 
 interface TitleReward extends BaseReward {
-  type: "title";
-  name: string;
+  type: 'title'
+  name: string
 }
 
 interface ExclusiveReward extends BaseReward {
-  type: "exclusive";
-  name: string;
+  type: 'exclusive'
+  name: string
 }
 
 type Reward =
@@ -80,99 +82,99 @@ type Reward =
   | BuffReward
   | ItemReward
   | TitleReward
-  | ExclusiveReward;
+  | ExclusiveReward
 
 interface DailyReward {
-  day: number;
-  reward: Reward;
-  icon: React.ReactNode;
+  day: number
+  reward: Reward
+  icon: React.ReactNode
 }
 
 interface StreakBonus {
-  streak: number;
-  reward: Reward;
-  claimed: boolean;
+  streak: number
+  reward: Reward
+  claimed: boolean
 }
 
 interface UserStreak {
-  currentStreak: number;
-  longestStreak: number;
-  lastClaimed: Date;
-  canClaimToday: boolean;
-  currentDay: number;
-  totalDaysClaimed: number;
+  currentStreak: number
+  longestStreak: number
+  lastClaimed: Date
+  canClaimToday: boolean
+  currentDay: number
+  totalDaysClaimed: number
 }
 
 // Mock daily rewards data
 const dailyRewards: DailyReward[] = [
   {
     day: 1,
-    reward: { type: "xp", amount: 50 },
+    reward: { type: 'xp', amount: 50 },
     icon: <Sparkles className="h-6 w-6 text-blue-400" />,
   },
   {
     day: 2,
-    reward: { type: "points", amount: 100 },
+    reward: { type: 'points', amount: 100 },
     icon: <Star className="h-6 w-6 text-yellow-400" />,
   },
   {
     day: 3,
     reward: {
-      type: "buff",
-      name: "XP Boost",
-      description: "+20% XP for 24 hours",
+      type: 'buff',
+      name: 'XP Boost',
+      description: '+20% XP for 24 hours',
     },
     icon: <Zap className="h-6 w-6 text-purple-400" />,
   },
   {
     day: 4,
-    reward: { type: "points", amount: 150 },
+    reward: { type: 'points', amount: 150 },
     icon: <Star className="h-6 w-6 text-yellow-400" />,
   },
   {
     day: 5,
     reward: {
-      type: "item",
-      name: "Time Extension",
-      description: "Extend one quest deadline by 24 hours",
+      type: 'item',
+      name: 'Time Extension',
+      description: 'Extend one quest deadline by 24 hours',
     },
     icon: <Clock className="h-6 w-6 text-cyan-400" />,
   },
   {
     day: 6,
-    reward: { type: "points", amount: 200 },
+    reward: { type: 'points', amount: 200 },
     icon: <Star className="h-6 w-6 text-yellow-400" />,
   },
   {
     day: 7,
-    reward: { type: "title", name: "The Consistent" },
+    reward: { type: 'title', name: 'The Consistent' },
     icon: <Trophy className="h-6 w-6 text-amber-400" />,
   },
-];
+]
 
 // Mock streak bonus rewards
 const streakBonuses: StreakBonus[] = [
   {
     streak: 7,
-    reward: { type: "title", name: "The Dedicated" },
+    reward: { type: 'title', name: 'The Dedicated' },
     claimed: true,
   },
   {
     streak: 14,
     reward: {
-      type: "buff",
-      name: "Sales Magnet",
-      description: "+10% chance for high-value deals for 3 days",
+      type: 'buff',
+      name: 'Sales Magnet',
+      description: '+10% chance for high-value deals for 3 days',
     },
     claimed: false,
   },
-  { streak: 21, reward: { type: "points", amount: 500 }, claimed: false },
+  { streak: 21, reward: { type: 'points', amount: 500 }, claimed: false },
   {
     streak: 30,
-    reward: { type: "exclusive", name: "Special Avatar Frame: Golden Streak" },
+    reward: { type: 'exclusive', name: 'Special Avatar Frame: Golden Streak' },
     claimed: false,
   },
-];
+]
 
 // Demo user streak data
 const mockUserStreak: UserStreak = {
@@ -182,52 +184,52 @@ const mockUserStreak: UserStreak = {
   canClaimToday: true,
   currentDay: 5, // in the 7-day cycle
   totalDaysClaimed: 24,
-};
+}
 
 // Function to format reward text
 const getRewardText = (reward: Reward): string => {
   switch (reward.type) {
-    case "xp":
-      return `${reward.amount} XP`;
-    case "points":
-      return `${reward.amount} Points`;
-    case "buff":
-      return `Buff: ${reward.name}`;
-    case "item":
-      return `Item: ${reward.name}`;
-    case "title":
-      return `Title: ${reward.name}`;
-    case "exclusive":
-      return `Exclusive: ${reward.name}`;
+    case 'xp':
+      return `${reward.amount} XP`
+    case 'points':
+      return `${reward.amount} Points`
+    case 'buff':
+      return `Buff: ${reward.name}`
+    case 'item':
+      return `Item: ${reward.name}`
+    case 'title':
+      return `Title: ${reward.name}`
+    case 'exclusive':
+      return `Exclusive: ${reward.name}`
     default:
-      return "";
+      return ''
   }
-};
+}
 
 // Function to get reward icon color based on type
 const getRewardBgColor = (reward: Reward): string => {
   switch (reward.type) {
-    case "xp":
-      return "bg-blue-500/20";
-    case "points":
-      return "bg-yellow-500/20";
-    case "buff":
-    case "item":
-      return "bg-purple-500/20";
-    case "title":
-      return "bg-green-500/20";
-    case "exclusive":
-      return "bg-orange-500/20";
+    case 'xp':
+      return 'bg-blue-500/20'
+    case 'points':
+      return 'bg-yellow-500/20'
+    case 'buff':
+    case 'item':
+      return 'bg-purple-500/20'
+    case 'title':
+      return 'bg-green-500/20'
+    case 'exclusive':
+      return 'bg-orange-500/20'
     default:
-      return "bg-gray-500/20";
+      return 'bg-gray-500/20'
   }
-};
+}
 
 export default function DailyRewardsPage() {
-  const router = useRouter();
-  const [showClaimDialog, setShowClaimDialog] = useState(false);
-  const [claimedReward, setClaimedReward] = useState<DailyReward | null>(null);
-  const [userStreak, setUserStreak] = useState<UserStreak>(mockUserStreak);
+  const router = useRouter()
+  const [showClaimDialog, setShowClaimDialog] = useState(false)
+  const [claimedReward, setClaimedReward] = useState<DailyReward | null>(null)
+  const [userStreak, setUserStreak] = useState<UserStreak>(mockUserStreak)
 
   // Calendar days (for the monthly view)
   const calendarDays = Array.from({ length: 30 }, (_, i) => ({
@@ -235,13 +237,13 @@ export default function DailyRewardsPage() {
     claimed: i < userStreak.totalDaysClaimed,
     isToday:
       i + 1 === userStreak.totalDaysClaimed + 1 && userStreak.canClaimToday,
-  }));
+  }))
 
   // Handle claim reward
   const handleClaimReward = () => {
-    const todayReward = dailyRewards[(userStreak.currentDay - 1) % 7];
-    setClaimedReward(todayReward);
-    setShowClaimDialog(true);
+    const todayReward = dailyRewards[(userStreak.currentDay - 1) % 7]
+    setClaimedReward(todayReward)
+    setShowClaimDialog(true)
 
     // In a real app, this would update the backend
     setUserStreak((prev) => ({
@@ -251,18 +253,18 @@ export default function DailyRewardsPage() {
       totalDaysClaimed: prev.totalDaysClaimed + 1,
       canClaimToday: false,
       lastClaimed: new Date(),
-    }));
-  };
+    }))
+  }
 
   // Format date as "Day, Month Date, Year"
   const formatDate = (date: Date): string => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
 
   return (
     <div className="p-4 pb-20">
@@ -271,8 +273,7 @@ export default function DailyRewardsPage() {
           variant="ghost"
           size="icon"
           className="mr-2"
-          onClick={() => router.push("/")}
-        >
+          onClick={() => router.push('/')}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
 
@@ -299,7 +300,7 @@ export default function DailyRewardsPage() {
                     {userStreak.currentStreak} Day Streak
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Keep it going! Your longest streak is{" "}
+                    Keep it going! Your longest streak is{' '}
                     {userStreak.longestStreak} days
                   </p>
                 </div>
@@ -310,7 +311,7 @@ export default function DailyRewardsPage() {
               <div className="mt-4 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span>
-                    Next streak bonus at{" "}
+                    Next streak bonus at{' '}
                     {Math.ceil(userStreak.currentStreak / 7) * 7} days
                   </span>
                   <span>
@@ -355,12 +356,12 @@ export default function DailyRewardsPage() {
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
             {dailyRewards.map((reward, index) => {
-              const isActive = index + 1 === userStreak.currentDay;
+              const isActive = index + 1 === userStreak.currentDay
               const isClaimed =
                 index + 1 < userStreak.currentDay ||
                 (index + 1 === userStreak.currentDay &&
-                  !userStreak.canClaimToday);
-              const isFuture = index + 1 > userStreak.currentDay;
+                  !userStreak.canClaimToday)
+              const isFuture = index + 1 > userStreak.currentDay
 
               return (
                 <div
@@ -369,13 +370,12 @@ export default function DailyRewardsPage() {
                     relative p-3 rounded-lg border-2 text-center transition-all
                     ${
                       isActive && userStreak.canClaimToday
-                        ? "ai-gradient-border animate-pulse"
-                        : "border-border"
+                        ? 'ai-gradient-border animate-pulse'
+                        : 'border-border'
                     }
-                    ${isClaimed ? "bg-secondary/20" : ""}
-                    ${isFuture ? "opacity-70" : ""}
-                  `}
-                >
+                    ${isClaimed ? 'bg-secondary/20' : ''}
+                    ${isFuture ? 'opacity-70' : ''}
+                  `}>
                   <div className="absolute top-1 left-1 bg-secondary/60 text-xs px-1 rounded">
                     Day {reward.day}
                   </div>
@@ -383,8 +383,7 @@ export default function DailyRewardsPage() {
                   <div
                     className={`mx-auto my-2 p-2 rounded-full ${getRewardBgColor(
                       reward.reward
-                    )}`}
-                  >
+                    )}`}>
                     {reward.icon}
                   </div>
 
@@ -398,7 +397,7 @@ export default function DailyRewardsPage() {
                     </div>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
 
@@ -406,11 +405,10 @@ export default function DailyRewardsPage() {
             <Button
               className="ai-gradient-bg"
               onClick={handleClaimReward}
-              disabled={!userStreak.canClaimToday}
-            >
+              disabled={!userStreak.canClaimToday}>
               {userStreak.canClaimToday
                 ? "Claim Today's Reward"
-                : "Already Claimed Today"}
+                : 'Already Claimed Today'}
             </Button>
           </div>
         </CardContent>
@@ -428,22 +426,20 @@ export default function DailyRewardsPage() {
         <CardContent>
           <div className="space-y-4">
             {streakBonuses.map((bonus, index) => {
-              const isUnlocked = userStreak.currentStreak >= bonus.streak;
+              const isUnlocked = userStreak.currentStreak >= bonus.streak
 
               return (
                 <div
                   key={index}
                   className={`
                     flex items-center p-3 rounded-lg border
-                    ${isUnlocked ? "border-amber-500/30" : "border-border"}
-                    ${bonus.claimed ? "bg-secondary/20" : ""}
-                  `}
-                >
+                    ${isUnlocked ? 'border-amber-500/30' : 'border-border'}
+                    ${bonus.claimed ? 'bg-secondary/20' : ''}
+                  `}>
                   <div
                     className={`p-2 rounded-lg mr-3 ${getRewardBgColor(
                       bonus.reward
-                    )}`}
-                  >
+                    )}`}>
                     {isUnlocked ? (
                       <Trophy className="h-6 w-6 text-amber-400" />
                     ) : (
@@ -469,7 +465,7 @@ export default function DailyRewardsPage() {
 
                     {!isUnlocked && (
                       <div className="text-xs text-muted-foreground mt-1">
-                        Unlocks in {bonus.streak - userStreak.currentStreak}{" "}
+                        Unlocks in {bonus.streak - userStreak.currentStreak}{' '}
                         more days
                       </div>
                     )}
@@ -481,7 +477,7 @@ export default function DailyRewardsPage() {
                     </Button>
                   )}
                 </div>
-              );
+              )
             })}
           </div>
         </CardContent>
@@ -520,10 +516,9 @@ export default function DailyRewardsPage() {
                 key={index}
                 className={`
                   h-10 flex items-center justify-center rounded-md text-sm relative
-                  ${day.claimed ? "bg-green-500/20" : "bg-secondary/10"}
-                  ${day.isToday ? "ring-2 ring-blue-400" : ""}
-                `}
-              >
+                  ${day.claimed ? 'bg-green-500/20' : 'bg-secondary/10'}
+                  ${day.isToday ? 'ring-2 ring-blue-400' : ''}
+                `}>
                 {day.day}
                 {day.claimed && (
                   <div className="absolute bottom-1 right-1">
@@ -596,8 +591,7 @@ export default function DailyRewardsPage() {
               <div
                 className={`p-4 ${getRewardBgColor(
                   claimedReward.reward
-                )} rounded-full mb-4`}
-              >
+                )} rounded-full mb-4`}>
                 {claimedReward.icon}
               </div>
 
@@ -607,7 +601,7 @@ export default function DailyRewardsPage() {
                 </h3>
                 <p className="text-lg">{getRewardText(claimedReward.reward)}</p>
 
-                {"description" in claimedReward.reward &&
+                {'description' in claimedReward.reward &&
                   claimedReward.reward.description && (
                     <p className="text-sm text-muted-foreground mt-2">
                       {claimedReward.reward.description}
@@ -629,13 +623,12 @@ export default function DailyRewardsPage() {
           <DialogFooter>
             <Button
               onClick={() => setShowClaimDialog(false)}
-              className="w-full ai-gradient-bg"
-            >
+              className="w-full ai-gradient-bg">
               Awesome!
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

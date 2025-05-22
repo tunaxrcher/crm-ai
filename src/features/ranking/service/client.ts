@@ -1,27 +1,30 @@
-import { GetRankingsParams, GetRankingsResponse } from '../types';
+import { GetRankingsParams, GetRankingsResponse } from '../types'
 
 /**
  * Client service for getting rankings data from the API
  */
-export async function getRankings({ period, characterClass }: GetRankingsParams): Promise<GetRankingsResponse> {
+export async function getRankings({
+  period,
+  characterClass,
+}: GetRankingsParams): Promise<GetRankingsResponse> {
   try {
-    const params = new URLSearchParams();
-    params.append('period', period);
-    params.append('class', characterClass);
+    const params = new URLSearchParams()
+    params.append('period', period)
+    params.append('class', characterClass)
 
-    const response = await fetch(`/api/ranking?${params.toString()}`);
+    const response = await fetch(`/api/ranking?${params.toString()}`)
 
     if (!response.ok) {
-      throw new Error('Failed to fetch rankings data');
+      throw new Error('Failed to fetch rankings data')
     }
 
-    const data = await response.json();
-    return data;
+    const data = await response.json()
+    return data
   } catch (error) {
-    console.error('Error fetching rankings from API:', error);
+    console.error('Error fetching rankings from API:', error)
     return {
       rankings: [],
-    };
+    }
   }
 }
 
@@ -30,16 +33,16 @@ export async function getRankings({ period, characterClass }: GetRankingsParams)
  */
 export async function getClassConfig() {
   try {
-    const response = await fetch('/api/ranking/class-config');
+    const response = await fetch('/api/ranking/class-config')
 
     if (!response.ok) {
-      throw new Error('Failed to fetch class config data');
+      throw new Error('Failed to fetch class config data')
     }
 
-    const data = await response.json();
-    return data;
+    const data = await response.json()
+    return data
   } catch (error) {
-    console.error('Error fetching class config from API:', error);
-    return {};
+    console.error('Error fetching class config from API:', error)
+    return {}
   }
 }

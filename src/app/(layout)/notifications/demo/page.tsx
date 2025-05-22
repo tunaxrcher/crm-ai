@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 export default function NotificationDemoPage() {
   return (
@@ -12,5 +12,5 @@ export default function NotificationDemoPage() {
         <p>Please check back later!</p>
       </div>
     </div>
-  );
+  )
 }

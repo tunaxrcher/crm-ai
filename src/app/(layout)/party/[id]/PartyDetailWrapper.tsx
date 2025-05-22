@@ -1,23 +1,27 @@
-"use client";
+'use client'
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { useTeamDetails } from "@src/features/party/hook/api";
-import TeamDetailView from "@src/features/party/components/TeamDetailView";
-import { Team } from "@src/features/party/types";
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent } from "@src/components/ui/card";
-import { ChevronLeft, Info } from "lucide-react";
-import { Skeleton } from "@src/components/ui/skeleton";
+import { useEffect, useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { Button } from '@src/components/ui/button'
+import { Card, CardContent } from '@src/components/ui/card'
+import { Skeleton } from '@src/components/ui/skeleton'
+import TeamDetailView from '@src/features/party/components/TeamDetailView'
+import { useTeamDetails } from '@src/features/party/hook/api'
+import { Team } from '@src/features/party/types'
+import { ChevronLeft, Info } from 'lucide-react'
 
 interface PartyDetailWrapperProps {
-  teamId: string;
+  teamId: string
 }
 
-export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) {
-  const router = useRouter();
-  const { team, loading, error } = useTeamDetails(teamId);
-  const [basicTeam, setBasicTeam] = useState<Team | null>(null);
+export default function PartyDetailWrapper({
+  teamId,
+}: PartyDetailWrapperProps) {
+  const router = useRouter()
+  const { team, loading, error } = useTeamDetails(teamId)
+  const [basicTeam, setBasicTeam] = useState<Team | null>(null)
 
   // Create a basic team object for the TeamDetailView when we have data
   useEffect(() => {
@@ -31,33 +35,33 @@ export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) 
         level: team.level || 1,
         xp: team.xp || 0,
         xpToNextLevel: team.xpToNextLevel || 1000,
-        joinRequirement: "",
-        leader: team.members?.find(m => m.isLeader) || {
-          id: "unknown",
-          name: "Unknown",
+        joinRequirement: '',
+        leader: team.members?.find((m) => m.isLeader) || {
+          id: 'unknown',
+          name: 'Unknown',
           level: 1,
-          role: "Member",
-          avatar: "?"
+          role: 'Member',
+          avatar: '?',
         },
         tags: [],
-        activity: "active",
+        activity: 'active',
         completedQuests: team.completedQuests?.length || 0,
         achievements: team.achievements?.length || 0,
         isFull: (team.members?.length || 0) >= 5,
-        isPrivate: false
-      });
+        isPrivate: false,
+      })
     }
-  }, [team]);
+  }, [team])
 
   const handleBack = () => {
-    router.push("/party");
-  };
+    router.push('/party')
+  }
 
   const handleJoinTeam = (team: Team) => {
     // Normally would handle join request, for now just navigate back
-    console.log("Would join team:", team.id);
-    router.push("/party");
-  };
+    console.log('Would join team:', team.id)
+    router.push('/party')
+  }
 
   // Loading state
   if (loading) {
@@ -67,8 +71,7 @@ export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) 
           variant="ghost"
           size="icon"
           className="mb-4"
-          onClick={handleBack}
-        >
+          onClick={handleBack}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
 
@@ -78,7 +81,7 @@ export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) 
           <Skeleton className="h-64 w-full" />
         </div>
       </div>
-    );
+    )
   }
 
   // Error state
@@ -89,8 +92,7 @@ export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) 
           variant="ghost"
           size="icon"
           className="mb-4"
-          onClick={handleBack}
-        >
+          onClick={handleBack}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
 
@@ -105,7 +107,7 @@ export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) 
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   // If we have a team but no basicTeam yet, show a loading state
@@ -116,13 +118,12 @@ export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) 
           variant="ghost"
           size="icon"
           className="mb-4"
-          onClick={handleBack}
-        >
+          onClick={handleBack}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <div className="text-center">Loading team details...</div>
       </div>
-    );
+    )
   }
 
   // Successfully loaded team
@@ -134,5 +135,5 @@ export default function PartyDetailWrapper({ teamId }: PartyDetailWrapperProps) 
         onJoin={handleJoinTeam}
       />
     </div>
-  );
+  )
 }

@@ -1,8 +1,7 @@
 // Re-export all mock data from the new data structure
 // This file is kept for backward compatibility with existing code
-
 // Import all data from the new structure
-import * as DataImports from '@src/data';
+import * as DataImports from '@src/data'
 
 // Re-export all items with the same names
 export const {
@@ -31,5 +30,5 @@ export const {
   // Party
   mockTeams,
   mockTeamDetail,
-  mockTeamQuests
-} = DataImports;
+  mockTeamQuests,
+} = DataImports

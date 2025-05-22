@@ -75,7 +75,17 @@
     overflow-wrap: break-word;
   }
 
-  h1, h2, h3, h4, h5, h6, p, span, div, button, a {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  div,
+  button,
+  a {
     @apply font-normal;
   }
 }
@@ -110,8 +120,8 @@
   }
 
   .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 
   .animate-pulse-subtle {
@@ -168,7 +178,12 @@
 
   .quest-item-hover:hover {
     @apply border-transparent;
-    background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(59, 130, 246, 0.2), rgba(34, 211, 238, 0.2));
+    background: linear-gradient(
+      90deg,
+      rgba(168, 85, 247, 0.2),
+      rgba(59, 130, 246, 0.2),
+      rgba(34, 211, 238, 0.2)
+    );
     background-size: 200% 200%;
     animation: gradient-x 2s ease infinite;
   }

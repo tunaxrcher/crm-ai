@@ -1,6 +1,7 @@
 // src/app/api/feed/[id]/like/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { likeService } from "@src/features/feed/service/server";
+import { NextRequest, NextResponse } from 'next/server'
+
+import { likeService } from '@src/features/feed/service/server'
 
 // POST /api/feed/[id]/like - กดไลค์
 export async function POST(
@@ -8,20 +9,20 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
-    const body = await request.json();
+    const { id } = await context.params
+    const body = await request.json()
     const like = await likeService.toggleLike({
       feedItemId: parseInt(id),
       userId: body.userId,
-    });
+    })
 
-    return NextResponse.json(like);
+    return NextResponse.json(like)
   } catch (error) {
-    console.error("Error toggling like:", error);
+    console.error('Error toggling like:', error)
     return NextResponse.json(
-      { error: "Failed to toggle like" },
+      { error: 'Failed to toggle like' },
       { status: 500 }
-    );
+    )
   }
 }
 
@@ -31,14 +32,14 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
-    const likes = await likeService.getLikesByFeedItem(parseInt(id));
-    return NextResponse.json(likes);
+    const { id } = await context.params
+    const likes = await likeService.getLikesByFeedItem(parseInt(id))
+    return NextResponse.json(likes)
   } catch (error) {
-    console.error("Error fetching likes:", error);
+    console.error('Error fetching likes:', error)
     return NextResponse.json(
-      { error: "Failed to fetch likes" },
+      { error: 'Failed to fetch likes' },
       { status: 500 }
-    );
+    )
   }
 }

@@ -1,39 +1,42 @@
-"use client";
+'use client'
 
-import React from "react";
-import { Skeleton } from "@src/components/ui/skeleton";
+import React from 'react'
+
+import { Skeleton } from '@src/components/ui/skeleton'
 
 interface SkeletonLoadingProps {
   /** Type of skeleton to show (feed, character, quest, ranking, party) */
-  type: "feed" | "character" | "quest" | "ranking" | "party" | "default";
+  type: 'feed' | 'character' | 'quest' | 'ranking' | 'party' | 'default'
   /** Custom text to display while loading, defaults to empty */
-  text?: string;
+  text?: string
   /** Custom class name for the container */
-  className?: string;
+  className?: string
 }
 
 /**
  * Facebook-style skeleton loading component that adapts to different content types
  */
 export default function SkeletonLoading({
-  type = "default",
+  type = 'default',
   text,
-  className = "",
+  className = '',
 }: SkeletonLoadingProps) {
   return (
     <div className={`w-full animate-pulse-subtle ${className}`}>
       {text && (
-        <div className="text-center text-muted-foreground py-2 mb-4">{text}</div>
+        <div className="text-center text-muted-foreground py-2 mb-4">
+          {text}
+        </div>
       )}
 
-      {type === "feed" && <FeedSkeleton />}
-      {type === "character" && <CharacterSkeleton />}
-      {type === "quest" && <QuestSkeleton />}
-      {type === "ranking" && <RankingSkeleton />}
-      {type === "party" && <PartySkeleton />}
-      {type === "default" && <DefaultSkeleton />}
+      {type === 'feed' && <FeedSkeleton />}
+      {type === 'character' && <CharacterSkeleton />}
+      {type === 'quest' && <QuestSkeleton />}
+      {type === 'ranking' && <RankingSkeleton />}
+      {type === 'party' && <PartySkeleton />}
+      {type === 'default' && <DefaultSkeleton />}
     </div>
-  );
+  )
 }
 
 function FeedSkeleton() {
@@ -44,7 +47,10 @@ function FeedSkeleton() {
         <Skeleton className="h-4 w-40 mb-2" />
         <div className="flex space-x-2 overflow-hidden py-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={`story-${i}`} className="w-16 h-16 rounded-full flex-shrink-0" />
+            <Skeleton
+              key={`story-${i}`}
+              className="w-16 h-16 rounded-full flex-shrink-0"
+            />
           ))}
         </div>
       </div>
@@ -69,7 +75,7 @@ function FeedSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 function CharacterSkeleton() {
@@ -124,7 +130,7 @@ function CharacterSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function QuestSkeleton() {
@@ -171,7 +177,7 @@ function QuestSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 function RankingSkeleton() {
@@ -237,7 +243,7 @@ function RankingSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 function PartySkeleton() {
@@ -290,7 +296,7 @@ function PartySkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 function DefaultSkeleton() {
@@ -310,5 +316,5 @@ function DefaultSkeleton() {
 
       <Skeleton className="h-10 w-32 rounded-md mx-auto" />
     </div>
-  );
+  )
 }

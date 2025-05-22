@@ -1,85 +1,81 @@
-"use client";
+'use client'
 
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from 'react'
+
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+
+import { ImageWithFallback } from '@src/components/shared'
+import NotificationSheet from '@src/components/shared/NotificationSheet'
 import {
-  User,
-  Activity,
-  ScrollText,
-  Trophy,
-  Gift,
-} from "lucide-react";
-import NotificationSheet from "@src/components/shared/NotificationSheet";
-import { ImageWithFallback } from "@src/components/shared";
-import { LevelUpNotification, AchievementUnlockedNotification } from "@src/components/ui/notification-system";
-import { useCharacter } from "@src/features/character/context/CharacterContext";
+  AchievementUnlockedNotification,
+  LevelUpNotification,
+} from '@src/components/ui/notification-system'
+import { useCharacter } from '@src/features/character/context/CharacterContext'
+import { Activity, Gift, ScrollText, Trophy, User } from 'lucide-react'
 
 // Client body wrapper without notification provider
 export default function ClientBody({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   // Remove any extension-added classes during hydration
   useEffect(() => {
     // This runs only on the client after hydration
-    document.body.className = "antialiased";
-  }, []);
+    document.body.className = 'antialiased'
+  }, [])
 
-  return <ClientBodyInner>{children}</ClientBodyInner>;
+  return <ClientBodyInner>{children}</ClientBodyInner>
 }
 
 // Inner component without notification context
-function ClientBodyInner({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const router = useRouter();
+function ClientBodyInner({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const router = useRouter()
 
   // State for special notification animations
-  const [showLevelUp, setShowLevelUp] = useState(false);
-  const [showAchievement, setShowAchievement] = useState(false);
-  const [currentLevel, setCurrentLevel] = useState(1);
+  const [showLevelUp, setShowLevelUp] = useState(false)
+  const [showAchievement, setShowAchievement] = useState(false)
+  const [currentLevel, setCurrentLevel] = useState(1)
   const [achievement, setAchievement] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     icon: <Trophy className="h-10 w-10 text-amber-400" />,
-    reward: ""
-  });
+    reward: '',
+  })
 
   // Get character data
-  const { character } = useCharacter();
+  const { character } = useCharacter()
 
   // Register animation effects
   useEffect(() => {
-    if (!character) return;
+    if (!character || typeof character.level !== 'number') return
 
-    // Register event handlers for character level ups and achievements
     const handleLevelUp = () => {
-      setCurrentLevel(character.level);
-      setShowLevelUp(true);
-    };
+      setCurrentLevel(character.level)
+      setShowLevelUp(true)
+    }
 
     const handleAchievementUnlocked = (achievement: any) => {
-      setAchievement(achievement);
-      setShowAchievement(true);
-    };
+      setAchievement(achievement)
+      setShowAchievement(true)
+    }
 
-    // Listen for level up events
-    window.addEventListener('character:levelup', handleLevelUp);
-    window.addEventListener('character:achievement', handleAchievementUnlocked);
+    window.addEventListener('character:levelup', handleLevelUp)
+    window.addEventListener('character:achievement', handleAchievementUnlocked)
 
     return () => {
-      window.removeEventListener('character:levelup', handleLevelUp);
-      window.removeEventListener('character:achievement', handleAchievementUnlocked);
-    };
-  }, [character]);
+      window.removeEventListener('character:levelup', handleLevelUp)
+      window.removeEventListener(
+        'character:achievement',
+        handleAchievementUnlocked
+      )
+    }
+  }, [character])
 
   // Skip footer on character creation page
-  const isCharacterCreation = pathname === "/character/create";
+  const isCharacterCreation = pathname === '/character/create'
 
   return (
     <div className="antialiased">
@@ -108,7 +104,8 @@ function ClientBodyInner({
         </header>
       )}
 
-      <main className={`mobile-container ${!isCharacterCreation ? 'pt-16' : ''}`}>
+      <main
+        className={`mobile-container ${!isCharacterCreation ? 'pt-16' : ''}`}>
         {children}
       </main>
 
@@ -116,40 +113,55 @@ function ClientBodyInner({
         <footer className="mobile-footer">
           <Link
             href="/character"
-            className={`footer-icon ${pathname === "/character" ? "ai-gradient-text" : "text-muted-foreground"}`}
-          >
+            className={`footer-icon ${
+              pathname === '/character'
+                ? 'ai-gradient-text'
+                : 'text-muted-foreground'
+            }`}>
             <User className="h-6 w-6 mb-1" />
             <span>Character</span>
           </Link>
 
           <Link
             href="/feed"
-            className={`footer-icon ${pathname === "/feed" ? "ai-gradient-text" : "text-muted-foreground"}`}
-          >
+            className={`footer-icon ${
+              pathname === '/feed'
+                ? 'ai-gradient-text'
+                : 'text-muted-foreground'
+            }`}>
             <Activity className="h-6 w-6 mb-1" />
             <span>Feed</span>
           </Link>
 
           <Link
             href="/quest"
-            className={`footer-icon ${pathname === "/quest" ? "ai-gradient-text" : "text-muted-foreground"}`}
-          >
+            className={`footer-icon ${
+              pathname === '/quest'
+                ? 'ai-gradient-text'
+                : 'text-muted-foreground'
+            }`}>
             <ScrollText className="h-6 w-6 mb-1" />
             <span>Quest</span>
           </Link>
 
           <Link
             href="/ranking"
-            className={`footer-icon ${pathname === "/ranking" ? "ai-gradient-text" : "text-muted-foreground"}`}
-          >
+            className={`footer-icon ${
+              pathname === '/ranking'
+                ? 'ai-gradient-text'
+                : 'text-muted-foreground'
+            }`}>
             <Trophy className="h-6 w-6 mb-1" />
             <span>Ranking</span>
           </Link>
 
           <Link
             href="/reward"
-            className={`footer-icon ${pathname === "/reward" ? "ai-gradient-text" : "text-muted-foreground"}`}
-          >
+            className={`footer-icon ${
+              pathname === '/reward'
+                ? 'ai-gradient-text'
+                : 'text-muted-foreground'
+            }`}>
             <Gift className="h-6 w-6 mb-1" />
             <span>Reward</span>
           </Link>
@@ -169,5 +181,5 @@ function ClientBodyInner({
         onClose={() => setShowAchievement(false)}
       />
     </div>
-  );
+  )
 }

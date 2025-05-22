@@ -1,19 +1,19 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState } from 'react'
+
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@src/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
-import { Badge } from "@src/components/ui/badge";
-import { Progress } from "@src/components/ui/progress";
-import { Button } from "@src/components/ui/button";
+} from '@src/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@src/components/ui/dialog";
+} from '@src/components/ui/dialog'
+import { Progress } from '@src/components/ui/progress'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@src/components/ui/tabs'
 import {
   Award,
   BookUser,
@@ -43,495 +50,495 @@ import {
   Medal,
   MessageCircle,
   Star,
-  Trophy,
   TrendingUp,
+  Trophy,
   Users,
   Zap,
-} from "lucide-react";
+} from 'lucide-react'
 
 type CategoryId =
-  | "sales"
-  | "marketing"
-  | "customer"
-  | "teamwork"
-  | "personal"
-  | "efficiency";
-type AchievementTier = "bronze" | "silver" | "gold" | "platinum";
-type RewardType = "xp" | "points" | "title" | "buff";
+  | 'sales'
+  | 'marketing'
+  | 'customer'
+  | 'teamwork'
+  | 'personal'
+  | 'efficiency'
+type AchievementTier = 'bronze' | 'silver' | 'gold' | 'platinum'
+type RewardType = 'xp' | 'points' | 'title' | 'buff'
 
 interface BaseReward {
-  type: RewardType;
+  type: RewardType
 }
 
 interface XPReward extends BaseReward {
-  type: "xp";
-  amount: number;
+  type: 'xp'
+  amount: number
 }
 
 interface PointsReward extends BaseReward {
-  type: "points";
-  amount: number;
+  type: 'points'
+  amount: number
 }
 
 interface TitleReward extends BaseReward {
-  type: "title";
-  name: string;
+  type: 'title'
+  name: string
 }
 
 interface BuffReward extends BaseReward {
-  type: "buff";
-  name: string;
-  description: string;
+  type: 'buff'
+  name: string
+  description: string
 }
 
-type Reward = XPReward | PointsReward | TitleReward | BuffReward;
+type Reward = XPReward | PointsReward | TitleReward | BuffReward
 
 interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  progress: number;
-  completed: boolean;
-  tier: AchievementTier;
-  reward: Reward;
+  id: string
+  name: string
+  description: string
+  icon: React.ReactNode
+  progress: number
+  completed: boolean
+  tier: AchievementTier
+  reward: Reward
 }
 
 interface Category {
-  id: CategoryId;
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-  totalAchievements: number;
-  completedAchievements: number;
-  color: string;
+  id: CategoryId
+  name: string
+  icon: React.ReactNode
+  description: string
+  totalAchievements: number
+  completedAchievements: number
+  color: string
 }
 
 // Achievement categories with icons and descriptions
 const achievementCategories: Category[] = [
   {
-    id: "sales" as CategoryId,
-    name: "Sales Mastery",
+    id: 'sales' as CategoryId,
+    name: 'Sales Mastery',
     icon: <TrendingUp className="h-10 w-10 text-green-400" />,
-    description: "Excellence in closing deals and generating revenue",
+    description: 'Excellence in closing deals and generating revenue',
     totalAchievements: 12,
     completedAchievements: 4,
-    color: "green",
+    color: 'green',
   },
   {
-    id: "marketing" as CategoryId,
-    name: "Marketing Wizardry",
+    id: 'marketing' as CategoryId,
+    name: 'Marketing Wizardry',
     icon: <Globe className="h-10 w-10 text-blue-400" />,
-    description: "Skills in attracting and engaging potential customers",
+    description: 'Skills in attracting and engaging potential customers',
     totalAchievements: 15,
     completedAchievements: 7,
-    color: "blue",
+    color: 'blue',
   },
   {
-    id: "customer" as CategoryId,
-    name: "Customer Relations",
+    id: 'customer' as CategoryId,
+    name: 'Customer Relations',
     icon: <Heart className="h-10 w-10 text-red-400" />,
-    description: "Building lasting relationships with clients",
+    description: 'Building lasting relationships with clients',
     totalAchievements: 10,
     completedAchievements: 5,
-    color: "red",
+    color: 'red',
   },
   {
-    id: "teamwork" as CategoryId,
-    name: "Team Excellence",
+    id: 'teamwork' as CategoryId,
+    name: 'Team Excellence',
     icon: <Users className="h-10 w-10 text-purple-400" />,
-    description: "Collaboration and coordination with colleagues",
+    description: 'Collaboration and coordination with colleagues',
     totalAchievements: 8,
     completedAchievements: 3,
-    color: "purple",
+    color: 'purple',
   },
   {
-    id: "personal" as CategoryId,
-    name: "Personal Growth",
+    id: 'personal' as CategoryId,
+    name: 'Personal Growth',
     icon: <GraduationCap className="h-10 w-10 text-yellow-400" />,
-    description: "Individual development and skill improvement",
+    description: 'Individual development and skill improvement',
     totalAchievements: 10,
     completedAchievements: 3,
-    color: "yellow",
+    color: 'yellow',
   },
   {
-    id: "efficiency" as CategoryId,
-    name: "Efficiency Expert",
+    id: 'efficiency' as CategoryId,
+    name: 'Efficiency Expert',
     icon: <Zap className="h-10 w-10 text-cyan-400" />,
-    description: "Optimizing workflows and processes",
+    description: 'Optimizing workflows and processes',
     totalAchievements: 8,
     completedAchievements: 2,
-    color: "cyan",
+    color: 'cyan',
   },
-];
+]
 // Detailed mock achievements by category
 // Update the mockAchievementsByCategory with proper type
 const mockAchievementsByCategory: Record<CategoryId, Achievement[]> = {
   sales: [
     {
-      id: "sales-1",
-      name: "First Sale",
-      description: "Close your first sales deal",
+      id: 'sales-1',
+      name: 'First Sale',
+      description: 'Close your first sales deal',
       icon: <CheckCircle className="h-6 w-6 text-green-400" />,
       progress: 100,
       completed: true,
-      tier: "bronze" as AchievementTier,
+      tier: 'bronze' as AchievementTier,
       reward: {
-        type: "xp" as const,
+        type: 'xp' as const,
         amount: 50,
       },
     },
     {
-      id: "sales-2",
-      name: "Sales Rookie",
-      description: "Close 5 sales deals",
+      id: 'sales-2',
+      name: 'Sales Rookie',
+      description: 'Close 5 sales deals',
       icon: <CheckCircle className="h-6 w-6 text-green-400" />,
       progress: 100,
       completed: true,
-      tier: "bronze" as AchievementTier,
+      tier: 'bronze' as AchievementTier,
       reward: {
-        type: "xp" as const,
+        type: 'xp' as const,
         amount: 100,
       },
     },
     {
-      id: "sales-3",
-      name: "Deal Hunter",
-      description: "Close 10 sales deals",
+      id: 'sales-3',
+      name: 'Deal Hunter',
+      description: 'Close 10 sales deals',
       icon: <CheckCircle className="h-6 w-6 text-green-400" />,
       progress: 100,
       completed: true,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "points" as const,
+        type: 'points' as const,
         amount: 200,
       },
     },
     {
-      id: "sales-4",
-      name: "Sales Champion",
-      description: "Close 25 sales deals",
+      id: 'sales-4',
+      name: 'Sales Champion',
+      description: 'Close 25 sales deals',
       icon: <CheckCircle className="h-6 w-6 text-green-400" />,
       progress: 100,
       completed: true,
-      tier: "gold" as AchievementTier,
+      tier: 'gold' as AchievementTier,
       reward: {
-        type: "title" as const,
-        name: "The Closer",
+        type: 'title' as const,
+        name: 'The Closer',
       },
     },
     {
-      id: "sales-5",
-      name: "Big Spender",
-      description: "Close a deal worth more than $10,000",
+      id: 'sales-5',
+      name: 'Big Spender',
+      description: 'Close a deal worth more than $10,000',
       icon: <TrendingUp className="h-6 w-6 text-green-400" />,
       progress: 0,
       completed: false,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "points" as const,
+        type: 'points' as const,
         amount: 300,
       },
     },
     {
-      id: "sales-6",
-      name: "Whale Hunter",
-      description: "Close a deal worth more than $50,000",
+      id: 'sales-6',
+      name: 'Whale Hunter',
+      description: 'Close a deal worth more than $50,000',
       icon: <TrendingUp className="h-6 w-6 text-green-400" />,
       progress: 0,
       completed: false,
-      tier: "gold" as AchievementTier,
+      tier: 'gold' as AchievementTier,
       reward: {
-        type: "buff" as const,
-        name: "Deal Magnet",
-        description: "+15% chance to find high-value leads for 7 days",
+        type: 'buff' as const,
+        name: 'Deal Magnet',
+        description: '+15% chance to find high-value leads for 7 days',
       },
     },
   ],
   marketing: [
     {
-      id: "marketing-1",
-      name: "Content Creator",
-      description: "Create your first marketing content",
+      id: 'marketing-1',
+      name: 'Content Creator',
+      description: 'Create your first marketing content',
       icon: <Globe className="h-6 w-6 text-blue-400" />,
       progress: 100,
       completed: true,
-      tier: "bronze" as AchievementTier,
+      tier: 'bronze' as AchievementTier,
       reward: {
-        type: "xp" as const,
+        type: 'xp' as const,
         amount: 50,
       },
     },
     {
-      id: "marketing-2",
-      name: "Social Media Novice",
-      description: "Post 5 times on social media",
+      id: 'marketing-2',
+      name: 'Social Media Novice',
+      description: 'Post 5 times on social media',
       icon: <MessageCircle className="h-6 w-6 text-blue-400" />,
       progress: 100,
       completed: true,
-      tier: "bronze" as AchievementTier,
+      tier: 'bronze' as AchievementTier,
       reward: {
-        type: "xp" as const,
+        type: 'xp' as const,
         amount: 100,
       },
     },
     {
-      id: "marketing-3",
-      name: "Engagement Expert",
-      description: "Achieve 100+ engagements on your posts",
+      id: 'marketing-3',
+      name: 'Engagement Expert',
+      description: 'Achieve 100+ engagements on your posts',
       icon: <Users className="h-6 w-6 text-blue-400" />,
       progress: 85,
       completed: false,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "points" as const,
+        type: 'points' as const,
         amount: 150,
       },
     },
     {
-      id: "marketing-4",
-      name: "Campaign Strategist",
-      description: "Successfully run 3 marketing campaigns",
+      id: 'marketing-4',
+      name: 'Campaign Strategist',
+      description: 'Successfully run 3 marketing campaigns',
       icon: <LineChart className="h-6 w-6 text-blue-400" />,
       progress: 67,
       completed: false,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "buff" as const,
-        name: "Viral Content",
-        description: "+20% engagement on your next campaign",
+        type: 'buff' as const,
+        name: 'Viral Content',
+        description: '+20% engagement on your next campaign',
       },
     },
   ],
   customer: [
     // Add customer achievements
     {
-      id: "customer-1",
-      name: "Customer Friend",
-      description: "Receive 5 positive customer reviews",
+      id: 'customer-1',
+      name: 'Customer Friend',
+      description: 'Receive 5 positive customer reviews',
       icon: <Heart className="h-6 w-6 text-red-400" />,
       progress: 100,
       completed: true,
-      tier: "bronze" as AchievementTier,
+      tier: 'bronze' as AchievementTier,
       reward: {
-        type: "xp" as const,
+        type: 'xp' as const,
         amount: 75,
       },
     },
     {
-      id: "customer-2",
-      name: "Problem Solver",
-      description: "Resolve 10 customer issues",
+      id: 'customer-2',
+      name: 'Problem Solver',
+      description: 'Resolve 10 customer issues',
       icon: <Heart className="h-6 w-6 text-red-400" />,
       progress: 50,
       completed: false,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "points" as const,
+        type: 'points' as const,
         amount: 200,
       },
     },
   ],
   teamwork: [
     {
-      id: "teamwork-1",
-      name: "Team Player",
-      description: "Join your first team",
+      id: 'teamwork-1',
+      name: 'Team Player',
+      description: 'Join your first team',
       icon: <Users className="h-6 w-6 text-purple-400" />,
       progress: 100,
       completed: true,
-      tier: "bronze" as AchievementTier,
+      tier: 'bronze' as AchievementTier,
       reward: {
-        type: "xp" as const,
+        type: 'xp' as const,
         amount: 50,
       },
     },
     {
-      id: "teamwork-2",
-      name: "Collaborator",
-      description: "Complete 3 team quests",
+      id: 'teamwork-2',
+      name: 'Collaborator',
+      description: 'Complete 3 team quests',
       icon: <Handshake className="h-6 w-6 text-purple-400" />,
       progress: 67,
       completed: false,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "buff" as const,
-        name: "Team Spirit",
-        description: "+10% XP from team activities for 3 days",
+        type: 'buff' as const,
+        name: 'Team Spirit',
+        description: '+10% XP from team activities for 3 days',
       },
     },
   ],
   personal: [
     {
-      id: "personal-1",
-      name: "Early Bird",
-      description: "Log in before 8 AM for 5 days",
+      id: 'personal-1',
+      name: 'Early Bird',
+      description: 'Log in before 8 AM for 5 days',
       icon: <Clock className="h-6 w-6 text-yellow-400" />,
       progress: 100,
       completed: true,
-      tier: "bronze" as AchievementTier,
+      tier: 'bronze' as AchievementTier,
       reward: {
-        type: "xp" as const,
+        type: 'xp' as const,
         amount: 75,
       },
     },
     {
-      id: "personal-2",
-      name: "Consistent Performer",
-      description: "Complete daily quests for 7 consecutive days",
+      id: 'personal-2',
+      name: 'Consistent Performer',
+      description: 'Complete daily quests for 7 consecutive days',
       icon: <CheckCircle className="h-6 w-6 text-yellow-400" />,
       progress: 71,
       completed: false,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "points" as const,
+        type: 'points' as const,
         amount: 150,
       },
     },
     {
-      id: "personal-3",
-      name: "Level Up Master",
-      description: "Reach level 10",
+      id: 'personal-3',
+      name: 'Level Up Master',
+      description: 'Reach level 10',
       icon: <Trophy className="h-6 w-6 text-yellow-400" />,
       progress: 80,
       completed: false,
-      tier: "gold" as AchievementTier,
+      tier: 'gold' as AchievementTier,
       reward: {
-        type: "title" as const,
-        name: "The Dedicated",
+        type: 'title' as const,
+        name: 'The Dedicated',
       },
     },
   ],
   efficiency: [
     // Add efficiency achievements
     {
-      id: "efficiency-1",
-      name: "Speed Demon",
-      description: "Complete 5 quests in under 30 minutes each",
+      id: 'efficiency-1',
+      name: 'Speed Demon',
+      description: 'Complete 5 quests in under 30 minutes each',
       icon: <Zap className="h-6 w-6 text-cyan-400" />,
       progress: 40,
       completed: false,
-      tier: "silver" as AchievementTier,
+      tier: 'silver' as AchievementTier,
       reward: {
-        type: "buff" as const,
-        name: "Lightning Fast",
-        description: "+10% quest completion speed for 24 hours",
+        type: 'buff' as const,
+        name: 'Lightning Fast',
+        description: '+10% quest completion speed for 24 hours',
       },
     },
     {
-      id: "efficiency-2",
-      name: "Multitasker",
-      description: "Complete 3 quests simultaneously",
+      id: 'efficiency-2',
+      name: 'Multitasker',
+      description: 'Complete 3 quests simultaneously',
       icon: <Zap className="h-6 w-6 text-cyan-400" />,
       progress: 0,
       completed: false,
-      tier: "gold" as AchievementTier,
+      tier: 'gold' as AchievementTier,
       reward: {
-        type: "title" as const,
-        name: "The Efficient",
+        type: 'title' as const,
+        name: 'The Efficient',
       },
     },
   ],
-};
+}
 
 // Function to get achievements by selected category
 const getAchievementsByCategory = (categoryId: CategoryId): Achievement[] => {
-  return mockAchievementsByCategory[categoryId] || [];
-};
+  return mockAchievementsByCategory[categoryId] || []
+}
 
 // Function to get achievement progress text
 const getAchievementProgressText = (achievement: Achievement): string => {
   if (achievement.completed) {
-    return "Completed";
+    return 'Completed'
   }
 
   if (achievement.progress > 0) {
-    return `${achievement.progress}% complete`;
+    return `${achievement.progress}% complete`
   }
 
-  return "Not started";
-};
+  return 'Not started'
+}
 
 // Function to get tier badge
 const getTierBadge = (tier: AchievementTier): React.ReactNode => {
   switch (tier) {
-    case "bronze":
+    case 'bronze':
       return (
         <Badge className="bg-amber-700/20 text-amber-700 hover:bg-amber-700/30">
           {tier}
         </Badge>
-      );
-    case "silver":
+      )
+    case 'silver':
       return (
         <Badge className="bg-slate-400/20 text-slate-400 hover:bg-slate-400/30">
           {tier}
         </Badge>
-      );
-    case "gold":
+      )
+    case 'gold':
       return (
         <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
           {tier}
         </Badge>
-      );
-    case "platinum":
+      )
+    case 'platinum':
       return (
         <Badge className="bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30">
           {tier}
         </Badge>
-      );
+      )
     default:
-      return <Badge>{tier}</Badge>;
+      return <Badge>{tier}</Badge>
   }
-};
+}
 
 // Function to format achievement reward description
 const getAchievementRewardText = (reward: Reward): string => {
   switch (reward.type) {
-    case "xp":
-      return `${reward.amount} XP`;
-    case "points":
-      return `${reward.amount} Points`;
-    case "title":
-      return `Title: ${reward.name}`;
-    case "buff":
-      return reward.description;
+    case 'xp':
+      return `${reward.amount} XP`
+    case 'points':
+      return `${reward.amount} Points`
+    case 'title':
+      return `Title: ${reward.name}`
+    case 'buff':
+      return reward.description
     default:
-      return "";
+      return ''
   }
-};
+}
 
 // Function to get category background color
 const getCategoryBgColor = (color: string): string => {
   switch (color) {
-    case "green":
-      return "bg-gradient-to-br from-green-900/20 to-green-700/10";
-    case "blue":
-      return "bg-gradient-to-br from-blue-900/20 to-blue-700/10";
-    case "red":
-      return "bg-gradient-to-br from-red-900/20 to-red-700/10";
-    case "purple":
-      return "bg-gradient-to-br from-purple-900/20 to-purple-700/10";
-    case "yellow":
-      return "bg-gradient-to-br from-yellow-900/20 to-yellow-700/10";
-    case "cyan":
-      return "bg-gradient-to-br from-cyan-900/20 to-cyan-700/10";
+    case 'green':
+      return 'bg-gradient-to-br from-green-900/20 to-green-700/10'
+    case 'blue':
+      return 'bg-gradient-to-br from-blue-900/20 to-blue-700/10'
+    case 'red':
+      return 'bg-gradient-to-br from-red-900/20 to-red-700/10'
+    case 'purple':
+      return 'bg-gradient-to-br from-purple-900/20 to-purple-700/10'
+    case 'yellow':
+      return 'bg-gradient-to-br from-yellow-900/20 to-yellow-700/10'
+    case 'cyan':
+      return 'bg-gradient-to-br from-cyan-900/20 to-cyan-700/10'
     default:
-      return "bg-secondary/10";
+      return 'bg-secondary/10'
   }
-};
+}
 
 export default function AchievementsPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null
-  );
+  )
   const [selectedAchievement, setSelectedAchievement] =
-    useState<Achievement | null>(null);
-  const [isAchievementDialogOpen, setIsAchievementDialogOpen] = useState(false);
-  const router = useRouter();
+    useState<Achievement | null>(null)
+  const [isAchievementDialogOpen, setIsAchievementDialogOpen] = useState(false)
+  const router = useRouter()
 
   const achievements = selectedCategory
     ? getAchievementsByCategory(selectedCategory.id)
-    : [];
+    : []
 
   return (
     <div className="p-4 pb-20">
@@ -540,8 +547,7 @@ export default function AchievementsPage() {
           variant="ghost"
           size="icon"
           className="mr-2"
-          onClick={() => router.back()}
-        >
+          onClick={() => router.back()}>
           <ChevronLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -561,8 +567,7 @@ export default function AchievementsPage() {
                 className={`overflow-hidden cursor-pointer hover:border-primary/50 transition-all duration-200 ${getCategoryBgColor(
                   category.color
                 )}`}
-                onClick={() => setSelectedCategory(category)}
-              >
+                onClick={() => setSelectedCategory(category)}>
                 <CardContent className="p-6">
                   <div className="flex items-start">
                     <div className="mr-4">{category.icon}</div>
@@ -707,22 +712,20 @@ export default function AchievementsPage() {
               <Card
                 key={achievement.id}
                 className={`overflow-hidden border-${
-                  achievement.completed ? "primary/30" : "border"
+                  achievement.completed ? 'primary/30' : 'border'
                 } cursor-pointer hover:border-primary/50 transition-all quest-item-hover`}
                 onClick={() => {
-                  setSelectedAchievement(achievement);
-                  setIsAchievementDialogOpen(true);
-                }}
-              >
+                  setSelectedAchievement(achievement)
+                  setIsAchievementDialogOpen(true)
+                }}>
                 <CardContent className="p-4">
                   <div className="flex items-center">
                     <div
                       className={`p-2 rounded-lg mr-4 ${
                         achievement.completed
-                          ? "bg-green-500/20"
-                          : "bg-secondary/20"
-                      }`}
-                    >
+                          ? 'bg-green-500/20'
+                          : 'bg-secondary/20'
+                      }`}>
                       {achievement.icon}
                     </div>
 
@@ -764,8 +767,7 @@ export default function AchievementsPage() {
             <Button
               variant="ghost"
               className="mt-2"
-              onClick={() => setSelectedCategory(null)}
-            >
+              onClick={() => setSelectedCategory(null)}>
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back to Categories
             </Button>
@@ -776,8 +778,7 @@ export default function AchievementsPage() {
       {/* Achievement Details Dialog */}
       <Dialog
         open={isAchievementDialogOpen}
-        onOpenChange={setIsAchievementDialogOpen}
-      >
+        onOpenChange={setIsAchievementDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Achievement Details</DialogTitle>
@@ -792,10 +793,9 @@ export default function AchievementsPage() {
                 <div
                   className={`p-3 rounded-lg mr-4 ${
                     selectedAchievement.completed
-                      ? "bg-green-500/20"
-                      : "bg-secondary/20"
-                  }`}
-                >
+                      ? 'bg-green-500/20'
+                      : 'bg-secondary/20'
+                  }`}>
                   {selectedAchievement.icon}
                 </div>
 
@@ -860,5 +860,5 @@ export default function AchievementsPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

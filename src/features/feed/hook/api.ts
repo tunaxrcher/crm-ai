@@ -1,52 +1,53 @@
-import { useState, useEffect, useCallback } from "react";
-import { feedService } from "../service/client";
-import { FeedItem, Story } from "../types";
+import { useCallback, useEffect, useState } from 'react'
+
+import { feedService } from '../service/client'
+import { FeedItemUI, StoryUI } from '../types'
 
 export function useFeed() {
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [stories, setStories] = useState<Story[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [feedItems, setFeedItems] = useState<FeedItemUI[]>([])
+  const [stories, setStories] = useState<StoryUI[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   // Load more function
   const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
+    if (isLoadingMore || !hasMore) return
 
     try {
-      setIsLoadingMore(true);
+      setIsLoadingMore(true)
 
       const feedResponse = await feedService.getFeedItems({
         page: page + 1,
         limit: 10,
         userId: 1, // TODO: Get from auth
-      });
+      })
 
-      const transformedFeed = feedResponse.items.map(transformApiToFeedItem);
+      const transformedFeed = feedResponse.items.map(transformApiToFeedItem)
 
       if (transformedFeed.length === 0) {
-        setHasMore(false);
+        setHasMore(false)
       } else {
-        setFeedItems((prev) => [...prev, ...transformedFeed]);
-        setPage((prev) => prev + 1);
+        setFeedItems((prev) => [...prev, ...transformedFeed])
+        setPage((prev) => prev + 1)
       }
 
       // Check if there are more pages
       setHasMore(
         feedResponse.pagination.page < feedResponse.pagination.totalPages
-      );
+      )
     } catch (err) {
-      console.error("Load more failed:", err);
+      console.error('Load more failed:', err)
     } finally {
-      setIsLoadingMore(false);
+      setIsLoadingMore(false)
     }
-  }, [page, hasMore, isLoadingMore]);
+  }, [page, hasMore, isLoadingMore])
 
   // Mock data transformer - แปลงข้อมูลจาก API ให้ตรงกับ types ที่ UI ใช้อยู่
-  const transformApiToFeedItem = (apiItem: any): FeedItem => {
+  const transformApiToFeedItem = (apiItem: any): FeedItemUI => {
     const baseContent = {
       timestamp: apiItem.createdAt,
       engagement: {
@@ -63,7 +64,7 @@ export function useFeed() {
             timestamp: comment.createdAt,
           })) || [],
       },
-    };
+    }
 
     // Base feed item structure
     const baseFeedItem = {
@@ -76,14 +77,14 @@ export function useFeed() {
         level: apiItem.user.level,
         title: apiItem.user.bio,
       },
-    };
+    }
 
     // Map API type to UI type
     switch (apiItem.type) {
-      case "quest_completion":
+      case 'quest_completion':
         return {
           ...baseFeedItem,
-          type: "quest_complete",
+          type: 'quest_complete',
           content: {
             ...baseContent,
             quest: {
@@ -93,24 +94,24 @@ export function useFeed() {
             },
             image: apiItem.mediaUrl,
           },
-        };
+        }
 
-      case "level_up":
+      case 'level_up':
         return {
           ...baseFeedItem,
-          type: "level_up",
+          type: 'level_up',
           content: {
             ...baseContent,
             previousLevel: apiItem.levelHistory?.levelFrom || 0,
             newLevel: apiItem.levelHistory?.levelTo || 0,
-            newTitle: "New Title",
+            newTitle: 'New Title',
           },
-        };
+        }
 
-      case "achievement":
+      case 'achievement':
         return {
           ...baseFeedItem,
-          type: "achievement",
+          type: 'achievement',
           content: {
             ...baseContent,
             achievement: {
@@ -120,23 +121,23 @@ export function useFeed() {
               icon: apiItem.achievement?.achievement.icon,
             },
           },
-        };
+        }
 
-      case "post":
+      case 'post':
       default:
         return {
           ...baseFeedItem,
-          type: "post",
+          type: 'post',
           content: {
             ...baseContent,
             text: apiItem.content,
             image: apiItem.mediaUrl,
           },
-        };
+        }
     }
-  };
+  }
 
-  const transformApiToStory = (apiStory: any): Story => {
+  const transformApiToStory = (apiStory: any): StoryUI => {
     return {
       id: apiStory.id.toString(),
       user: {
@@ -146,24 +147,24 @@ export function useFeed() {
         level: apiStory.user.level,
       },
       media: {
-        type: apiStory.type as "image" | "video",
-        url: apiStory.mediaUrl || "",
-        thumbnail: apiStory.type === "video" ? apiStory.mediaUrl : undefined,
+        type: apiStory.type as 'image' | 'video',
+        url: apiStory.mediaUrl || '',
+        thumbnail: apiStory.type === 'video' ? apiStory.mediaUrl : undefined,
       },
       questTitle: apiStory.content,
       viewed: apiStory.hasViewed || false,
       expiresAt: apiStory.expiresAt,
-    };
-  };
+    }
+  }
 
   // Load feed data
   const loadFeedData = useCallback(
     async (isRefresh = false) => {
       try {
         if (isRefresh) {
-          setIsRefreshing(true);
+          setIsRefreshing(true)
         } else {
-          setIsLoading(true);
+          setIsLoading(true)
         }
 
         // Call API
@@ -174,48 +175,48 @@ export function useFeed() {
             userId: 1, // TODO: Get from auth
           }),
           feedService.getStories(1), // TODO: Get from auth
-        ]);
+        ])
 
         // Transform data
-        const transformedFeed = feedResponse.items.map(transformApiToFeedItem);
-        const transformedStories = storiesResponse.map(transformApiToStory);
+        const transformedFeed = feedResponse.items.map(transformApiToFeedItem)
+        const transformedStories = storiesResponse.map(transformApiToStory)
 
         // Update state
         if (isRefresh) {
-          setFeedItems(transformedFeed);
-          setPage(1);
+          setFeedItems(transformedFeed)
+          setPage(1)
         } else {
           setFeedItems((prev) =>
             page === 1 ? transformedFeed : [...prev, ...transformedFeed]
-          );
+          )
         }
 
-        setStories(transformedStories);
-        setError(null);
+        setStories(transformedStories)
+        setError(null)
       } catch (err) {
-        setError(err as Error);
+        setError(err as Error)
       } finally {
-        setIsLoading(false);
-        setIsRefreshing(false);
+        setIsLoading(false)
+        setIsRefreshing(false)
       }
     },
     [page]
-  );
+  )
 
   // Initial load
   useEffect(() => {
-    loadFeedData();
-  }, []);
+    loadFeedData()
+  }, [])
 
   // Refresh function
   const refreshFeed = useCallback(() => {
-    loadFeedData(true);
-  }, [loadFeedData]);
+    loadFeedData(true)
+  }, [loadFeedData])
 
   // Toggle like
   const toggleLike = useCallback(async (feedItemId: string) => {
     try {
-      const result = await feedService.toggleLike(feedItemId);
+      const result = await feedService.toggleLike(feedItemId)
 
       // Update local state
       setFeedItems((prev) =>
@@ -233,25 +234,25 @@ export function useFeed() {
                     : Math.max(0, item.content.engagement.likes - 1),
                 },
               },
-            };
+            }
           }
-          return item;
+          return item
         })
-      );
+      )
 
-      return result;
+      return result
     } catch (err) {
-      console.error("Toggle like failed:", err);
-      throw err;
+      console.error('Toggle like failed:', err)
+      throw err
     }
-  }, []);
+  }, [])
 
   // Add comment
   const addComment = useCallback(
     async (feedItemId: string, content: string) => {
       try {
-        const newComment = await feedService.createComment(feedItemId, content);
-        console.log(newComment);
+        const newComment = await feedService.createComment(feedItemId, content)
+        console.log(newComment)
 
         // Update local state
         setFeedItems((prev) =>
@@ -266,7 +267,7 @@ export function useFeed() {
                 },
                 text: newComment.content,
                 timestamp: newComment.createdAt,
-              };
+              }
 
               return {
                 ...item,
@@ -280,37 +281,37 @@ export function useFeed() {
                     ],
                   },
                 },
-              };
+              }
             }
-            return item;
+            return item
           })
-        );
+        )
 
-        return newComment;
+        return newComment
       } catch (err) {
-        console.error("Add comment failed:", err);
-        throw err;
+        console.error('Add comment failed:', err)
+        throw err
       }
     },
     []
-  );
+  )
 
   // Format time helper
   const formatTimeDiff = useCallback((date: Date | string | number) => {
-    const now = new Date();
-    const then = new Date(date);
-    const diff = now.getTime() - then.getTime();
+    const now = new Date()
+    const then = new Date(date)
+    const diff = now.getTime() - then.getTime()
 
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
+    const seconds = Math.floor(diff / 1000)
+    const minutes = Math.floor(seconds / 60)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
 
-    if (days > 0) return `${days} วันที่แล้ว`;
-    if (hours > 0) return `${hours} ชั่วโมงที่แล้ว`;
-    if (minutes > 0) return `${minutes} นาทีที่แล้ว`;
-    return "เมื่อสักครู่";
-  }, []);
+    if (days > 0) return `${days} วันที่แล้ว`
+    if (hours > 0) return `${hours} ชั่วโมงที่แล้ว`
+    if (minutes > 0) return `${minutes} นาทีที่แล้ว`
+    return 'เมื่อสักครู่'
+  }, [])
 
   return {
     feedItems,
@@ -325,5 +326,5 @@ export function useFeed() {
     loadMore,
     hasMore,
     isLoadingMore,
-  };
+  }
 }

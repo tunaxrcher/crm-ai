@@ -1,15 +1,24 @@
-"use client";
+'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@src/components/ui/card";
-import { Badge } from "@src/components/ui/badge";
-import { Award } from "lucide-react";
-import { Achievement } from "../types";
+import { Badge } from '@src/components/ui/badge'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@src/components/ui/card'
+import { Award } from 'lucide-react'
+
+import { Achievement } from '../types'
 
 interface AchievementListProps {
-  achievements: Achievement[];
+  achievements: Achievement[]
 }
 
-export default function AchievementList({ achievements }: AchievementListProps) {
+export default function AchievementList({
+  achievements,
+}: AchievementListProps) {
   return (
     <Card className="mb-6">
       <CardHeader className="pb-2">
@@ -26,24 +35,27 @@ export default function AchievementList({ achievements }: AchievementListProps) 
           {achievements.map((achievement) => (
             <div
               key={achievement.id}
-              className={`flex items-center p-3 rounded-lg ${achievement.earned ? 'bg-secondary/20' : 'bg-secondary/5 opacity-60'}`}
-            >
+              className={`flex items-center p-3 rounded-lg ${achievement.earned ? 'bg-secondary/20' : 'bg-secondary/5 opacity-60'}`}>
               <div className="text-2xl mr-3">{achievement.icon}</div>
               <div className="flex-1">
                 <div className="font-medium text-sm flex items-center">
                   {achievement.name}
                   {achievement.earned && (
-                    <Badge variant="outline" className="ml-2 text-xs border-green-500 text-green-500">
+                    <Badge
+                      variant="outline"
+                      className="ml-2 text-xs border-green-500 text-green-500">
                       ได้รับแล้ว
                     </Badge>
                   )}
                 </div>
-                <div className="text-xs text-muted-foreground">{achievement.description}</div>
+                <div className="text-xs text-muted-foreground">
+                  {achievement.description}
+                </div>
               </div>
             </div>
           ))}
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

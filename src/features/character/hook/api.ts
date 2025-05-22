@@ -1,46 +1,60 @@
-"use client";
+'use client'
 
 // Custom hooks for Character feature API calls
-import { useState, useEffect, useCallback } from 'react';
-import { Character, CharacterResponse, Stat, JobClass, LevelRequirement } from '../types';
-import { fetchCharacter, allocateStatPoints, fetchJobClasses, fetchXPTable } from '../service/client';
+import { useCallback, useEffect, useState } from 'react'
+
+import {
+  allocateStatPoints,
+  fetchCharacter,
+  fetchJobClasses,
+  fetchXPTable,
+} from '../service/client'
+import {
+  Character,
+  CharacterResponse,
+  JobClass,
+  LevelRequirement,
+  Stat,
+} from '../types'
 
 /**
  * Hook to fetch character data
  */
 export function useCharacter(id?: string) {
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [portrait, setPortrait] = useState<string>('');
-  const [jobClass, setJobClass] = useState<JobClass | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [character, setCharacter] = useState<Character | null>(null)
+  const [portrait, setPortrait] = useState<string>('')
+  const [jobClass, setJobClass] = useState<JobClass | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   const loadCharacter = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      const data = await fetchCharacter(id);
-      setCharacter(data.character);
-      setPortrait(data.portrait);
-      setJobClass(data.jobClass);
+      setIsLoading(true)
+      setError(null)
+      const data = await fetchCharacter(id)
+      setCharacter(data.character)
+      setPortrait(data.portrait)
+      setJobClass(data.jobClass)
     } catch (err) {
-      console.error("Error loading character:", err);
-      setError(err instanceof Error ? err : new Error('ไม่สามารถโหลดข้อมูลตัวละครได้'));
+      console.error('Error loading character:', err)
+      setError(
+        err instanceof Error ? err : new Error('ไม่สามารถโหลดข้อมูลตัวละครได้')
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [id]);
+  }, [id])
 
   // Initial data load
   useEffect(() => {
-    loadCharacter();
-  }, [loadCharacter]);
+    loadCharacter()
+  }, [loadCharacter])
 
   // Function to manually refresh the character data
   const refetchCharacter = () => {
-    setIsLoading(true);
-    loadCharacter();
-  };
+    setIsLoading(true)
+    loadCharacter()
+  }
 
   return {
     character,
@@ -48,105 +62,113 @@ export function useCharacter(id?: string) {
     jobClass,
     isLoading,
     error,
-    refetchCharacter
-  };
+    refetchCharacter,
+  }
 }
 
 /**
  * Hook to fetch all job classes
  */
 export function useJobClasses() {
-  const [jobClasses, setJobClasses] = useState<JobClass[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [jobClasses, setJobClasses] = useState<JobClass[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   const loadJobClasses = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      const data = await fetchJobClasses();
-      setJobClasses(data);
+      setIsLoading(true)
+      setError(null)
+      const data = await fetchJobClasses()
+      setJobClasses(data)
     } catch (err) {
-      console.error("Error loading job classes:", err);
-      setError(err instanceof Error ? err : new Error('ไม่สามารถโหลดข้อมูลอาชีพได้'));
+      console.error('Error loading job classes:', err)
+      setError(
+        err instanceof Error ? err : new Error('ไม่สามารถโหลดข้อมูลอาชีพได้')
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   // Initial data load
   useEffect(() => {
-    loadJobClasses();
-  }, [loadJobClasses]);
+    loadJobClasses()
+  }, [loadJobClasses])
 
   return {
     jobClasses,
     isLoading,
     error,
-    refetchJobClasses: loadJobClasses
-  };
+    refetchJobClasses: loadJobClasses,
+  }
 }
 
 /**
  * Hook to fetch XP table
  */
 export function useXPTable() {
-  const [xpTable, setXPTable] = useState<LevelRequirement[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [xpTable, setXPTable] = useState<LevelRequirement[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   const loadXPTable = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      const data = await fetchXPTable();
-      setXPTable(data);
+      setIsLoading(true)
+      setError(null)
+      const data = await fetchXPTable()
+      setXPTable(data)
     } catch (err) {
-      console.error("Error loading XP table:", err);
-      setError(err instanceof Error ? err : new Error('ไม่สามารถโหลดข้อมูลตาราง XP ได้'));
+      console.error('Error loading XP table:', err)
+      setError(
+        err instanceof Error
+          ? err
+          : new Error('ไม่สามารถโหลดข้อมูลตาราง XP ได้')
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, []);
+  }, [])
 
   // Initial data load
   useEffect(() => {
-    loadXPTable();
-  }, [loadXPTable]);
+    loadXPTable()
+  }, [loadXPTable])
 
   return {
     xpTable,
     isLoading,
     error,
-    refetchXPTable: loadXPTable
-  };
+    refetchXPTable: loadXPTable,
+  }
 }
 
 /**
  * Hook to handle stat allocation
  */
 export function useStatAllocation() {
-  const [isAllocating, setIsAllocating] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [isAllocating, setIsAllocating] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
   const allocateStats = async (characterId: string, stats: Stat) => {
     try {
-      setIsAllocating(true);
-      setError(null);
-      const updatedCharacter = await allocateStatPoints(characterId, stats);
-      return updatedCharacter;
+      setIsAllocating(true)
+      setError(null)
+      const updatedCharacter = await allocateStatPoints(characterId, stats)
+      return updatedCharacter
     } catch (err) {
-      console.error("Error allocating stats:", err);
-      setError(err instanceof Error ? err : new Error('ไม่สามารถจัดสรรสถิติได้'));
-      throw err;
+      console.error('Error allocating stats:', err)
+      setError(
+        err instanceof Error ? err : new Error('ไม่สามารถจัดสรรสถิติได้')
+      )
+      throw err
     } finally {
-      setIsAllocating(false);
+      setIsAllocating(false)
     }
-  };
+  }
 
   return {
     allocateStats,
     isAllocating,
-    error
-  };
+    error,
+  }
 }

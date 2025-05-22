@@ -1,60 +1,77 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@src/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
-import { Input } from "@src/components/ui/input";
+import { useEffect, useState } from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { ErrorDisplay, SkeletonLoading } from '@src/components/shared'
+import { Button } from '@src/components/ui/button'
 import {
-  ChevronRight,
-  UserCircle2,
-  Upload,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@src/components/ui/card'
+import { Input } from '@src/components/ui/input'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@src/components/ui/tabs'
+import { useJobClasses } from '@src/features/character/hook/api'
+import { JobClass } from '@src/features/character/types'
+import {
   BadgePercent,
+  Briefcase,
+  ChevronRight,
   LineChart,
   Receipt,
-  Briefcase
-} from "lucide-react";
-import { useJobClasses } from "@src/features/character/hook/api";
-import { JobClass } from "@src/features/character/types";
-import { SkeletonLoading, ErrorDisplay } from "@src/components/shared";
+  Upload,
+  UserCircle2,
+} from 'lucide-react'
 
 export default function CharacterCreation() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [selectedJobClassId, setSelectedJobClassId] = useState<string | null>(null);
-  const [characterName, setCharacterName] = useState<string>("");
-  const [portrait, setPortrait] = useState<"upload" | "generate">("upload");
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState<number>(1)
+  const [selectedJobClassId, setSelectedJobClassId] = useState<string | null>(
+    null
+  )
+  const [characterName, setCharacterName] = useState<string>('')
+  const [portrait, setPortrait] = useState<'upload' | 'generate'>('upload')
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
 
   // Fetch job classes from API
-  const { jobClasses, isLoading, error, refetchJobClasses } = useJobClasses();
+  const { jobClasses, isLoading, error, refetchJobClasses } = useJobClasses()
 
   // Get selected job class details
-  const selectedJobClass = jobClasses.find(jc => jc.id === selectedJobClassId) || null;
+  const selectedJobClass =
+    jobClasses.find((jc) => jc.id === selectedJobClassId) || null
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setUploadedImage(imageUrl);
+      const imageUrl = URL.createObjectURL(file)
+      setUploadedImage(imageUrl)
     }
-  };
+  }
 
   const handleJobClassSelect = (jobClassId: string) => {
-    setSelectedJobClassId(jobClassId);
-  };
+    setSelectedJobClassId(jobClassId)
+  }
 
   const handleNextStep = () => {
     if (currentStep === 1 && selectedJobClassId) {
-      setCurrentStep(2);
-    } else if (currentStep === 2 && characterName.trim() !== "") {
-      setCurrentStep(3);
+      setCurrentStep(2)
+    } else if (currentStep === 2 && characterName.trim() !== '') {
+      setCurrentStep(3)
     } else if (currentStep === 3) {
       // In a real app, we would save the character data to backend
-      router.push("/quest");
+      router.push('/quest')
     }
-  };
+  }
 
   // Show loading state
   if (isLoading) {
@@ -62,7 +79,7 @@ export default function CharacterCreation() {
       <div className="p-4 max-w-md mx-auto">
         <SkeletonLoading type="character" text="กำลังโหลดข้อมูลอาชีพ..." />
       </div>
-    );
+    )
   }
 
   // Show error state
@@ -78,46 +95,53 @@ export default function CharacterCreation() {
           technicalDetails={error}
         />
       </div>
-    );
+    )
   }
 
   // Get job class icon
   const getJobClassIcon = (jobClass: JobClass) => {
     switch (jobClass.id) {
-      case "jobclass-marketing":
-        return <BadgePercent className="h-8 w-8" />;
-      case "jobclass-sales":
-        return <LineChart className="h-8 w-8" />;
-      case "jobclass-accounting":
-        return <Receipt className="h-8 w-8" />;
+      case 'jobclass-marketing':
+        return <BadgePercent className="h-8 w-8" />
+      case 'jobclass-sales':
+        return <LineChart className="h-8 w-8" />
+      case 'jobclass-accounting':
+        return <Receipt className="h-8 w-8" />
       default:
-        return <Briefcase className="h-8 w-8" />;
+        return <Briefcase className="h-8 w-8" />
     }
-  };
+  }
 
   return (
     <div className="p-4 max-w-md mx-auto">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold ai-gradient-text">สร้างตัวละครของคุณ</h1>
-        <p className="text-muted-foreground">ปรับแต่งตัวละครเพื่อการผจญภัยใน CRM RPG</p>
+        <h1 className="text-2xl font-bold ai-gradient-text">
+          สร้างตัวละครของคุณ
+        </h1>
+        <p className="text-muted-foreground">
+          ปรับแต่งตัวละครเพื่อการผจญภัยใน CRM RPG
+        </p>
       </div>
 
       <div className="flex justify-between items-center mb-8">
-        <div className={`flex items-center ${currentStep >= 1 ? "ai-gradient-text" : "text-muted-foreground"}`}>
+        <div
+          className={`flex items-center ${currentStep >= 1 ? 'ai-gradient-text' : 'text-muted-foreground'}`}>
           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-2">
             1
           </div>
           <span>อาชีพ</span>
         </div>
         <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        <div className={`flex items-center ${currentStep >= 2 ? "ai-gradient-text" : "text-muted-foreground"}`}>
+        <div
+          className={`flex items-center ${currentStep >= 2 ? 'ai-gradient-text' : 'text-muted-foreground'}`}>
           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-2">
             2
           </div>
           <span>ชื่อ</span>
         </div>
         <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        <div className={`flex items-center ${currentStep >= 3 ? "ai-gradient-text" : "text-muted-foreground"}`}>
+        <div
+          className={`flex items-center ${currentStep >= 3 ? 'ai-gradient-text' : 'text-muted-foreground'}`}>
           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-2">
             3
           </div>
@@ -134,12 +158,9 @@ export default function CharacterCreation() {
             <Card
               key={jobClass.id}
               className={`cursor-pointer hover:ai-gradient-border transition-all ${selectedJobClassId === jobClass.id ? 'ai-gradient-border' : ''}`}
-              onClick={() => handleJobClassSelect(jobClass.id)}
-            >
+              onClick={() => handleJobClassSelect(jobClass.id)}>
               <CardHeader className="flex flex-row items-center pb-2">
-                <div className="mr-4">
-                  {getJobClassIcon(jobClass)}
-                </div>
+                <div className="mr-4">{getJobClassIcon(jobClass)}</div>
                 <div>
                   <CardTitle>{jobClass.name}</CardTitle>
                   <CardDescription className="mt-1">
@@ -149,10 +170,12 @@ export default function CharacterCreation() {
               </CardHeader>
               <CardContent className="pt-0 pb-2">
                 <div className="text-sm text-muted-foreground">
-                  <span className="ai-gradient-text">Level 1:</span> {jobClass.levels[0]?.title}
+                  <span className="ai-gradient-text">Level 1:</span>{' '}
+                  {jobClass.levels[0]?.title}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  <span className="ai-gradient-text">Level 100:</span> {jobClass.levels[5]?.title}
+                  <span className="ai-gradient-text">Level 100:</span>{' '}
+                  {jobClass.levels[5]?.title}
                 </div>
               </CardContent>
             </Card>
@@ -161,8 +184,7 @@ export default function CharacterCreation() {
           <Button
             className="w-full ai-gradient-bg"
             onClick={handleNextStep}
-            disabled={!selectedJobClassId}
-          >
+            disabled={!selectedJobClassId}>
             ขั้นตอนถัดไป
           </Button>
         </div>
@@ -189,23 +211,31 @@ export default function CharacterCreation() {
               />
 
               <div className="p-4 bg-secondary/30 rounded-lg">
-                <p className="text-sm mb-2">อาชีพที่เลือก: <span className="ai-gradient-text font-semibold">{selectedJobClass?.name}</span></p>
-                <p className="text-sm">ตำแหน่งเริ่มต้น: <span className="ai-gradient-text font-semibold">{selectedJobClass?.levels[0]?.title}</span></p>
+                <p className="text-sm mb-2">
+                  อาชีพที่เลือก:{' '}
+                  <span className="ai-gradient-text font-semibold">
+                    {selectedJobClass?.name}
+                  </span>
+                </p>
+                <p className="text-sm">
+                  ตำแหน่งเริ่มต้น:{' '}
+                  <span className="ai-gradient-text font-semibold">
+                    {selectedJobClass?.levels[0]?.title}
+                  </span>
+                </p>
               </div>
             </CardContent>
             <CardFooter>
               <Button
                 variant="outline"
                 onClick={() => setCurrentStep(1)}
-                className="mr-2"
-              >
+                className="mr-2">
                 ย้อนกลับ
               </Button>
               <Button
                 className="flex-1 ai-gradient-bg"
                 onClick={handleNextStep}
-                disabled={characterName.trim() === ""}
-              >
+                disabled={characterName.trim() === ''}>
                 ขั้นตอนถัดไป
               </Button>
             </CardFooter>
@@ -218,7 +248,9 @@ export default function CharacterCreation() {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold mb-4">เลือกรูปตัวละคร</h2>
 
-          <Tabs defaultValue="upload" onValueChange={(v) => setPortrait(v as "upload" | "generate")}>
+          <Tabs
+            defaultValue="upload"
+            onValueChange={(v) => setPortrait(v as 'upload' | 'generate')}>
             <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger value="upload">อัปโหลดรูปภาพ</TabsTrigger>
               <TabsTrigger value="generate">AI สร้างรูปภาพ</TabsTrigger>
@@ -259,7 +291,8 @@ export default function CharacterCreation() {
                   </label>
 
                   <p className="text-xs text-muted-foreground mt-4 text-center">
-                    รูปภาพของคุณจะถูกใช้เพื่อสร้างรูปตัวละครที่แตกต่างกัน 6 แบบสำหรับแต่ละระดับความสำเร็จ
+                    รูปภาพของคุณจะถูกใช้เพื่อสร้างรูปตัวละครที่แตกต่างกัน 6
+                    แบบสำหรับแต่ละระดับความสำเร็จ
                   </p>
                 </CardContent>
               </Card>
@@ -280,7 +313,8 @@ export default function CharacterCreation() {
                   </div>
 
                   <p className="text-center text-sm">
-                    ระบบจะสร้างรูปตัวละครที่ไม่ซ้ำกัน 6 รูปสำหรับระดับความสำเร็จของคุณ
+                    ระบบจะสร้างรูปตัวละครที่ไม่ซ้ำกัน 6
+                    รูปสำหรับระดับความสำเร็จของคุณ
                   </p>
                 </CardContent>
               </Card>
@@ -291,19 +325,15 @@ export default function CharacterCreation() {
             <Button
               variant="outline"
               onClick={() => setCurrentStep(2)}
-              className="flex-1"
-            >
+              className="flex-1">
               ย้อนกลับ
             </Button>
-            <Button
-              className="flex-1 ai-gradient-bg"
-              onClick={handleNextStep}
-            >
+            <Button className="flex-1 ai-gradient-bg" onClick={handleNextStep}>
               สร้างตัวละคร
             </Button>
           </div>
         </div>
       )}
     </div>
-  );
+  )
 }

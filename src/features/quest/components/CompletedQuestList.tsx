@@ -1,20 +1,22 @@
-"use client";
+'use client'
 
-import { Award, Clock3, Check } from "lucide-react";
-import { CompletedQuest } from "../types";
+import { Award, Check, Clock3 } from 'lucide-react'
+
+import { CompletedQuest } from '../types'
 
 interface CompletedQuestListProps {
-  completedQuests: CompletedQuest[];
+  completedQuests: CompletedQuest[]
 }
 
-export default function CompletedQuestList({ completedQuests }: CompletedQuestListProps) {
+export default function CompletedQuestList({
+  completedQuests,
+}: CompletedQuestListProps) {
   return (
     <div className="space-y-4">
       {completedQuests.map((quest) => (
         <div
           key={quest.id}
-          className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/10"
-        >
+          className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/10">
           <div className="flex-1">
             <div className="flex items-center">
               <div className="mr-2">
@@ -27,7 +29,9 @@ export default function CompletedQuestList({ completedQuests }: CompletedQuestLi
 
             <div className="flex items-center mt-1 ml-4">
               <Award className="h-3 w-3 mr-1 text-yellow-400" />
-              <span className="text-xs text-yellow-400">{quest.xpEarned} XP</span>
+              <span className="text-xs text-yellow-400">
+                {quest.xpEarned} XP
+              </span>
               <span className="mx-2 text-xs text-muted-foreground">•</span>
               <Clock3 className="h-3 w-3 mr-1 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">
@@ -44,5 +48,5 @@ export default function CompletedQuestList({ completedQuests }: CompletedQuestLi
         </div>
       ))}
     </div>
-  );
+  )
 }

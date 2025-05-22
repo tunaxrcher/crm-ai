@@ -1,54 +1,64 @@
 // Client-side service for Character feature
-import { Character, CharacterResponse, AllocateStatPointsRequest, Stat, JobClass, LevelRequirement } from '../types';
+import {
+  AllocateStatPointsRequest,
+  Character,
+  CharacterResponse,
+  JobClass,
+  LevelRequirement,
+  Stat,
+} from '../types'
 
 /**
  * Fetch character data
  */
 export async function fetchCharacter(id?: string): Promise<CharacterResponse> {
   // In a real app, this would be an actual API call
-  const response = await fetch(`/api/character${id ? `/${id}` : ''}`);
+  const response = await fetch(`/api/character${id ? `/${id}` : ''}`)
 
   if (!response.ok) {
-    throw new Error('Failed to fetch character data');
+    throw new Error('Failed to fetch character data')
   }
 
-  return response.json();
+  return response.json()
 }
 
 /**
  * Fetch all job classes
  */
 export async function fetchJobClasses(): Promise<JobClass[]> {
-  const response = await fetch('/api/character/job-classes');
+  const response = await fetch('/api/character/job-classes')
 
   if (!response.ok) {
-    throw new Error('Failed to fetch job classes');
+    throw new Error('Failed to fetch job classes')
   }
 
-  return response.json();
+  return response.json()
 }
 
 /**
  * Fetch XP table (level requirements)
  */
 export async function fetchXPTable(): Promise<LevelRequirement[]> {
-  const response = await fetch('/api/character/xp-table');
+  const response = await fetch('/api/character/xp-table')
 
   if (!response.ok) {
-    throw new Error('Failed to fetch XP requirements');
+    throw new Error('Failed to fetch XP requirements')
   }
 
-  return response.json();
+  return response.json()
 }
 
 /**
  * Allocate stat points
  */
-export async function allocateStatPoints(characterId: string, stats: Stat): Promise<Character> {
+export async function allocateStatPoints(
+  characterId: string,
+  stats: Stat
+): Promise<Character> {
   const payload: AllocateStatPointsRequest = {
     characterId,
-    stats
-  };
+    stats,
+  }
 
   const response = await fetch('/api/character/allocate-stats', {
     method: 'POST',
@@ -56,11 +66,11 @@ export async function allocateStatPoints(characterId: string, stats: Stat): Prom
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
-  });
+  })
 
   if (!response.ok) {
-    throw new Error('Failed to allocate stat points');
+    throw new Error('Failed to allocate stat points')
   }
 
-  return response.json();
+  return response.json()
 }

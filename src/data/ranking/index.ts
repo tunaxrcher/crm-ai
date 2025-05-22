@@ -1,7 +1,7 @@
 // Ranking Feature Mock Data
 export const mockRankings = {
   'all-time': {
-    'all': [
+    all: [
       {
         id: 'user-1',
         name: 'Jessica Lee',
@@ -91,7 +91,7 @@ export const mockRankings = {
         change: 3,
       },
     ],
-    'marketing': [
+    marketing: [
       {
         id: 'user-3',
         name: 'Ryan Thompson',
@@ -126,7 +126,7 @@ export const mockRankings = {
         change: 1,
       },
     ],
-    'sales': [
+    sales: [
       {
         id: 'user-1',
         name: 'Jessica Lee',
@@ -172,7 +172,7 @@ export const mockRankings = {
         change: 0,
       },
     ],
-    'accounting': [
+    accounting: [
       {
         id: 'user-2',
         name: 'Michael Chen',
@@ -184,10 +184,10 @@ export const mockRankings = {
         position: 1,
         change: 0,
       },
-    ]
+    ],
   },
-  'weekly': {
-    'all': [
+  weekly: {
+    all: [
       {
         id: 'user-2',
         name: 'Michael Chen',
@@ -244,7 +244,7 @@ export const mockRankings = {
         change: 8,
       },
     ],
-    'marketing': [
+    marketing: [
       {
         id: 'user-3',
         name: 'Ryan Thompson',
@@ -279,7 +279,7 @@ export const mockRankings = {
         change: 0,
       },
     ],
-    'sales': [
+    sales: [
       {
         id: 'user-5',
         name: 'James Rodriguez',
@@ -325,7 +325,7 @@ export const mockRankings = {
         change: 0,
       },
     ],
-    'accounting': [
+    accounting: [
       {
         id: 'user-2',
         name: 'Michael Chen',
@@ -337,6 +337,6 @@ export const mockRankings = {
         position: 1,
         change: 0,
       },
-    ]
-  }
-};
+    ],
+  },
+}

@@ -1,61 +1,70 @@
-"use client";
+'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Trophy, Award, Star } from 'lucide-react';
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
+
+import { Award, Star, Trophy } from 'lucide-react'
 
 // Types
 interface JobLevel {
-  level: number;
-  title: string;
-  requiredCharacterLevel: number;
+  level: number
+  title: string
+  requiredCharacterLevel: number
 }
 
 interface JobClass {
-  id: string;
-  name: string;
-  description?: string;
-  levels: JobLevel[];
+  id: string
+  name: string
+  description?: string
+  levels: JobLevel[]
 }
 
 interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  reward?: string;
-  unlocked: boolean;
-  date?: Date;
+  id: string
+  name: string
+  description: string
+  icon: React.ReactNode
+  reward?: string
+  unlocked: boolean
+  date?: Date
 }
 
 interface Character {
-  id: string;
-  name: string;
-  level: number;
-  xp: number;
-  nextLevelXp: number;
-  jobClassId: string;
-  jobClassName: string;
-  currentJobLevel: number;
+  id: string
+  name: string
+  level: number
+  xp: number
+  nextLevelXp: number
+  jobClassId: string
+  jobClassName: string
+  currentJobLevel: number
   stats: {
-    [key: string]: number;
-  };
-  achievements: Achievement[];
+    [key: string]: number
+  }
+  achievements: Achievement[]
 }
 
 interface CharacterContextType {
-  character: Character | null;
-  jobClass: JobClass | null;
-  loading: boolean;
-  error: Error | null;
-  addXp: (amount: number) => void;
-  unlockAchievement: (achievementId: string) => void;
-  showLevelUpAnimation: () => void;
-  showAchievementAnimation: (achievement: Achievement) => void;
-  setJobClass: (jobClass: JobClass) => void;
+  character: Character | null
+  jobClass: JobClass | null
+  loading: boolean
+  error: Error | null
+  addXp: (amount: number) => void
+  unlockAchievement: (achievementId: string) => void
+  showLevelUpAnimation: () => void
+  showAchievementAnimation: (achievement: Achievement) => void
+  setJobClass: (jobClass: JobClass) => void
 }
 
 // Create context
-const CharacterContext = createContext<CharacterContextType | undefined>(undefined);
+const CharacterContext = createContext<CharacterContextType | undefined>(
+  undefined
+)
 
 // Default job class data
 const defaultJobClass: JobClass = {
@@ -66,35 +75,35 @@ const defaultJobClass: JobClass = {
     {
       level: 1,
       requiredCharacterLevel: 1,
-      title: 'นักการตลาด'
+      title: 'นักการตลาด',
     },
     {
       level: 2,
       requiredCharacterLevel: 10,
-      title: 'นักการตลาดมืออาชีพ'
+      title: 'นักการตลาดมืออาชีพ',
     },
     {
       level: 3,
       requiredCharacterLevel: 35,
-      title: 'เซียนการตลาด'
+      title: 'เซียนการตลาด',
     },
     {
       level: 4,
       requiredCharacterLevel: 60,
-      title: 'เทพการตลาด'
+      title: 'เทพการตลาด',
     },
     {
       level: 5,
       requiredCharacterLevel: 80,
-      title: 'ปรมาจารย์ด้านการตลาด'
+      title: 'ปรมาจารย์ด้านการตลาด',
     },
     {
       level: 6,
       requiredCharacterLevel: 100,
-      title: 'เทพเจ้าการตลาด'
-    }
-  ]
-};
+      title: 'เทพเจ้าการตลาด',
+    },
+  ],
+}
 
 // Default character data
 const defaultCharacter: Character = {
@@ -139,31 +148,36 @@ const defaultCharacter: Character = {
       unlocked: false,
     },
   ],
-};
+}
 
 // Helper to get job level based on character level
-const getJobLevelForCharacter = (jobClass: JobClass, characterLevel: number): number => {
+const getJobLevelForCharacter = (
+  jobClass: JobClass,
+  characterLevel: number
+): number => {
   for (let i = jobClass.levels.length - 1; i >= 0; i--) {
     if (characterLevel >= jobClass.levels[i].requiredCharacterLevel) {
-      return jobClass.levels[i].level;
+      return jobClass.levels[i].level
     }
   }
-  return 1; // Default to first level
-};
+  return 1 // Default to first level
+}
 
 // Helper to dispatch character events
 const dispatchCharacterEvent = (eventName: string, detail?: any) => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return
 
-  window.dispatchEvent(new CustomEvent(eventName, { detail }));
-};
+  window.dispatchEvent(new CustomEvent(eventName, { detail }))
+}
 
 // Context provider
-export const CharacterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [jobClass, setJobClass] = useState<JobClass | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+export const CharacterProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
+  const [character, setCharacter] = useState<Character | null>(null)
+  const [jobClass, setJobClass] = useState<JobClass | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   // Load character data
   useEffect(() => {
@@ -171,54 +185,54 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({ children 
     setTimeout(() => {
       try {
         // In a real app, fetch from API
-        setCharacter(defaultCharacter);
-        setJobClass(defaultJobClass);
-        setLoading(false);
+        setCharacter(defaultCharacter)
+        setJobClass(defaultJobClass)
+        setLoading(false)
       } catch (err) {
-        setError(err as Error);
-        setLoading(false);
+        setError(err as Error)
+        setLoading(false)
       }
-    }, 500);
-  }, []);
+    }, 500)
+  }, [])
 
   // Update job level when character level changes
   useEffect(() => {
     if (character && jobClass) {
-      const newJobLevel = getJobLevelForCharacter(jobClass, character.level);
+      const newJobLevel = getJobLevelForCharacter(jobClass, character.level)
 
       if (newJobLevel !== character.currentJobLevel) {
         setCharacter({
           ...character,
-          currentJobLevel: newJobLevel
-        });
+          currentJobLevel: newJobLevel,
+        })
 
         // Dispatch job level up event if it increased
         if (newJobLevel > character.currentJobLevel) {
           dispatchCharacterEvent('character:joblevelup', {
             level: newJobLevel,
-            title: jobClass.levels[newJobLevel - 1]?.title || "Unknown Title"
-          });
+            title: jobClass.levels[newJobLevel - 1]?.title || 'Unknown Title',
+          })
         }
       }
     }
-  }, [character?.level, jobClass]);
+  }, [character?.level, jobClass])
 
   // Add XP and handle level up
   const addXp = (amount: number) => {
-    if (!character) return;
+    if (!character) return
 
-    let newXp = character.xp + amount;
-    let newLevel = character.level;
-    let leveledUp = false;
-    let newNextLevelXp = character.nextLevelXp;
+    let newXp = character.xp + amount
+    let newLevel = character.level
+    let leveledUp = false
+    let newNextLevelXp = character.nextLevelXp
 
     // Check for level up
     while (newXp >= newNextLevelXp) {
-      newXp -= newNextLevelXp;
-      newLevel++;
-      leveledUp = true;
+      newXp -= newNextLevelXp
+      newLevel++
+      leveledUp = true
       // Next level requires more XP
-      newNextLevelXp = Math.floor(newNextLevelXp * 1.5);
+      newNextLevelXp = Math.floor(newNextLevelXp * 1.5)
     }
 
     // Update character
@@ -227,60 +241,68 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({ children 
       xp: newXp,
       level: newLevel,
       nextLevelXp: newNextLevelXp,
-    });
+    })
 
     // Handle level up event
     if (leveledUp) {
-      dispatchCharacterEvent('character:levelup', { level: newLevel });
+      dispatchCharacterEvent('character:levelup', { level: newLevel })
     }
-  };
+  }
 
   // Unlock achievement
   const unlockAchievement = (achievementId: string) => {
-    if (!character) return;
+    if (!character) return
 
-    const achievement = character.achievements.find(a => a.id === achievementId);
-    if (!achievement || achievement.unlocked) return;
+    const achievement = character.achievements.find(
+      (a) => a.id === achievementId
+    )
+    if (!achievement || achievement.unlocked) return
 
     // Update achievement
-    const updatedAchievements = character.achievements.map(a =>
+    const updatedAchievements = character.achievements.map((a) =>
       a.id === achievementId ? { ...a, unlocked: true, date: new Date() } : a
-    );
+    )
 
     // Update character
     setCharacter({
       ...character,
       achievements: updatedAchievements,
-    });
+    })
 
     // Dispatch achievement event
-    dispatchCharacterEvent('character:achievement', achievement);
-  };
+    dispatchCharacterEvent('character:achievement', achievement)
+  }
 
   // Animation helpers
   const showLevelUpAnimation = () => {
-    dispatchCharacterEvent('character:levelup', { level: character?.level || 1 });
-  };
+    dispatchCharacterEvent('character:levelup', {
+      level: character?.level || 1,
+    })
+  }
 
   const showAchievementAnimation = (achievement: Achievement) => {
-    dispatchCharacterEvent('character:achievement', achievement);
-  };
+    dispatchCharacterEvent('character:achievement', achievement)
+  }
 
   const setJobClassAndUpdate = (newJobClass: JobClass) => {
-    setJobClass(newJobClass);
+    setJobClass(newJobClass)
 
     if (character) {
-      const currentJobLevel = getJobLevelForCharacter(newJobClass, character.level);
-      const currentTitle = newJobClass.levels[currentJobLevel - 1]?.title || "Unknown Title";
+      const currentJobLevel = getJobLevelForCharacter(
+        newJobClass,
+        character.level
+      )
+      const currentTitle =
+        newJobClass.levels[currentJobLevel - 1]?.title || 'Unknown Title'
 
       setCharacter({
         ...character,
         jobClassId: newJobClass.id,
         jobClassName: newJobClass.name,
-        currentJobLevel
-      });
+        currentJobLevel,
+      })
     }
-  };
+  }
 
   const value = {
     character,
@@ -291,21 +313,21 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({ children 
     unlockAchievement,
     showLevelUpAnimation,
     showAchievementAnimation,
-    setJobClass: setJobClassAndUpdate
-  };
+    setJobClass: setJobClassAndUpdate,
+  }
 
   return (
     <CharacterContext.Provider value={value}>
       {children}
     </CharacterContext.Provider>
-  );
-};
+  )
+}
 
 // Hook for using the context
 export const useCharacter = () => {
-  const context = useContext(CharacterContext);
+  const context = useContext(CharacterContext)
   if (context === undefined) {
-    throw new Error('useCharacter must be used within a CharacterProvider');
+    throw new Error('useCharacter must be used within a CharacterProvider')
   }
-  return context;
-};
+  return context
+}

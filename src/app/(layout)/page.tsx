@@ -1,51 +1,51 @@
-"use client";
+'use client'
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@src/components/ui/button";
-import { Card, CardContent } from "@src/components/ui/card";
+import { useEffect } from 'react'
+
+import { useRouter } from 'next/navigation'
+
+import { Button } from '@src/components/ui/button'
+import { Card, CardContent } from '@src/components/ui/card'
+import { useNotification } from '@src/components/ui/notification-system'
 import {
   BarChart3,
   Calendar,
+  ChartPieIcon,
   Gift,
   Layout,
   Medal,
   ScrollText,
+  Timer,
   Trophy,
   Users,
-  ChartPieIcon,
-  Timer,
-} from "lucide-react";
-import { useNotification } from "@src/components/ui/notification-system";
+} from 'lucide-react'
 
 export default function Home() {
-  const router = useRouter();
-  const { addNotification } = useNotification();
+  const router = useRouter()
+  const { addNotification } = useNotification()
 
   // Show welcome notification
   useEffect(() => {
     const welcomeTimer = setTimeout(() => {
       addNotification({
-        type: "info",
-        title: "Welcome to AI CRM RPG",
-        message: "Check out the new features and enhancements!",
+        type: 'info',
+        title: 'ยินดีต้อนรับสู่ เอไอ & CRM',
+        message: 'Check out the new features and enhancements!',
         duration: 5000,
         action: {
-          label: "Explore",
-          onClick: () => console.log("Welcome notification clicked"),
+          label: 'ทดสอบ Noti',
+          onClick: () => console.log('Welcome notification clicked'),
         },
-      });
-    }, 1000);
+      })
+    }, 1000)
 
-    return () => clearTimeout(welcomeTimer);
-  }, [addNotification]);
+    return () => clearTimeout(welcomeTimer)
+  }, [addNotification])
 
   return (
     <div className="p-4 pb-20">
       <div className="mb-6 text-center">
-        <h1 className="text-3xl font-bold ai-gradient-text mb-2">
-          เอไอ & CRM
-        </h1>
+        <h1 className="text-3xl font-bold ai-gradient-text mb-2">เอไอ & CRM</h1>
         <p className="text-muted-foreground">
           Turn your CRM work into an engaging RPG experience
         </p>
@@ -207,5 +207,5 @@ export default function Home() {
         </Button>
       </div> */}
     </div>
-  );
+  )
 }

@@ -1,78 +1,83 @@
-"use client";
+'use client'
 
-import React, { createContext, useContext, useState, useCallback } from "react";
-import ErrorDisplay, { ErrorSeverity } from "./ErrorDisplay";
+import React, { createContext, useCallback, useContext, useState } from 'react'
+
+import ErrorDisplay, { ErrorSeverity } from './ErrorDisplay'
 
 interface ErrorContextType {
-  showError: (title: string, options?: ErrorOptions) => void;
-  clearError: () => void;
-  error: ErrorState | null;
+  showError: (title: string, options?: ErrorOptions) => void
+  clearError: () => void
+  error: ErrorState | null
 }
 
 interface ErrorState {
-  title: string;
-  message?: string;
-  severity: ErrorSeverity;
-  technicalDetails?: string;
+  title: string
+  message?: string
+  severity: ErrorSeverity
+  technicalDetails?: string
 }
 
 interface ErrorOptions {
-  message?: string;
-  severity?: ErrorSeverity;
-  technicalDetails?: string;
-  autoHideAfter?: number; // milliseconds
+  message?: string
+  severity?: ErrorSeverity
+  technicalDetails?: string
+  autoHideAfter?: number // milliseconds
 }
 
-const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
+const ErrorContext = createContext<ErrorContextType | undefined>(undefined)
 
 /**
  * Provider component for application-wide error handling
  */
 export function ErrorProvider({ children }: { children: React.ReactNode }) {
-  const [error, setError] = useState<ErrorState | null>(null);
-  const [autoHideTimeoutId, setAutoHideTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [error, setError] = useState<ErrorState | null>(null)
+  const [autoHideTimeoutId, setAutoHideTimeoutId] =
+    useState<NodeJS.Timeout | null>(null)
 
   const clearError = useCallback(() => {
-    setError(null);
+    setError(null)
     if (autoHideTimeoutId) {
-      clearTimeout(autoHideTimeoutId);
-      setAutoHideTimeoutId(null);
+      clearTimeout(autoHideTimeoutId)
+      setAutoHideTimeoutId(null)
     }
-  }, [autoHideTimeoutId]);
+  }, [autoHideTimeoutId])
 
-  const showError = useCallback((
-    title: string,
-    {
-      message,
-      severity = "error",
-      technicalDetails,
-      autoHideAfter
-    }: ErrorOptions = {}
-  ) => {
-    // Clear any existing timeout
-    if (autoHideTimeoutId) {
-      clearTimeout(autoHideTimeoutId);
-      setAutoHideTimeoutId(null);
-    }
+  const showError = useCallback(
+    (
+      title: string,
+      {
+        message,
+        severity = 'error',
+        technicalDetails,
+        autoHideAfter,
+      }: ErrorOptions = {}
+    ) => {
+      // Clear any existing timeout
+      if (autoHideTimeoutId) {
+        clearTimeout(autoHideTimeoutId)
+        setAutoHideTimeoutId(null)
+      }
 
-    setError({ title, message, severity, technicalDetails });
+      setError({ title, message, severity, technicalDetails })
 
-    // Set auto-hide if specified
-    if (autoHideAfter && autoHideAfter > 0) {
-      const timeoutId = setTimeout(() => {
-        setError(null);
-        setAutoHideTimeoutId(null);
-      }, autoHideAfter);
+      // Set auto-hide if specified
+      if (autoHideAfter && autoHideAfter > 0) {
+        const timeoutId = setTimeout(() => {
+          setError(null)
+          setAutoHideTimeoutId(null)
+        }, autoHideAfter)
 
-      setAutoHideTimeoutId(timeoutId);
-    }
-  }, [autoHideTimeoutId]);
+        setAutoHideTimeoutId(timeoutId)
+      }
+    },
+    [autoHideTimeoutId]
+  )
 
   const contextValue = {
     showError,
     clearError,
-    error
-  };
+    error,
+  }
 
   return (
     <ErrorContext.Provider value={contextValue}>
@@ -91,18 +96,18 @@ export function ErrorProvider({ children }: { children: React.ReactNode }) {
         </div>
       )}
     </ErrorContext.Provider>
-  );
+  )
 }
 
 /**
  * Hook to use the error context in components
  */
 export function useError() {
-  const context = useContext(ErrorContext);
+  const context = useContext(ErrorContext)
 
   if (context === undefined) {
-    throw new Error("useError must be used within an ErrorProvider");
+    throw new Error('useError must be used within an ErrorProvider')
   }
 
-  return context;
+  return context
 }

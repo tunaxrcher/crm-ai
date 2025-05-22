@@ -1,5 +1,5 @@
-import PartyPage from "@src/features/party/components/PartyPage";
+import PartyPage from '@src/features/party/components/PartyPage'
 
 export default function Page() {
-  return <PartyPage />;
+  return <PartyPage />
 }

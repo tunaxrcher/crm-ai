@@ -3,404 +3,420 @@
 // Mock teams data
 export const mockTeams = [
   {
-    id: "team-1",
-    name: "Sales Champions",
-    description: "Top performers in the sales department",
+    id: 'team-1',
+    name: 'Sales Champions',
+    description: 'Top performers in the sales department',
     members: 5,
     maxMembers: 5,
     level: 8,
     xp: 3450,
     xpToNextLevel: 5000,
-    joinRequirement: "Min Level 5",
+    joinRequirement: 'Min Level 5',
     leader: {
-      id: "user-1",
-      name: "Alex Chen",
+      id: 'user-1',
+      name: 'Alex Chen',
       level: 15,
-      role: "Sales Lead",
-      avatar: "AC"
+      role: 'Sales Lead',
+      avatar: 'AC',
     },
-    tags: ["sales", "competitive", "active"],
-    activity: "very-active",
+    tags: ['sales', 'competitive', 'active'],
+    activity: 'very-active',
     completedQuests: 35,
     achievements: 14,
     isFull: true,
-    isPrivate: false
+    isPrivate: false,
   },
   {
-    id: "team-2",
-    name: "Marketing Wizards",
-    description: "Creative minds behind all marketing campaigns",
+    id: 'team-2',
+    name: 'Marketing Wizards',
+    description: 'Creative minds behind all marketing campaigns',
     members: 3,
     maxMembers: 5,
     level: 6,
     xp: 2250,
     xpToNextLevel: 3000,
-    joinRequirement: "Marketing role required",
+    joinRequirement: 'Marketing role required',
     leader: {
-      id: "user-2",
-      name: "Sarah Kim",
+      id: 'user-2',
+      name: 'Sarah Kim',
       level: 12,
-      role: "Marketing Specialist",
-      avatar: "SK"
+      role: 'Marketing Specialist',
+      avatar: 'SK',
     },
-    tags: ["marketing", "creative", "casual"],
-    activity: "active",
+    tags: ['marketing', 'creative', 'casual'],
+    activity: 'active',
     completedQuests: 24,
     achievements: 9,
     isFull: false,
-    isPrivate: false
+    isPrivate: false,
   },
   {
-    id: "team-3",
-    name: "Account Guardians",
-    description: "Dedicated to maintaining client relationships",
+    id: 'team-3',
+    name: 'Account Guardians',
+    description: 'Dedicated to maintaining client relationships',
     members: 4,
     maxMembers: 6,
     level: 10,
     xp: 5200,
     xpToNextLevel: 6000,
-    joinRequirement: "Account Managers only",
+    joinRequirement: 'Account Managers only',
     leader: {
-      id: "user-3",
-      name: "Carlos Rodriguez",
+      id: 'user-3',
+      name: 'Carlos Rodriguez',
       level: 18,
-      role: "Senior Account Manager",
-      avatar: "CR"
+      role: 'Senior Account Manager',
+      avatar: 'CR',
     },
-    tags: ["account-management", "professional", "active"],
-    activity: "active",
+    tags: ['account-management', 'professional', 'active'],
+    activity: 'active',
     completedQuests: 42,
     achievements: 16,
     isFull: false,
-    isPrivate: true
+    isPrivate: true,
   },
   {
-    id: "team-4",
-    name: "Tech Support Heroes",
-    description: "Always ready to solve technical issues",
+    id: 'team-4',
+    name: 'Tech Support Heroes',
+    description: 'Always ready to solve technical issues',
     members: 2,
     maxMembers: 4,
     level: 5,
     xp: 1800,
     xpToNextLevel: 2500,
-    joinRequirement: "Technical knowledge required",
+    joinRequirement: 'Technical knowledge required',
     leader: {
-      id: "user-4",
-      name: "Mia Johnson",
+      id: 'user-4',
+      name: 'Mia Johnson',
       level: 9,
-      role: "Technical Support Lead",
-      avatar: "MJ"
+      role: 'Technical Support Lead',
+      avatar: 'MJ',
     },
-    tags: ["support", "technical", "casual"],
-    activity: "semi-active",
+    tags: ['support', 'technical', 'casual'],
+    activity: 'semi-active',
     completedQuests: 18,
     achievements: 7,
     isFull: false,
-    isPrivate: false
-  }
-];
+    isPrivate: false,
+  },
+]
 
 // Mock team details for team-1
 export const mockTeamDetail = {
-  id: "team-1",
-  name: "Sales Champions",
-  description: "We are the elite sales team focused on exceeding targets and closing high-value deals. Our team specializes in enterprise solutions and strategic partnerships.",
+  id: 'team-1',
+  name: 'Sales Champions',
+  description:
+    'We are the elite sales team focused on exceeding targets and closing high-value deals. Our team specializes in enterprise solutions and strategic partnerships.',
   members: [
     {
-      id: "user-1",
-      name: "Alex Chen",
+      id: 'user-1',
+      name: 'Alex Chen',
       level: 15,
-      role: "Sales Lead",
-      avatar: "AC",
+      role: 'Sales Lead',
+      avatar: 'AC',
       isLeader: true,
-      status: "online",
-      joinedAt: "3 months ago",
+      status: 'online',
+      joinedAt: '3 months ago',
       questContribution: 78,
-      specialties: ["High-value deals", "Negotiations", "Client retention"]
+      specialties: ['High-value deals', 'Negotiations', 'Client retention'],
     },
     {
-      id: "user-5",
-      name: "Lisa Wong",
+      id: 'user-5',
+      name: 'Lisa Wong',
       level: 12,
-      role: "Account Manager",
-      avatar: "LW",
+      role: 'Account Manager',
+      avatar: 'LW',
       isLeader: false,
-      status: "online",
-      joinedAt: "2 months ago",
+      status: 'online',
+      joinedAt: '2 months ago',
       questContribution: 65,
-      specialties: ["Enterprise clients", "Upselling", "Demonstrations"]
+      specialties: ['Enterprise clients', 'Upselling', 'Demonstrations'],
     },
     {
-      id: "user-6",
-      name: "Juan Martinez",
+      id: 'user-6',
+      name: 'Juan Martinez',
       level: 10,
-      role: "Sales Rep",
-      avatar: "JM",
+      role: 'Sales Rep',
+      avatar: 'JM',
       isLeader: false,
-      status: "offline",
-      joinedAt: "1 month ago",
+      status: 'offline',
+      joinedAt: '1 month ago',
       questContribution: 42,
-      specialties: ["Cold outreach", "Lead generation", "New markets"]
+      specialties: ['Cold outreach', 'Lead generation', 'New markets'],
     },
     {
-      id: "user-7",
-      name: "Emma Taylor",
+      id: 'user-7',
+      name: 'Emma Taylor',
       level: 9,
-      role: "Sales Specialist",
-      avatar: "ET",
+      role: 'Sales Specialist',
+      avatar: 'ET',
       isLeader: false,
-      status: "away",
-      joinedAt: "3 weeks ago",
+      status: 'away',
+      joinedAt: '3 weeks ago',
       questContribution: 31,
-      specialties: ["Product knowledge", "Competition analysis", "Sales support"]
+      specialties: [
+        'Product knowledge',
+        'Competition analysis',
+        'Sales support',
+      ],
     },
     {
-      id: "user-8",
-      name: "David Park",
+      id: 'user-8',
+      name: 'David Park',
       level: 8,
-      role: "Junior Sales Rep",
-      avatar: "DP",
+      role: 'Junior Sales Rep',
+      avatar: 'DP',
       isLeader: false,
-      status: "online",
-      joinedAt: "2 weeks ago",
+      status: 'online',
+      joinedAt: '2 weeks ago',
       questContribution: 25,
-      specialties: ["Market research", "Follow-ups", "Client onboarding"]
-    }
+      specialties: ['Market research', 'Follow-ups', 'Client onboarding'],
+    },
   ],
   pendingRequests: [
     {
-      id: "user-9",
-      name: "Sophie Chen",
+      id: 'user-9',
+      name: 'Sophie Chen',
       level: 7,
-      role: "Sales Associate",
-      avatar: "SC",
-      message: "I'd like to join your team to learn from experienced sales professionals."
-    }
+      role: 'Sales Associate',
+      avatar: 'SC',
+      message:
+        "I'd like to join your team to learn from experienced sales professionals.",
+    },
   ],
   teamQuests: [
     {
-      id: "team-quest-1",
-      title: "Quarterly Sales Target",
-      description: "Achieve 120% of the quarterly sales target as a team",
+      id: 'team-quest-1',
+      title: 'Quarterly Sales Target',
+      description: 'Achieve 120% of the quarterly sales target as a team',
       progress: 75,
       reward: {
         xp: 1000,
         points: 500,
-        buff: "Team Synergy: +15% to all sales activities for 7 days"
+        buff: 'Team Synergy: +15% to all sales activities for 7 days',
       },
-      deadline: "5 days left",
-      difficulty: "hard",
+      deadline: '5 days left',
+      difficulty: 'hard',
       participants: 5,
-      requiredParticipants: 3
+      requiredParticipants: 3,
     },
     {
-      id: "team-quest-2",
-      title: "Client Retention Campaign",
-      description: "Reach out to all existing clients and ensure satisfaction",
+      id: 'team-quest-2',
+      title: 'Client Retention Campaign',
+      description: 'Reach out to all existing clients and ensure satisfaction',
       progress: 60,
       reward: {
         xp: 600,
         points: 300,
-        buff: "Client Trust: +20% chance for repeat business for 5 days"
+        buff: 'Client Trust: +20% chance for repeat business for 5 days',
       },
-      deadline: "3 days left",
-      difficulty: "medium",
+      deadline: '3 days left',
+      difficulty: 'medium',
       participants: 4,
-      requiredParticipants: 2
+      requiredParticipants: 2,
     },
     {
-      id: "team-quest-3",
-      title: "Sales Technique Workshop",
-      description: "Organize and participate in a team workshop on advanced sales techniques",
+      id: 'team-quest-3',
+      title: 'Sales Technique Workshop',
+      description:
+        'Organize and participate in a team workshop on advanced sales techniques',
       progress: 30,
       reward: {
         xp: 400,
         points: 200,
-        buff: "Skill Enhancement: +2 to AGI and INT stats for all team members for 3 days"
+        buff: 'Skill Enhancement: +2 to AGI and INT stats for all team members for 3 days',
       },
-      deadline: "7 days left",
-      difficulty: "easy",
+      deadline: '7 days left',
+      difficulty: 'easy',
       participants: 3,
-      requiredParticipants: 3
-    }
+      requiredParticipants: 3,
+    },
   ],
   completedQuests: [
     {
-      id: "completed-team-quest-1",
-      title: "New Product Launch",
-      description: "Successfully introduce the new product to 50 potential clients",
-      completedOn: "Last week",
+      id: 'completed-team-quest-1',
+      title: 'New Product Launch',
+      description:
+        'Successfully introduce the new product to 50 potential clients',
+      completedOn: 'Last week',
       reward: {
         xp: 800,
-        points: 400
+        points: 400,
       },
-      participants: 5
+      participants: 5,
     },
     {
-      id: "completed-team-quest-2",
-      title: "Sales Pipeline Cleanup",
-      description: "Audit and update all leads in the sales pipeline",
-      completedOn: "2 weeks ago",
+      id: 'completed-team-quest-2',
+      title: 'Sales Pipeline Cleanup',
+      description: 'Audit and update all leads in the sales pipeline',
+      completedOn: '2 weeks ago',
       reward: {
         xp: 500,
-        points: 250
+        points: 250,
       },
-      participants: 4
-    }
+      participants: 4,
+    },
   ],
   chat: [
     {
-      id: "message-1",
-      userId: "user-1",
-      userName: "Alex Chen",
-      avatar: "AC",
-      message: "Great job on the quarterly sales targets everyone! We're at 75% already.",
-      timestamp: "Today, 9:30 AM"
+      id: 'message-1',
+      userId: 'user-1',
+      userName: 'Alex Chen',
+      avatar: 'AC',
+      message:
+        "Great job on the quarterly sales targets everyone! We're at 75% already.",
+      timestamp: 'Today, 9:30 AM',
     },
     {
-      id: "message-2",
-      userId: "user-5",
-      userName: "Lisa Wong",
-      avatar: "LW",
-      message: "I just closed the deal with Enterprise Solutions Inc. That should help us reach our target!",
-      timestamp: "Today, 10:15 AM"
+      id: 'message-2',
+      userId: 'user-5',
+      userName: 'Lisa Wong',
+      avatar: 'LW',
+      message:
+        'I just closed the deal with Enterprise Solutions Inc. That should help us reach our target!',
+      timestamp: 'Today, 10:15 AM',
     },
     {
-      id: "message-3",
-      userId: "user-6",
-      userName: "Juan Martinez",
-      avatar: "JM",
-      message: "Nice work Lisa! I've got two more prospects lined up for this week.",
-      timestamp: "Today, 10:18 AM"
+      id: 'message-3',
+      userId: 'user-6',
+      userName: 'Juan Martinez',
+      avatar: 'JM',
+      message:
+        "Nice work Lisa! I've got two more prospects lined up for this week.",
+      timestamp: 'Today, 10:18 AM',
     },
     {
-      id: "message-4",
-      userId: "user-1",
-      userName: "Alex Chen",
-      avatar: "AC",
-      message: "Don't forget we have the team workshop quest coming up. Let's coordinate on that.",
-      timestamp: "Today, 10:25 AM"
+      id: 'message-4',
+      userId: 'user-1',
+      userName: 'Alex Chen',
+      avatar: 'AC',
+      message:
+        "Don't forget we have the team workshop quest coming up. Let's coordinate on that.",
+      timestamp: 'Today, 10:25 AM',
     },
     {
-      id: "message-5",
-      userId: "user-7",
-      userName: "Emma Taylor",
-      avatar: "ET",
-      message: "I can prepare some materials for the workshop. I've been researching new negotiation techniques.",
-      timestamp: "Today, 11:02 AM"
-    }
+      id: 'message-5',
+      userId: 'user-7',
+      userName: 'Emma Taylor',
+      avatar: 'ET',
+      message:
+        "I can prepare some materials for the workshop. I've been researching new negotiation techniques.",
+      timestamp: 'Today, 11:02 AM',
+    },
   ],
   benefits: [
     {
-      title: "Team Synergy",
-      description: "+10% XP for all team activities",
-      icon: "Shield"
+      title: 'Team Synergy',
+      description: '+10% XP for all team activities',
+      icon: 'Shield',
     },
     {
-      title: "Resource Sharing",
-      description: "Access to team-exclusive items and buffs",
-      icon: "Users"
+      title: 'Resource Sharing',
+      description: 'Access to team-exclusive items and buffs',
+      icon: 'Users',
     },
     {
-      title: "Specialized Quests",
-      description: "Unlock team-only quests with premium rewards",
-      icon: "Target"
-    }
+      title: 'Specialized Quests',
+      description: 'Unlock team-only quests with premium rewards',
+      icon: 'Target',
+    },
   ],
   achievements: [
     {
-      title: "Sales Dream Team",
-      description: "Achieved 150% of quarterly target",
+      title: 'Sales Dream Team',
+      description: 'Achieved 150% of quarterly target',
       progress: 75,
-      reward: "Team Level +1 when completed"
+      reward: 'Team Level +1 when completed',
     },
     {
-      title: "Perfect Coordination",
-      description: "Complete 10 team quests with full participation",
+      title: 'Perfect Coordination',
+      description: 'Complete 10 team quests with full participation',
       progress: 70,
-      reward: "Team buff: +15% coordination bonus"
+      reward: 'Team buff: +15% coordination bonus',
     },
     {
-      title: "Department Champions",
-      description: "Rank #1 among all sales teams for a month",
+      title: 'Department Champions',
+      description: 'Rank #1 among all sales teams for a month',
       progress: 100,
       completed: true,
-      reward: "Exclusive Team Banner: 'Champions Circle'"
-    }
+      reward: "Exclusive Team Banner: 'Champions Circle'",
+    },
   ],
   level: 8,
   xp: 3450,
-  xpToNextLevel: 5000
-};
+  xpToNextLevel: 5000,
+}
 
 // Mock team quests data
 export const mockTeamQuests = [
   {
-    id: "global-team-quest-1",
-    title: "Cross-Department Collaboration",
-    description: "Work with at least 2 other teams to complete a major project",
+    id: 'global-team-quest-1',
+    title: 'Cross-Department Collaboration',
+    description: 'Work with at least 2 other teams to complete a major project',
     rewards: {
       xp: 1200,
       points: 600,
-      buff: "Collaborative Spirit: +15% effectiveness on cross-team projects for 14 days"
+      buff: 'Collaborative Spirit: +15% effectiveness on cross-team projects for 14 days',
     },
     requirements: {
       minTeamLevel: 5,
       minMembers: 3,
-      duration: "14 days",
-      difficulty: "medium"
+      duration: '14 days',
+      difficulty: 'medium',
     },
-    tags: ["collaboration", "project-management", "cross-functional"]
+    tags: ['collaboration', 'project-management', 'cross-functional'],
   },
   {
-    id: "global-team-quest-2",
-    title: "Knowledge Sharing Summit",
-    description: "Organize a knowledge sharing event with presentations from each team member",
+    id: 'global-team-quest-2',
+    title: 'Knowledge Sharing Summit',
+    description:
+      'Organize a knowledge sharing event with presentations from each team member',
     rewards: {
       xp: 800,
       points: 400,
-      buff: "Wisdom Boost: +2 to INT for all team members for 7 days"
+      buff: 'Wisdom Boost: +2 to INT for all team members for 7 days',
     },
     requirements: {
       minTeamLevel: 3,
       minMembers: 2,
-      duration: "7 days",
-      difficulty: "easy"
+      duration: '7 days',
+      difficulty: 'easy',
     },
-    tags: ["knowledge-sharing", "training", "development"]
+    tags: ['knowledge-sharing', 'training', 'development'],
   },
   {
-    id: "global-team-quest-3",
-    title: "Quarter Crusher Challenge",
-    description: "Exceed department targets by at least 25% in a single quarter",
+    id: 'global-team-quest-3',
+    title: 'Quarter Crusher Challenge',
+    description:
+      'Exceed department targets by at least 25% in a single quarter',
     rewards: {
       xp: 2000,
       points: 1000,
-      buff: "Market Dominance: +20% performance on all sales and marketing activities for 30 days"
+      buff: 'Market Dominance: +20% performance on all sales and marketing activities for 30 days',
     },
     requirements: {
       minTeamLevel: 8,
       minMembers: 4,
-      duration: "90 days",
-      difficulty: "hard"
+      duration: '90 days',
+      difficulty: 'hard',
     },
-    tags: ["sales", "performance", "competitive"]
+    tags: ['sales', 'performance', 'competitive'],
   },
   {
-    id: "global-team-quest-4",
-    title: "Client Satisfaction Surge",
-    description: "Achieve an average client satisfaction rating of 9.5/10 or higher",
+    id: 'global-team-quest-4',
+    title: 'Client Satisfaction Surge',
+    description:
+      'Achieve an average client satisfaction rating of 9.5/10 or higher',
     rewards: {
       xp: 1500,
       points: 750,
-      buff: "Reputation Boost: +25% client retention for 21 days"
+      buff: 'Reputation Boost: +25% client retention for 21 days',
     },
     requirements: {
       minTeamLevel: 6,
       minMembers: 3,
-      duration: "30 days",
-      difficulty: "medium"
+      duration: '30 days',
+      difficulty: 'medium',
     },
-    tags: ["client-relations", "service", "reputation"]
-  }
-];
+    tags: ['client-relations', 'service', 'reputation'],
+  },
+]

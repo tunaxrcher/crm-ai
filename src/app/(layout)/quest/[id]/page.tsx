@@ -1,10 +1,10 @@
-import QuestDetail from "./QuestDetail";
+import QuestDetail from './QuestDetail'
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>
 }
 
 export default async function Page({ params }: PageProps) {
-  const { id } = await params;
-  return <QuestDetail questId={id} />;
+  const { id } = await params
+  return <QuestDetail questId={id} />
 }

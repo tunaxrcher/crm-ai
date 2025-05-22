@@ -1,11 +1,12 @@
-"use client";
+'use client'
 
-import { Stat } from "../types";
-import { ReactNode } from "react";
+import { ReactNode } from 'react'
+
+import { Stat } from '../types'
 
 interface StatDisplayProps {
-  stats: Stat;
-  getStatIcon: (stat: string) => ReactNode;
+  stats: Stat
+  getStatIcon: (stat: string) => ReactNode
 }
 
 export default function StatDisplay({ stats, getStatIcon }: StatDisplayProps) {
@@ -23,5 +24,5 @@ export default function StatDisplay({ stats, getStatIcon }: StatDisplayProps) {
         </div>
       ))}
     </div>
-  );
+  )
 }

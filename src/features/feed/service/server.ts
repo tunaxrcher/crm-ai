@@ -1,38 +1,66 @@
 // src/features/feed/service/server.ts
-import "server-only";
-import { BaseService } from "@src/lib/service/server/baseService";
+import { Prisma } from '@prisma/client'
+import { BaseService } from '@src/lib/service/server/baseService'
+import 'server-only'
+
 import {
-  feedRepository,
-  storyRepository,
-  likeRepository,
   commentRepository,
-} from "../repository";
+  feedRepository,
+  likeRepository,
+  storyRepository,
+} from '../repository'
 
 // Feed Service
 export class FeedService extends BaseService {
-  private static instance: FeedService;
+  private static instance: FeedService
 
   constructor() {
-    super();
+    super()
   }
 
   public static getInstance() {
     if (!FeedService.instance) {
-      FeedService.instance = new FeedService();
+      FeedService.instance = new FeedService()
     }
-    return FeedService.instance;
+    return FeedService.instance
   }
 
   async getFeedItems(params: { page: number; limit: number; userId?: number }) {
-    const { page, limit, userId } = params;
-    const skip = (page - 1) * limit;
+    const { page, limit, userId } = params
+    const skip = (page - 1) * limit
 
-    const [items, total] = await Promise.all([
+    const includeRelations = {
+      user: true,
+      likes: {
+        include: { user: true },
+      },
+      comments: {
+        include: {
+          user: true,
+          replies: {
+            include: { user: true },
+          },
+        },
+      },
+      questSubmission: {
+        include: { quest: true },
+      },
+      levelHistory: true,
+      achievement: {
+        include: { achievement: true },
+      },
+    } as const
+
+    const [items, total] = (await Promise.all([
       feedRepository.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
-        distinct: ["id"], // เพิ่มเพื่อให้แน่ใจว่าไม่มี duplicate
+        orderBy: { createdAt: 'desc' },
+        where: {
+          type: {
+            in: ['quest_completion', 'level_up', 'achievement'],
+          },
+        },
         include: {
           user: true,
           likes: {
@@ -56,17 +84,19 @@ export class FeedService extends BaseService {
         },
       }),
       feedRepository.count(),
-    ]);
+    ])) as any
 
     // เช็คว่า userId ที่ส่งมาได้กดไลค์หรือยัง
-    const itemsWithLikeStatus = items.map((item) => ({
-      ...item,
-      hasLiked: userId
-        ? item.likes.some((like) => like.userId === userId)
-        : false,
-      likesCount: item.likes.length,
-      commentsCount: item.comments.length,
-    }));
+    const itemsWithLikeStatus = items.map(
+      (item: { likes: any[]; comments: string | any[] }) => ({
+        ...item,
+        hasLiked: userId
+          ? item.likes.some((like) => like.userId === userId)
+          : false,
+        likesCount: item.likes.length,
+        commentsCount: item.comments.length,
+      })
+    )
 
     return {
       items: itemsWithLikeStatus,
@@ -76,7 +106,7 @@ export class FeedService extends BaseService {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    };
+    }
   }
 
   // async getFeedItems(params: { page: number; limit: number; userId?: number }) {
@@ -166,76 +196,99 @@ export class FeedService extends BaseService {
               include: { user: true },
             },
           },
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         },
       },
-    });
+    })
   }
 
+  // src/features/feed/service/server.ts
   async createFeedItem(data: {
-    userId: number;
-    content: string;
-    type: string;
-    mediaType?: "text" | "image" | "video";
-    mediaUrl?: string;
+    userId: number
+    content: string
+    type: string
+    mediaType?: 'text' | 'image' | 'video'
+    mediaUrl?: string
   }) {
-    return feedRepository.create(data);
+    return feedRepository.create({
+      content: data.content,
+      type: data.type,
+      mediaType: data.mediaType || 'text',
+      mediaUrl: data.mediaUrl,
+      user: {
+        connect: { id: data.userId }, // ใช้ connect แทน userId
+      },
+    })
   }
 
   async deleteFeedItem(id: number) {
-    return feedRepository.delete(id);
+    return feedRepository.delete(id)
   }
 }
 
 // Story Service
 export class StoryService extends BaseService {
-  private static instance: StoryService;
+  private static instance: StoryService
 
   constructor() {
-    super();
+    super()
   }
 
   public static getInstance() {
     if (!StoryService.instance) {
-      StoryService.instance = new StoryService();
+      StoryService.instance = new StoryService()
     }
-    return StoryService.instance;
+    return StoryService.instance
   }
 
   async getActiveStories(userId?: number) {
     const stories = await storyRepository.findActiveStories({
       include: {
         user: true,
-        views: userId
-          ? {
-              where: { userId },
-            }
-          : false,
+        views: true, // Include all views always to count
       },
-    });
+    })
 
-    return stories.map((story) => ({
+    // Type assertion to let TypeScript know about the included relations
+    type StoryWithRelations = Prisma.StoryGetPayload<{
+      include: {
+        user: true
+        views: true
+      }
+    }>
+
+    const storiesWithRelations = stories as StoryWithRelations[]
+
+    return storiesWithRelations.map((story) => ({
       ...story,
-      hasViewed: userId ? story.views.length > 0 : false,
-      viewsCount: story.views.length,
-    }));
+      hasViewed:
+        userId && story.views
+          ? story.views.some((view) => view.userId === userId)
+          : false,
+      viewsCount: story.views?.length || 0,
+    }))
   }
 
   async createStory(data: {
-    userId: number;
-    content?: string;
-    type: "text" | "image" | "video";
-    mediaUrl?: string;
-    text?: string;
-    expiresInHours?: number;
+    userId: number
+    content?: string
+    type: 'text' | 'image' | 'video'
+    mediaUrl?: string
+    text?: string
+    expiresInHours?: number
   }) {
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + (data.expiresInHours || 24));
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + (data.expiresInHours || 24))
+
+    const { userId, expiresInHours, ...storyData } = data
 
     return storyRepository.create({
-      ...data,
+      ...storyData,
       expiresAt,
-    });
+      user: {
+        connect: { id: userId },
+      },
+    })
   }
 
   async markStoryAsViewed(data: { storyId: number; userId: number }) {
@@ -243,66 +296,66 @@ export class StoryService extends BaseService {
     const existingView = await storyRepository.findStoryView(
       data.storyId,
       data.userId
-    );
+    )
 
     if (existingView) {
-      return existingView;
+      return existingView
     }
 
-    return storyRepository.createStoryView(data);
+    return storyRepository.createStoryView(data)
   }
 }
 
 // Like Service
 export class LikeService extends BaseService {
-  private static instance: LikeService;
+  private static instance: LikeService
 
   constructor() {
-    super();
+    super()
   }
 
   public static getInstance() {
     if (!LikeService.instance) {
-      LikeService.instance = new LikeService();
+      LikeService.instance = new LikeService()
     }
-    return LikeService.instance;
+    return LikeService.instance
   }
 
   async toggleLike(data: { feedItemId: number; userId: number }) {
     const existingLike = await likeRepository.findByUserAndFeedItem(
       data.userId,
       data.feedItemId
-    );
+    )
 
     if (existingLike) {
-      await likeRepository.delete(existingLike.id);
-      return { liked: false };
+      await likeRepository.delete(existingLike.id)
+      return { liked: false }
     }
 
-    await likeRepository.create(data);
-    return { liked: true };
+    await likeRepository.create(data)
+    return { liked: true }
   }
 
   async getLikesByFeedItem(feedItemId: number) {
     return likeRepository.findByFeedItem(feedItemId, {
       include: { user: true },
-    });
+    })
   }
 }
 
 // Comment Service
 export class CommentService extends BaseService {
-  private static instance: CommentService;
+  private static instance: CommentService
 
   constructor() {
-    super();
+    super()
   }
 
   public static getInstance() {
     if (!CommentService.instance) {
-      CommentService.instance = new CommentService();
+      CommentService.instance = new CommentService()
     }
-    return CommentService.instance;
+    return CommentService.instance
   }
 
   async getCommentsByFeedItem(feedItemId: number) {
@@ -311,36 +364,36 @@ export class CommentService extends BaseService {
         user: true,
         replies: {
           include: { user: true },
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: 'asc' },
         },
       },
-      orderBy: { createdAt: "desc" },
-    });
+      orderBy: { createdAt: 'desc' },
+    })
   }
 
   async createComment(data: {
-    feedItemId: number;
-    userId: number;
-    content: string;
+    feedItemId: number
+    userId: number
+    content: string
   }) {
-    return commentRepository.create(data);
+    return commentRepository.create(data)
   }
 
   async createReplyComment(data: {
-    commentId: number;
-    userId: number;
-    content: string;
+    commentId: number
+    userId: number
+    content: string
   }) {
-    return commentRepository.createReply(data);
+    return commentRepository.createReply(data)
   }
 
   async deleteComment(id: number) {
-    return commentRepository.delete(id);
+    return commentRepository.delete(id)
   }
 }
 
 // Export instances
-export const feedService = FeedService.getInstance();
-export const storyService = StoryService.getInstance();
-export const likeService = LikeService.getInstance();
-export const commentService = CommentService.getInstance();
+export const feedService = FeedService.getInstance()
+export const storyService = StoryService.getInstance()
+export const likeService = LikeService.getInstance()
+export const commentService = CommentService.getInstance()
