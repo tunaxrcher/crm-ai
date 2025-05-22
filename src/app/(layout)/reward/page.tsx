@@ -2,13 +2,44 @@
 
 import { useState } from "react";
 import { Button } from "@src/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@src/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@src/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@src/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@src/components/ui/tabs";
 import { Badge } from "@src/components/ui/badge";
 import { Progress } from "@src/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@src/components/ui/avatar";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@src/components/ui/dialog";
-import { Award, Clock, Gift, Info, Lock, Plus, Sparkles, Star, Trophy, Unlock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@src/components/ui/dialog";
+import {
+  Award,
+  Clock,
+  Gift,
+  Info,
+  Lock,
+  Plus,
+  Sparkles,
+  Star,
+  Trophy,
+  Unlock,
+} from "lucide-react";
 
 // Mock reward data
 const mockRewards = [
@@ -19,7 +50,7 @@ const mockRewards = [
     icon: <Sparkles className="h-10 w-10 text-purple-400" />,
     cost: 500,
     type: "buff",
-    unlocked: true
+    unlocked: true,
   },
   {
     id: "reward-2",
@@ -28,7 +59,7 @@ const mockRewards = [
     icon: <Clock className="h-10 w-10 text-blue-400" />,
     cost: 300,
     type: "buff",
-    unlocked: true
+    unlocked: true,
   },
   {
     id: "reward-3",
@@ -37,7 +68,7 @@ const mockRewards = [
     icon: <Trophy className="h-10 w-10 text-yellow-400" />,
     cost: 1000,
     type: "title",
-    unlocked: true
+    unlocked: true,
   },
   {
     id: "reward-4",
@@ -47,7 +78,7 @@ const mockRewards = [
     cost: 2000,
     type: "cosmetic",
     unlocked: false,
-    requiredLevel: 15
+    requiredLevel: 15,
   },
   {
     id: "reward-5",
@@ -57,8 +88,8 @@ const mockRewards = [
     cost: 1500,
     type: "special",
     unlocked: false,
-    requiredLevel: 20
-  }
+    requiredLevel: 20,
+  },
 ];
 
 // Mock achievements data
@@ -72,8 +103,8 @@ const mockAchievements = [
     completed: true,
     reward: {
       type: "xp",
-      amount: 100
-    }
+      amount: 100,
+    },
   },
   {
     id: "achievement-2",
@@ -84,8 +115,8 @@ const mockAchievements = [
     completed: false,
     reward: {
       type: "title",
-      name: "The Consistent"
-    }
+      name: "The Consistent",
+    },
   },
   {
     id: "achievement-3",
@@ -96,8 +127,8 @@ const mockAchievements = [
     completed: false,
     reward: {
       type: "points",
-      amount: 500
-    }
+      amount: 500,
+    },
   },
   {
     id: "achievement-4",
@@ -109,8 +140,8 @@ const mockAchievements = [
     reward: {
       type: "buff",
       name: "Marketing Excellence",
-      description: "+10% to DEX and INT stats for 7 days"
-    }
+      description: "+10% to DEX and INT stats for 7 days",
+    },
   },
   {
     id: "achievement-5",
@@ -121,8 +152,8 @@ const mockAchievements = [
     completed: false,
     reward: {
       type: "points",
-      amount: 300
-    }
+      amount: 300,
+    },
   },
   {
     id: "achievement-6",
@@ -133,9 +164,9 @@ const mockAchievements = [
     completed: false,
     reward: {
       type: "title",
-      name: "The Perfect"
-    }
-  }
+      name: "The Perfect",
+    },
+  },
 ];
 
 // Mock inventory data
@@ -147,7 +178,7 @@ const mockInventory = [
     icon: <Sparkles className="h-6 w-6 text-purple-400" />,
     quantity: 2,
     type: "buff",
-    usable: true
+    usable: true,
   },
   {
     id: "inventory-2",
@@ -157,8 +188,8 @@ const mockInventory = [
     quantity: 1,
     type: "title",
     usable: true,
-    active: false
-  }
+    active: false,
+  },
 ];
 
 export default function RewardPage() {
@@ -174,15 +205,31 @@ export default function RewardPage() {
 
   // Format reward type badge
   const getRewardTypeBadge = (type: string) => {
-    switch(type) {
-      case 'buff':
-        return <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">{type}</Badge>;
-      case 'title':
-        return <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">{type}</Badge>;
-      case 'cosmetic':
-        return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">{type}</Badge>;
-      case 'special':
-        return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">{type}</Badge>;
+    switch (type) {
+      case "buff":
+        return (
+          <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30">
+            {type}
+          </Badge>
+        );
+      case "title":
+        return (
+          <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
+            {type}
+          </Badge>
+        );
+      case "cosmetic":
+        return (
+          <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+            {type}
+          </Badge>
+        );
+      case "special":
+        return (
+          <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
+            {type}
+          </Badge>
+        );
       default:
         return <Badge>{type}</Badge>;
     }
@@ -190,17 +237,17 @@ export default function RewardPage() {
 
   // Format achievement reward description
   const getAchievementRewardText = (reward: any) => {
-    switch(reward.type) {
-      case 'xp':
+    switch (reward.type) {
+      case "xp":
         return `${reward.amount} XP`;
-      case 'points':
+      case "points":
         return `${reward.amount} Points`;
-      case 'title':
+      case "title":
         return `Title: ${reward.name}`;
-      case 'buff':
+      case "buff":
         return reward.description;
       default:
-        return '';
+        return "";
     }
   };
 
@@ -214,9 +261,11 @@ export default function RewardPage() {
             <span className="font-semibold">{userPoints} Points</span>
           </div>
         </div>
-        <p className="text-muted-foreground">Earn and spend points on rewards</p>
+        <p className="text-muted-foreground">
+          Earn and spend points on rewards
+        </p>
       </div>
-
+      {/* 
       <Tabs defaultValue="rewards" onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3 mb-4">
           <TabsTrigger value="rewards">Shop</TabsTrigger>
@@ -224,7 +273,6 @@ export default function RewardPage() {
           <TabsTrigger value="inventory">Inventory</TabsTrigger>
         </TabsList>
 
-        {/* Rewards Shop Tab */}
         <TabsContent value="rewards" className="space-y-4">
           {mockRewards.map((reward) => (
             <Card key={reward.id} className={`${reward.unlocked ? 'quest-card' : 'bg-secondary/10 opacity-80'}`}>
@@ -284,7 +332,6 @@ export default function RewardPage() {
           ))}
         </TabsContent>
 
-        {/* Achievements Tab */}
         <TabsContent value="achievements" className="space-y-4">
           {mockAchievements.map((achievement) => (
             <Card key={achievement.id} className="overflow-hidden">
@@ -327,7 +374,6 @@ export default function RewardPage() {
           ))}
         </TabsContent>
 
-        {/* Inventory Tab */}
         <TabsContent value="inventory">
           {mockInventory.length > 0 ? (
             <div className="space-y-4">
@@ -390,10 +436,10 @@ export default function RewardPage() {
             </Card>
           )}
         </TabsContent>
-      </Tabs>
+      </Tabs> */}
 
       {/* Purchase Reward Dialog */}
-      <Dialog open={isRewardDialogOpen} onOpenChange={setIsRewardDialogOpen}>
+      {/* <Dialog open={isRewardDialogOpen} onOpenChange={setIsRewardDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Purchase Reward</DialogTitle>
@@ -444,10 +490,10 @@ export default function RewardPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
       {/* Use Inventory Item Dialog */}
-      <Dialog open={isInventoryDialogOpen} onOpenChange={setIsInventoryDialogOpen}>
+      {/* <Dialog open={isInventoryDialogOpen} onOpenChange={setIsInventoryDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Use Item</DialogTitle>
@@ -491,7 +537,7 @@ export default function RewardPage() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 }
