@@ -11,7 +11,7 @@ import {
   AchievementUnlockedNotification,
   LevelUpNotification,
 } from '@src/components/ui/notification-system'
-import { useCharacter } from '@src/features/character/context/CharacterContext'
+import { useCharacter } from '@src/contexts/CharacterContext'
 import { Activity, Gift, ScrollText, Trophy, User } from 'lucide-react'
 
 // Client body wrapper without notification provider

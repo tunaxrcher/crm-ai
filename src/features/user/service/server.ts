@@ -1,3 +1,4 @@
+// src/features/user/service/server.ts
 import { getDevSession, getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/service/server/baseService'
 import 'server-only'
@@ -77,25 +78,40 @@ export class UserService extends BaseService {
     return this.userRepository.getAllAchievementsWithUserProgress(userId)
   }
 
-  private getCurrentJobLevel(character: Character): JobLevel {
-    return (
-      character.jobClass.levels.find(
-        (level: any) => character.level >= level.requiredCharacterLevel
-      ) || character.jobClass.levels[0]
-    )
+  private getCurrentJobLevel(character: any): JobLevel {
+    // if (!character.jobClass || !character.jobClass.levels || character.jobClass.levels.length === 0) {
+    //   // Return default job level if no levels exist
+    //   return {
+    //     level: 1,
+    //     title: 'Beginner',
+    //     requiredCharacterLevel: 1,
+    //     imageUrl: null
+    //   }
+    // }
+
+    // Find the highest level that the character qualifies for
+    for (let i = character.jobClass.levels.length - 1; i >= 0; i--) {
+      const jobLevel = character.jobClass.levels[i]
+      if (character.level >= jobLevel.requiredCharacterLevel) {
+        return jobLevel
+      }
+    }
+
+    // Return the first level if character doesn't qualify for any
+    return character.jobClass.levels[0]
   }
 
   private buildCharacterData(
     character: any,
     questStats: any,
     achievements: any,
-    currentJobLevel: any
+    currentJobLevel: JobLevel
   ) {
     return {
       id: character.id,
       name: character.name,
       jobClassName: character.jobClass.name,
-      currentJobLevel: currentJobLevel.level,
+      currentJobLevel: currentJobLevel.level, // Return only the level number, not the whole object
       level: character.level,
       currentXP: character.currentXP,
       nextLevelXP: character.nextLevelXP,

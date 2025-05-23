@@ -1,8 +1,9 @@
 import { userRepository } from '../repository'
 import { userService } from '../service/server'
+import { UserWithCharacter } from './user.type'
 
-export type UserWithCharacter = NonNullable<
-  Awaited<ReturnType<typeof userRepository.findUserWithCharacterById>>
+export type GetUserCharacterResponse = Awaited<
+  ReturnType<typeof userService.getUserCharacters>
 >
 
 // ===== Extracted Types from Complex Objects =====
@@ -15,9 +16,6 @@ export type JobLevel = JobClass['levels'][number]
 
 export type CharacterAchievement = Character['achievements'][number]
 
-export type GetUserCharacterResponse = Awaited<
-  ReturnType<typeof userService.getUserCharacters>
->
 
 // ===== Frontend Specific Types =====
 export type CharacterStats = {
@@ -29,6 +27,7 @@ export type CharacterStats = {
 }
 
 export type CharacterData = GetUserCharacterResponse['character']
+
 export type JobClassData = GetUserCharacterResponse['jobClass']
 
 // ===== Component Props Types =====

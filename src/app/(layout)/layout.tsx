@@ -4,10 +4,10 @@ import { Kanit } from 'next/font/google'
 import { ErrorProvider } from '@src/components/shared/ErrorProvider'
 import { ToastProvider } from '@src/components/shared/SimpleToast'
 import { NotificationProvider } from '@src/components/ui/notification-system'
-import { CharacterProvider } from '@src/features/character/context/CharacterContext'
 
 import ClientBody from './ClientBody'
 import './globals.css'
+import { CharacterProvider } from '@src/contexts/CharacterContext'
 
 const kanit = Kanit({
   variable: '--font-kanit',

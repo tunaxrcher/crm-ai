@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@src/components/ui/card'
 import { useNotification } from '@src/components/ui/notification-system'
+import { useCharacter } from '@src/contexts/CharacterContext'
 import useErrorHandler from '@src/hooks/useErrorHandler'
 import {
   AlertCircle,
@@ -24,34 +25,33 @@ import {
   Zap,
 } from 'lucide-react'
 
-import { useCharacter } from '../context/CharacterContext'
-import {
-  useCharacter as useCharacterAPI,
-  useStatAllocation,
-  useXPTable,
-} from '../hook/api'
 import { Stat } from '../types'
 import AchievementSection from './AchievementSection'
 import CharacterInfoSection from './CharacterInfoSection'
 import CharacterRadarChart from './CharacterRadarChart'
 import JobProgressionDialog from './JobProgressionDialog'
 import QuestStatistics from './QuestStatistics'
-import StatAllocationDialog from './StatAllocationDialog'
 
 export default function CharacterPageComponent() {
-  const [radarAnimation, setRadarAnimation] = useState(0) // For radar animation
-  const [statHighlight, setStatHighlight] = useState(-1) // For stat highlight animation
+  const {
+    character,
+    jobClass,
+    loading,
+    error,
+    refetch,
+    addXp,
+    showLevelUpAnimation,
+  } = useCharacter()
 
-  // Character stats - ใช้ข้อมูลจริงจาก API
-  // (ยังต้องเก็บ structure เดิมไว้เพื่อไม่กระทบ radar chart)
-  const stats = {
-    STR: 75, // จะต้องเปลี่ยนเป็น character.stats.STR เมื่อโหลดเสร็จ
-    VIT: 60,
-    LUK: 45, // เก็บไว้เพื่อ radar chart ยังทำงานได้
-    INT: 85,
-    DEX: 70,
-    AGI: 65,
-  }
+  // State
+  const [tempStats, setTempStats] = useState<Stat | null>(null)
+  const [statPoints, setStatPoints] = useState(0)
+  const [showProgressionDialog, setShowProgressionDialog] = useState(false)
+  const [radarAnimation, setRadarAnimation] = useState(0)
+  const [statHighlight, setStatHighlight] = useState(-1)
+  const { showError } = useError()
+  const { handleAsyncOperation } = useErrorHandler()
+  const { addNotification } = useNotification()
 
   // Animate the radar chart
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function CharacterPageComponent() {
     }, 50)
 
     const highlightInterval = setInterval(() => {
-      setStatHighlight((prev) => (prev + 1) % (Object.keys(stats).length + 3))
+      setStatHighlight((prev) => (prev + 1) % 8) // 5 stats + 3 padding
     }, 2000)
 
     return () => {
@@ -68,32 +68,6 @@ export default function CharacterPageComponent() {
       clearInterval(highlightInterval)
     }
   }, [])
-
-  // API และ context hooks
-  const {
-    character: apiCharacter,
-    jobClass,
-    isLoading: apiLoading,
-    error,
-    refetchCharacter,
-  } = useCharacterAPI()
-  const { allocateStats, isAllocating } = useStatAllocation()
-  const { xpTable, isLoading: xpTableLoading } = useXPTable()
-  const { showError } = useError()
-  const { handleAsyncOperation } = useErrorHandler()
-
-  const { addXp, showLevelUpAnimation } = useCharacter()
-
-  const { addNotification } = useNotification()
-
-  // State
-  const [showLevelDialog, setShowLevelDialog] = useState(false)
-  const [tempStats, setTempStats] = useState<Stat | null>(null)
-  const [statPoints, setStatPoints] = useState(0)
-  const [showProgressionDialog, setShowProgressionDialog] = useState(false)
-
-  const character = apiCharacter
-  const isLoading = apiLoading || xpTableLoading
 
   // Effects
   useEffect(() => {
@@ -104,7 +78,7 @@ export default function CharacterPageComponent() {
   }, [character])
 
   // Loading และ Error states
-  if (isLoading || !character || !tempStats) {
+  if (loading || !character || !tempStats) {
     return (
       <div className="p-4 pb-20">
         <SkeletonLoading type="character" text="กำลังโหลดข้อมูลตัวละคร..." />
@@ -119,7 +93,7 @@ export default function CharacterPageComponent() {
           title="ไม่สามารถโหลดข้อมูลตัวละครได้"
           message="เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์ โปรดลองใหม่อีกครั้ง"
           severity="error"
-          onRetry={refetchCharacter}
+          onRetry={refetch}
           showRetry={true}
           technicalDetails={error}
         />
@@ -131,6 +105,16 @@ export default function CharacterPageComponent() {
   const xpPercentage = Math.round(
     (character.currentXP / character.nextLevelXP) * 100
   )
+
+  // สร้าง stats object สำหรับ radar chart (เพิ่ม LUK เพื่อให้ chart ทำงานได้)
+  const radarStats = {
+    STR: character.stats.STR,
+    VIT: character.stats.VIT,
+    LUK: Math.floor((character.stats.AGI + character.stats.DEX) / 2), // คำนวณจาก AGI+DEX
+    INT: character.stats.INT,
+    DEX: character.stats.DEX,
+    AGI: character.stats.AGI,
+  }
 
   // Functions
   const getStatDescription = (stat: string) => {
@@ -150,7 +134,7 @@ export default function CharacterPageComponent() {
     }
   }
 
-  const allocatePoint = (stat: keyof typeof tempStats) => {
+  const allocatePoint = (stat: keyof Stat) => {
     if (statPoints > 0) {
       setTempStats((prev) => ({
         ...prev!,
@@ -160,7 +144,7 @@ export default function CharacterPageComponent() {
     }
   }
 
-  const deallocatePoint = (stat: keyof typeof tempStats) => {
+  const deallocatePoint = (stat: keyof Stat) => {
     if (tempStats[stat] > character.stats[stat]) {
       setTempStats((prev) => ({
         ...prev!,
@@ -187,31 +171,6 @@ export default function CharacterPageComponent() {
     }
   }
 
-  const confirmStatAllocation = async () => {
-    const result = await handleAsyncOperation(async () => {
-      return await allocateStats(character.id, tempStats)
-    })
-
-    if (result) {
-      setShowLevelDialog(false)
-      showError('อัพเดทสถิติตัวละครสำเร็จ', {
-        severity: 'info',
-        autoHideAfter: 3000,
-      })
-    } else {
-      showError('ไม่สามารถอัปเดตสถิติได้', {
-        severity: 'error',
-        message: 'โปรดลองอีกครั้งในภายหลัง',
-      })
-    }
-  }
-
-  const handleAllocateStats = () => {
-    setTempStats({ ...character.stats })
-    setStatPoints(character.statPoints)
-    setShowLevelDialog(true)
-  }
-
   const testNotifications = () => {
     addNotification({
       type: 'reward',
@@ -228,7 +187,7 @@ export default function CharacterPageComponent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen relative ">
+    <div className="flex flex-col min-h-screen relative">
       {/* Background Image with Blur */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -246,7 +205,7 @@ export default function CharacterPageComponent() {
       {/* Header */}
       <div className="relative z-10 flex justify-center pt-6 mb-2">
         <h1 className="text-2xl font-bold ai-gradient-text">
-          นักขายมืออาชีพ (Job Class)
+          {character.jobClassName} (Job Class)
         </h1>
       </div>
 
@@ -255,7 +214,7 @@ export default function CharacterPageComponent() {
         <CharacterRadarChart
           radarAnimation={radarAnimation}
           statHighlight={statHighlight}
-          stats={stats}
+          stats={radarStats}
         />
       </div>
 
@@ -264,9 +223,10 @@ export default function CharacterPageComponent() {
         <CharacterInfoSection
           character={character}
           xpPercentage={xpPercentage}
+          // onAllocateStats={handleAllocateStats}
         />
 
-        <AchievementSection />
+        <AchievementSection achievements={character.achievements} />
 
         <QuestStatistics questStats={character.questStats} />
 
@@ -289,24 +249,6 @@ export default function CharacterPageComponent() {
             </CardContent>
           </Card>
         )}
-
-        {/* Dialogs */}
-        <StatAllocationDialog
-          open={showLevelDialog}
-          onOpenChange={setShowLevelDialog}
-          tempStats={tempStats}
-          statPoints={statPoints}
-          character={character}
-          isAllocating={isAllocating}
-          getStatDescription={getStatDescription}
-          getStatIcon={getStatIcon}
-          allocatePoint={allocatePoint}
-          deallocatePoint={deallocatePoint}
-          confirmStatAllocation={confirmStatAllocation}
-          setTempStats={setTempStats}
-          setStatPoints={setStatPoints}
-          setShowLevelDialog={setShowLevelDialog}
-        />
 
         <JobProgressionDialog
           open={showProgressionDialog}
