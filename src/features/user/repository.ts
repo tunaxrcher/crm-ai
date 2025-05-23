@@ -1,0 +1,63 @@
+import { User } from '@prisma/client'
+import { BaseRepository } from '@src/lib/repository/baseRepository'
+
+export class UserRepository extends BaseRepository<User> {
+  private static instance: UserRepository
+
+  public static getInstance() {
+    if (!UserRepository.instance) {
+      UserRepository.instance = new UserRepository()
+    }
+    return UserRepository.instance
+  }
+
+  async findAll() {
+    return this.prisma.user.findMany()
+  }
+
+  async findById(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        files: true,
+      },
+    })
+  }
+
+  async findByUserId(userId: number) {
+    return this.prisma.user.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    })
+  }
+
+  async create(data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) {
+    return this.prisma.user.create({
+      data,
+    })
+  }
+
+  async update(
+    id: number,
+    data: Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt'>>
+  ) {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    })
+  }
+
+  async delete(id: number) {
+    return this.prisma.user.delete({
+      where: { id },
+    })
+  }
+
+  async findUserCharactersByUserId(id: number) {
+    return this.prisma.user.delete({
+      where: { id },
+    })
+  }
+}
+
+export const userRepository = UserRepository.getInstance()
