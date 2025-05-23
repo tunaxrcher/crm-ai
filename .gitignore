@@ -39,3 +39,8 @@ devtools/mysql_data_crm
 devtools/redis_data_crm
 
 .env
+
+# lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

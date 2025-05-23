@@ -1,9 +1,9 @@
-import { getServerSession } from '@src/lib/auth'
-import { prisma } from '@src/lib/db'
+import { getDevSession, getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/service/server/baseService'
 import 'server-only'
 
 import { UserRepository, userRepository } from '../repository'
+import { Character, JobLevel } from '../types'
 
 export class UserService extends BaseService {
   private static instance: UserService
@@ -30,16 +30,103 @@ export class UserService extends BaseService {
     return this.userRepository.findByUserId(userId)
   }
 
-  // async deleteUser(id: number) {
-  //   return this.userRepository.delete(id)
-  // }
-
   async getUserCharacters() {
-    const session = await getServerSession()
+    const session = (await getServerSession()) || (await getDevSession())
+    const userId = +session.user.id
 
-    console.log(`[Server] Fetching User Character with ID: ${session.user.id}`)
+    console.log(`[Server] Fetching User Character with ID: ${userId}`)
 
-    return await this.userRepository.findUserCharactersByUserId(+session.user.id)
+    const userWithCharacter = await this.getUserWithCharacterData(userId)
+    const character = userWithCharacter.character!
+
+    const [questStats, achievements, currentJobLevel] = await Promise.all([
+      this.getCharacterQuestStats(character.id),
+      this.getCharacterAchievements(userId),
+      this.getCurrentJobLevel(character),
+    ])
+
+    return {
+      character: this.buildCharacterData(
+        character,
+        questStats,
+        achievements,
+        currentJobLevel
+      ),
+      jobClass: this.buildJobClassData(character.jobClass),
+    }
+  }
+
+  // ============= Private Helper Methods =============
+
+  private async getUserWithCharacterData(userId: number) {
+    const userWithCharacter =
+      await this.userRepository.findUserWithCharacterById(userId)
+
+    if (!userWithCharacter || !userWithCharacter.character) {
+      throw new Error('Character not found')
+    }
+
+    return userWithCharacter
+  }
+
+  private async getCharacterQuestStats(characterId: number) {
+    return this.userRepository.getCharacterQuestStats(characterId)
+  }
+
+  private async getCharacterAchievements(userId: number) {
+    return this.userRepository.getAllAchievementsWithUserProgress(userId)
+  }
+
+  private getCurrentJobLevel(character: Character): JobLevel {
+    return (
+      character.jobClass.levels.find(
+        (level: any) => character.level >= level.requiredCharacterLevel
+      ) || character.jobClass.levels[0]
+    )
+  }
+
+  private buildCharacterData(
+    character: any,
+    questStats: any,
+    achievements: any,
+    currentJobLevel: any
+  ) {
+    return {
+      id: character.id,
+      name: character.name,
+      jobClassName: character.jobClass.name,
+      currentJobLevel: currentJobLevel.level,
+      level: character.level,
+      currentXP: character.currentXP,
+      nextLevelXP: character.nextLevelXP,
+      totalXP: character.totalXP,
+      title: currentJobLevel.title,
+      stats: {
+        AGI: character.statAGI,
+        STR: character.statSTR,
+        DEX: character.statDEX,
+        VIT: character.statVIT,
+        INT: character.statINT,
+      },
+      statPoints: character.statPoints,
+      achievements,
+      questStats,
+      portrait: character.currentPortraitUrl,
+    }
+  }
+
+  private buildJobClassData(jobClass: any) {
+    return {
+      id: jobClass.id,
+      name: jobClass.name,
+      description: jobClass.description,
+      levels: jobClass.levels.map((level: any) => ({
+        level: level.level,
+        requiredCharacterLevel: level.requiredCharacterLevel,
+        title: level.title,
+        imageUrl: level.imageUrl,
+      })),
+    }
   }
 }
 

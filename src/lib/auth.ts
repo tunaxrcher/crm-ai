@@ -69,11 +69,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id.toString(),
-          name: user.name,
-          email: user.email,
-          username: user.username,
-          avatar: user.avatar,
+          user: {
+            id: user.id.toString(),
+            name: user.name,
+            email: user.email,
+            username: user.username,
+            avatar: user.avatar,
+          },
         }
       },
     }),
@@ -114,4 +116,24 @@ export const authOptions: NextAuthOptions = {
 
 export async function getServerSession() {
   return getSession(authOptions) as Promise<Session>
+}
+
+export async function getDevSession() {
+  if (process.env.NODE_ENV === 'development') {
+    const firstUser = await prisma.user.findFirst({
+      orderBy: { id: 'asc' },
+    })
+
+    if (!firstUser) return null
+
+    return {
+      user: {
+        id: firstUser.id.toString(),
+        name: firstUser.name,
+        email: firstUser.email,
+        username: firstUser.username,
+        avatar: firstUser.avatar,
+      },
+    }
+  }
 }
