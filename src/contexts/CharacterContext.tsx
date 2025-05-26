@@ -21,6 +21,7 @@ interface Achievement {
   earned: boolean
   earnedOn?: string | null
 }
+
 interface CharacterContextType {
   character: Character | null
   jobClass: JobClass | null
@@ -188,12 +189,12 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({
     if (!character) return
 
     const achievement = character.achievements.find(
-      (a) => a.id === achievementId
+      (a: any) => a.id === achievementId
     )
     if (!achievement || achievement.earned) return
 
     // Update achievement
-    const updatedAchievements = character.achievements.map((a) =>
+    const updatedAchievements = character.achievements.map((a: any) =>
       a.id === achievementId
         ? { ...a, earned: true, earnedOn: new Date().toISOString() }
         : a

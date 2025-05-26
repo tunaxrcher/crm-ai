@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 
 import { ErrorDisplay, SkeletonLoading } from '@src/components/shared'
-import { useError } from '@src/components/shared/ErrorProvider'
 import { Button } from '@src/components/ui/button'
 import {
   Card,
@@ -15,19 +14,11 @@ import {
 } from '@src/components/ui/card'
 import { useNotification } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
-import useErrorHandler from '@src/hooks/useErrorHandler'
-import {
-  AlertCircle,
-  BadgePercent,
-  Clock,
-  Shield,
-  Swords,
-  Zap,
-} from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
-import { Stat } from '../types'
 import AchievementSection from './AchievementSection'
 import CharacterInfoSection from './CharacterInfoSection'
+import CharacterProfile from './CharacterProfile'
 import CharacterRadarChart from './CharacterRadarChart'
 import JobProgressionDialog from './JobProgressionDialog'
 import QuestStatistics from './QuestStatistics'
@@ -44,13 +35,9 @@ export default function CharacterPageComponent() {
   } = useCharacter()
 
   // State
-  const [tempStats, setTempStats] = useState<Stat | null>(null)
-  const [statPoints, setStatPoints] = useState(0)
   const [showProgressionDialog, setShowProgressionDialog] = useState(false)
   const [radarAnimation, setRadarAnimation] = useState(0)
-  const [statHighlight, setStatHighlight] = useState(-1)
-  const { showError } = useError()
-  const { handleAsyncOperation } = useErrorHandler()
+  const [statHighlight, setStatHighlight] = useState(0)
   const { addNotification } = useNotification()
 
   // Animate the radar chart
@@ -69,16 +56,8 @@ export default function CharacterPageComponent() {
     }
   }, [])
 
-  // Effects
-  useEffect(() => {
-    if (character && !tempStats) {
-      setTempStats({ ...character.stats })
-      setStatPoints(character.statPoints)
-    }
-  }, [character])
-
   // Loading และ Error states
-  if (loading || !character || !tempStats) {
+  if (loading || !character) {
     return (
       <div className="p-4 pb-20">
         <SkeletonLoading type="character" text="กำลังโหลดข้อมูลตัวละคร..." />
@@ -116,61 +95,6 @@ export default function CharacterPageComponent() {
     AGI: character.stats.AGI,
   }
 
-  // Functions
-  const getStatDescription = (stat: string) => {
-    switch (stat) {
-      case 'AGI':
-        return 'ความเร็ว, การตอบสนอง'
-      case 'STR':
-        return 'ความสามารถในการรับมือกับงานหนัก'
-      case 'DEX':
-        return 'ความแม่นยำ, ความถูกต้อง'
-      case 'VIT':
-        return 'ความสม่ำเสมอ, ความอดทน'
-      case 'INT':
-        return 'การวางแผน, การวิเคราะห์'
-      default:
-        return ''
-    }
-  }
-
-  const allocatePoint = (stat: keyof Stat) => {
-    if (statPoints > 0) {
-      setTempStats((prev) => ({
-        ...prev!,
-        [stat]: prev![stat] + 1,
-      }))
-      setStatPoints((prev) => prev - 1)
-    }
-  }
-
-  const deallocatePoint = (stat: keyof Stat) => {
-    if (tempStats[stat] > character.stats[stat]) {
-      setTempStats((prev) => ({
-        ...prev!,
-        [stat]: prev![stat] - 1,
-      }))
-      setStatPoints((prev) => prev + 1)
-    }
-  }
-
-  const getStatIcon = (stat: string) => {
-    switch (stat) {
-      case 'AGI':
-        return <Zap className="h-5 w-5" />
-      case 'STR':
-        return <Swords className="h-5 w-5" />
-      case 'DEX':
-        return <BadgePercent className="h-5 w-5" />
-      case 'VIT':
-        return <Clock className="h-5 w-5" />
-      case 'INT':
-        return <Shield className="h-5 w-5" />
-      default:
-        return null
-    }
-  }
-
   const testNotifications = () => {
     addNotification({
       type: 'reward',
@@ -179,11 +103,9 @@ export default function CharacterPageComponent() {
       duration: 3000,
     })
 
-    addXp(50)
-
-    setTimeout(() => {
-      showLevelUpAnimation()
-    }, 1500)
+    // setTimeout(() => {
+    //   showLevelUpAnimation()
+    // }, 1500)
   }
 
   return (
@@ -211,11 +133,14 @@ export default function CharacterPageComponent() {
 
       {/* Character Display with Radar Chart */}
       <div className="relative z-10 flex justify-center items-center h-[50vh] pt-4">
-        <CharacterRadarChart
-          radarAnimation={radarAnimation}
-          statHighlight={statHighlight}
-          stats={radarStats}
-        />
+        <div className="relative w-[400px] h-[400px] flex items-center justify-center">
+          <CharacterRadarChart
+            radarAnimation={radarAnimation}
+            statHighlight={statHighlight}
+            stats={radarStats}
+          />
+          <CharacterProfile character={character} />
+        </div>
       </div>
 
       {/* Character Info */}
@@ -231,20 +156,42 @@ export default function CharacterPageComponent() {
         <QuestStatistics questStats={character.questStats} />
 
         {/* Development testing button */}
+        <hr className="mt-5" />
         {process.env.NODE_ENV === 'development' && (
           <Card className="mb-4 mt-6">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center">
                 <AlertCircle className="h-5 w-5 mr-2 text-yellow-400" />
-                Development Testing
+                Development Testing ไว้เทสเฉย ๆ
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-2">
               <Button
                 variant="outline"
                 onClick={testNotifications}
                 className="w-full">
-                Test Notifications
+                🔔 ทดสอบ Notification
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => addXp(100)}
+                className="w-full">
+                ➕ เพิ่ม 100 XP
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={showLevelUpAnimation}
+                className="w-full">
+                ⬆️ เวลอัพ
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={showLevelUpAnimation}
+                className="w-full">
+                🚀 ส่งเควสประจำวัน
               </Button>
             </CardContent>
           </Card>

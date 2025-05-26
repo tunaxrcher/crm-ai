@@ -570,21 +570,44 @@ async function createUsers() {
 }
 
 // ========== ฟังก์ชันสร้าง Character ==========
-async function createCharacters(users: any[], jobClasses: any[]) {
+
+function generatePortraits(level: number): {
+  portraits: Record<string, string>
+  currentUrl: string
+} {
+  const bucket = process.env.DO_SPACES_BUCKET
+  const region = process.env.DO_SPACES_REGION
+  const baseUrl = `https://${bucket}.${region}.digitaloceanspaces.com`
+
+  const milestones = [1, 10, 35, 60, 80, 99]
+  const portraits: Record<string, string> = {}
+  let currentUrl = ''
+
+  for (const milestone of milestones) {
+    if (level >= milestone) {
+      const url = `${baseUrl}/${milestone}.png`
+      portraits[milestone.toString()] = url
+      currentUrl = url
+    } else {
+      portraits[milestone.toString()] = ''
+    }
+  }
+
+  return { portraits, currentUrl }
+}
+
+export async function createCharacters(users: any[], jobClasses: any[]) {
   const characters = []
 
   for (const user of users) {
-    // สุ่มเลือก JobClass
     const jobClass = faker.helpers.arrayElement(jobClasses)
 
-    // ดึง JobLevel ที่เหมาะสมสำหรับ Character Level
     const jobLevels = await prisma.jobLevel.findMany({
       where: { jobClassId: jobClass.id },
       orderBy: { level: 'asc' },
     })
 
-    // เลือกระดับ job ที่เหมาะสมกับ level ของผู้เล่น
-    let selectedJobLevel = jobLevels[0] // เริ่มต้นที่ level ต่ำสุด
+    let selectedJobLevel = jobLevels[0]
     for (const jobLevel of jobLevels) {
       if (user.level >= jobLevel.requiredCharacterLevel) {
         selectedJobLevel = jobLevel
@@ -593,7 +616,6 @@ async function createCharacters(users: any[], jobClasses: any[]) {
       }
     }
 
-    // สร้าง stat แบบสุ่ม แต่ให้เน้นตาม class
     const baseStats = 10
     let statAGI = baseStats
     let statSTR = baseStats
@@ -601,7 +623,6 @@ async function createCharacters(users: any[], jobClasses: any[]) {
     let statVIT = baseStats
     let statINT = baseStats
 
-    // เพิ่ม stat ตาม job class
     switch (jobClass.name) {
       case 'นักการตลาด':
         statAGI += faker.number.int({ min: 5, max: 15 })
@@ -629,6 +650,8 @@ async function createCharacters(users: any[], jobClasses: any[]) {
         break
     }
 
+    const { portraits, currentUrl } = generatePortraits(user.level)
+
     const character = await prisma.character.create({
       data: {
         name: `${user.name} (${jobClass.name})`,
@@ -637,22 +660,16 @@ async function createCharacters(users: any[], jobClasses: any[]) {
         nextLevelXP: 1000,
         totalXP: user.level * 1000 + faker.number.int({ min: 0, max: 900 }),
         statPoints: faker.number.int({ min: 0, max: 10 }),
-        statAGI: statAGI,
-        statSTR: statSTR,
-        statDEX: statDEX,
-        statVIT: statVIT,
-        statINT: statINT,
-        currentPortraitUrl: `https://source.unsplash.com/featured/?portrait,${jobClass.name}`,
+        statAGI,
+        statSTR,
+        statDEX,
+        statVIT,
+        statINT,
+        currentPortraitUrl: currentUrl,
         userId: user.id,
         jobClassId: jobClass.id,
         jobLevelId: selectedJobLevel.id,
-        generatedPortraits: {
-          '1': `https://source.unsplash.com/featured/?portrait,beginner,${jobClass.name}`,
-          '10': `https://source.unsplash.com/featured/?portrait,intermediate,${jobClass.name}`,
-          '35': `https://source.unsplash.com/featured/?portrait,advanced,${jobClass.name}`,
-          '60': `https://source.unsplash.com/featured/?portrait,expert,${jobClass.name}`,
-          '99': `https://source.unsplash.com/featured/?portrait,master,${jobClass.name}`,
-        },
+        generatedPortraits: portraits,
       },
     })
 
@@ -661,6 +678,98 @@ async function createCharacters(users: any[], jobClasses: any[]) {
 
   return characters
 }
+
+// async function createCharacters(users: any[], jobClasses: any[]) {
+//   const characters = []
+
+//   for (const user of users) {
+//     // สุ่มเลือก JobClass
+//     const jobClass = faker.helpers.arrayElement(jobClasses)
+
+//     // ดึง JobLevel ที่เหมาะสมสำหรับ Character Level
+//     const jobLevels = await prisma.jobLevel.findMany({
+//       where: { jobClassId: jobClass.id },
+//       orderBy: { level: 'asc' },
+//     })
+
+//     // เลือกระดับ job ที่เหมาะสมกับ level ของผู้เล่น
+//     let selectedJobLevel = jobLevels[0] // เริ่มต้นที่ level ต่ำสุด
+//     for (const jobLevel of jobLevels) {
+//       if (user.level >= jobLevel.requiredCharacterLevel) {
+//         selectedJobLevel = jobLevel
+//       } else {
+//         break
+//       }
+//     }
+
+//     // สร้าง stat แบบสุ่ม แต่ให้เน้นตาม class
+//     const baseStats = 10
+//     let statAGI = baseStats
+//     let statSTR = baseStats
+//     let statDEX = baseStats
+//     let statVIT = baseStats
+//     let statINT = baseStats
+
+//     // เพิ่ม stat ตาม job class
+//     switch (jobClass.name) {
+//       case 'นักการตลาด':
+//         statAGI += faker.number.int({ min: 5, max: 15 })
+//         statINT += faker.number.int({ min: 5, max: 10 })
+//         break
+//       case 'นักบัญชี':
+//         statINT += faker.number.int({ min: 10, max: 20 })
+//         statDEX += faker.number.int({ min: 3, max: 8 })
+//         break
+//       case 'นักขาย':
+//         statAGI += faker.number.int({ min: 8, max: 15 })
+//         statSTR += faker.number.int({ min: 3, max: 8 })
+//         break
+//       case 'ดีไซน์เนอร์':
+//         statDEX += faker.number.int({ min: 10, max: 20 })
+//         statINT += faker.number.int({ min: 5, max: 10 })
+//         break
+//       case 'โปรแกรมเมอร์':
+//         statINT += faker.number.int({ min: 15, max: 25 })
+//         statVIT += faker.number.int({ min: 3, max: 8 })
+//         break
+//       case 'ช่าง':
+//         statSTR += faker.number.int({ min: 10, max: 20 })
+//         statDEX += faker.number.int({ min: 5, max: 15 })
+//         break
+//     }
+
+//     const character = await prisma.character.create({
+//       data: {
+//         name: `${user.name} (${jobClass.name})`,
+//         level: user.level,
+//         currentXP: faker.number.int({ min: 0, max: 900 }),
+//         nextLevelXP: 1000,
+//         totalXP: user.level * 1000 + faker.number.int({ min: 0, max: 900 }),
+//         statPoints: faker.number.int({ min: 0, max: 10 }),
+//         statAGI: statAGI,
+//         statSTR: statSTR,
+//         statDEX: statDEX,
+//         statVIT: statVIT,
+//         statINT: statINT,
+//         currentPortraitUrl: `https://source.unsplash.com/featured/?portrait,${jobClass.name}`,
+//         userId: user.id,
+//         jobClassId: jobClass.id,
+//         jobLevelId: selectedJobLevel.id,
+//         generatedPortraits: {
+//           '1': `https://source.unsplash.com/featured/?portrait,beginner,${jobClass.name}`,
+//           '10': `https://source.unsplash.com/featured/?portrait,intermediate,${jobClass.name}`,
+//           '35': `https://source.unsplash.com/featured/?portrait,advanced,${jobClass.name}`,
+//           '60': `https://source.unsplash.com/featured/?portrait,expert,${jobClass.name}`,
+//           '99': `https://source.unsplash.com/featured/?portrait,master,${jobClass.name}`,
+//         },
+//       },
+//     })
+
+//     characters.push(character)
+//   }
+
+//   return characters
+// }
 
 // ========== ฟังก์ชันสร้าง Achievement ==========
 async function createAchievements() {

@@ -15,6 +15,8 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        const userData = {} as User
+
         // 🚀 Development Mode: Always login as first user
         if (isDev) {
           console.log('🔧 [DEV MODE] Auto login as first user')
@@ -32,26 +34,21 @@ export const authOptions: NextAuthOptions = {
             `✅ [DEV MODE] Logged in as: ${firstUser.name} (${firstUser.email})`
           )
 
-          return {
-            id: firstUser.id.toString(),
-            name: firstUser.name,
-            email: firstUser.email,
-            username: firstUser.username,
-            avatar: firstUser.avatar,
-          }
+          userData.id = firstUser.id.toString()
+          userData.name = firstUser.username
+          userData.email = firstUser.email
+          userData.username = firstUser.username
+          userData.avatar = firstUser.avatar
+
+          return userData
         }
 
         // Production login logic
-        if (!credentials?.username || !credentials?.password) {
-          return null
-        }
+        if (!credentials?.username || !credentials?.password) return null
 
         const user = await prisma.user.findFirst({
           where: {
-            OR: [
-              { username: credentials.username },
-              { email: credentials.username },
-            ],
+            OR: [{ username: credentials.username }],
           },
         })
 
@@ -68,15 +65,13 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        return {
-          user: {
-            id: user.id.toString(),
-            name: user.name,
-            email: user.email,
-            username: user.username,
-            avatar: user.avatar,
-          },
-        }
+        userData.id = user.id.toString()
+        userData.name = user.username
+        userData.email = user.email
+        userData.username = user.username
+        userData.avatar = user.avatar
+
+        return userData
       },
     }),
   ],
@@ -89,18 +84,20 @@ export const authOptions: NextAuthOptions = {
         token.username = user.username
         token.avatar = user.avatar
       }
+
       return token
     },
     async session({ session, token }) {
       if (token) {
         session.user = {
-          id: token.id as string,
-          name: token.name as string,
-          email: token.email as string,
-          username: token.username as string,
-          avatar: token.avatar as string,
+          id: token.id,
+          name: token.name,
+          email: token.email,
+          username: token.username,
+          avatar: token.avatar,
         }
       }
+
       return session
     },
   },
@@ -118,7 +115,28 @@ export async function getServerSession() {
   return getSession(authOptions) as Promise<Session>
 }
 
-export async function getDevSession() {
+// export async function getDevSession() {
+//   if (process.env.NODE_ENV === 'development') {
+//     const userData = {} as User
+
+//     const firstUser = await prisma.user.findFirst({
+//       orderBy: { id: 'asc' },
+//     })
+
+//     if (!firstUser) return null
+
+//     userData.id = firstUser.id.toString()
+//     userData.name = firstUser.username
+//     userData.email = firstUser.email
+//     userData.username = firstUser.username
+//     userData.avatar = firstUser.avatar
+
+//     console.log(userData)
+//     return userData
+//   }
+// }
+
+export async function getDevSession(): Promise<Session | null> {
   if (process.env.NODE_ENV === 'development') {
     const firstUser = await prisma.user.findFirst({
       orderBy: { id: 'asc' },
@@ -126,14 +144,19 @@ export async function getDevSession() {
 
     if (!firstUser) return null
 
-    return {
+    const session: Session = {
       user: {
         id: firstUser.id.toString(),
-        name: firstUser.name,
+        name: firstUser.username,
         email: firstUser.email,
         username: firstUser.username,
         avatar: firstUser.avatar,
       },
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 วัน
     }
+
+    return session
   }
+
+  return null
 }

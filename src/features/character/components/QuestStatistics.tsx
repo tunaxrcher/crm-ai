@@ -21,14 +21,14 @@ export default function QuestStatistics({ questStats }: QuestStatisticsProps) {
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center">
           <ScrollText className="h-5 w-5 mr-2 text-blue-400" />
-          สถิติภารกิจ
+          สถิติ
         </CardTitle>
         <CardDescription>สถิติการทำภารกิจสำเร็จของคุณ</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-secondary/20 p-3 rounded-lg">
-            <div className="text-xs text-muted-foreground">ภารกิจทั้งหมด</div>
+            <div className="text-xs text-muted-foreground">งานทั้งหมด</div>
             <div className="text-xl font-bold">{questStats.totalCompleted}</div>
           </div>
           <div className="bg-secondary/20 p-3 rounded-lg">

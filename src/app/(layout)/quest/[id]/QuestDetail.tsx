@@ -29,7 +29,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@src/components/ui/tabs'
-import { useCharacter } from '@src/features/character/context/CharacterContext'
+import { useCharacter } from '@src/contexts/CharacterContext'
 import { formatDeadline } from '@src/features/quest/utils'
 import {
   ArrowLeft,
@@ -248,12 +248,12 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
 
     // Check if quest has isSpecial property and if it's true
     if ('isSpecial' in quest && quest.isSpecial) {
-      unlockAchievement('first-quest')
+      unlockAchievement(1)
     }
 
     // Special case for the first quest to unlock the "First Steps" achievement
     if (questId === 'q1') {
-      unlockAchievement('first-quest')
+      unlockAchievement(1)
     }
   }
   // Navigate back to quests after successful submission
