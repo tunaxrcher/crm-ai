@@ -32,6 +32,7 @@ export default function CharacterPageComponent() {
     refetch,
     addXp,
     showLevelUpAnimation,
+    addXpFromAPI, levelUpFromAPI, submitDailyQuestFromAPI
   } = useCharacter()
 
   // State
@@ -173,26 +174,27 @@ export default function CharacterPageComponent() {
                 🔔 ทดสอบ Notification
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => addXp(100)}
-                className="w-full">
-                ➕ เพิ่ม 100 XP
-              </Button>
+             <Button
+  variant="outline"
+  onClick={() => addXpFromAPI(100)}
+  className="w-full">
+  ➕ เพิ่ม 100 XP (AI)
+</Button>
 
-              <Button
-                variant="outline"
-                onClick={showLevelUpAnimation}
-                className="w-full">
-                ⬆️ เวลอัพ
-              </Button>
+<Button
+  variant="outline"
+  onClick={levelUpFromAPI}
+  className="w-full">
+  ⬆️ เลเวลอัพ (AI)
+</Button>
 
-              <Button
-                variant="outline"
-                onClick={showLevelUpAnimation}
-                className="w-full">
-                🚀 ส่งเควสประจำวัน
-              </Button>
+<Button
+  variant="outline"
+  onClick={submitDailyQuestFromAPI}
+  className="w-full">
+  🚀 ส่งเควสประจำวัน (AI)
+</Button>
+
             </CardContent>
           </Card>
         )}

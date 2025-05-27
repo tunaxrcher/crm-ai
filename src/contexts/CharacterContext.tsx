@@ -8,6 +8,7 @@ import React, {
   useState,
 } from 'react'
 
+import { characterService } from '@src/features/character/service/client'
 import {
   CharacterData as Character,
   JobClassData as JobClass,
@@ -32,6 +33,10 @@ interface CharacterContextType {
   unlockAchievement: (achievementId: number) => void
   showLevelUpAnimation: () => void
   showAchievementAnimation: (achievement: Achievement) => void
+
+  addXpFromAPI: (amount: number) => Promise<void>
+  levelUpFromAPI: () => Promise<void>
+  submitDailyQuestFromAPI: () => Promise<void>
 }
 
 // Create context
@@ -77,6 +82,8 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({
           // เก็บ icon เป็น string ไว้ก่อน จะแปลงเป็น React component ตอน render
         })),
       }
+
+      console.log(transformedCharacter)
 
       setCharacter(transformedCharacter)
       setJobClass(data.jobClass)
@@ -226,6 +233,105 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({
     await fetchCharacterData()
   }
 
+  const addXpFromAPI = async (amount: number) => {
+    try {
+      const result = await characterService.addXP(amount)
+
+      if (result.success) {
+        setCharacter(result.data.character)
+
+        if (result.data.leveledUp) {
+          dispatchCharacterEvent('character:levelup', {
+            level: result.data.character.level,
+            unlockedClassLevel: result.data.unlockedClassLevel,
+            newJobLevel: result.data.newJobLevel,
+            portraitUpdated: result.data.portraitUpdated,
+          })
+        }
+
+        if (result.data.unlockedClassLevel) {
+          dispatchCharacterEvent('character:classunlock', {
+            classLevel: result.data.unlockedClassLevel,
+            portraitUrl: result.data.character.currentPortraitUrl,
+          })
+        }
+
+        if (result.data.newJobLevel) {
+          dispatchCharacterEvent('character:jobtitleup', {
+            newTitle: result.data.newJobLevel.title,
+            level: result.data.newJobLevel.level,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error adding XP:', error)
+    }
+  }
+
+  const levelUpFromAPI = async () => {
+    try {
+      const result = await characterService.levelUp()
+      if (result.success) {
+        setCharacter(result.data.character)
+
+        dispatchCharacterEvent('character:levelup', {
+          level: result.data.character.level,
+          unlockedClassLevel: result.data.unlockedClassLevel,
+          newJobLevel: result.data.newJobLevel,
+          portraitUpdated: result.data.portraitUpdated,
+        })
+
+        if (result.data.unlockedClassLevel) {
+          dispatchCharacterEvent('character:classunlock', {
+            classLevel: result.data.unlockedClassLevel,
+            portraitUrl: result.data.character.currentPortraitUrl,
+          })
+        }
+
+        if (result.data.newJobLevel) {
+          dispatchCharacterEvent('character:jobtitleup', {
+            newTitle: result.data.newJobLevel.title,
+            level: result.data.newJobLevel.level,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error leveling up:', error)
+    }
+  }
+
+  const submitDailyQuestFromAPI = async () => {
+    try {
+      const result = await characterService.submitDailyQuest()
+      if (result.success) {
+        setCharacter(result.data.character)
+
+        if (result.data.leveledUp) {
+          dispatchCharacterEvent('character:levelup', {
+            level: result.data.character.level,
+            unlockedClassLevel: result.data.unlockedClassLevel,
+            newJobLevel: result.data.newJobLevel,
+          })
+        }
+
+        dispatchCharacterEvent('character:questcomplete', {
+          questName: 'Daily Quest',
+          xpEarned: result.data.xpEarned,
+          tokensEarned: result.data.tokensEarned,
+        })
+
+        if (result.data.unlockedClassLevel) {
+          dispatchCharacterEvent('character:classunlock', {
+            classLevel: result.data.unlockedClassLevel,
+            portraitUrl: result.data.character.currentPortraitUrl,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting daily quest:', error)
+    }
+  }
+
   const value = {
     character,
     jobClass,
@@ -236,8 +342,10 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({
     unlockAchievement,
     showLevelUpAnimation,
     showAchievementAnimation,
+    addXpFromAPI,
+    levelUpFromAPI,
+    submitDailyQuestFromAPI,
   }
-
   return (
     <CharacterContext.Provider value={value}>
       {children}

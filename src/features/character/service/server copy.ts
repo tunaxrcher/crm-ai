@@ -1,180 +1,155 @@
-// src/features/user/service/server.ts
 import { userService } from '@src/features/user/service/server'
 import { getDevSession, getServerSession } from '@src/lib/auth'
-import { BaseService } from '@src/lib/service/server/baseService'
-import 'server-only'
 
 import { JobClassHelper } from '../helpers/jobClassHelper'
 import { PortraitHelper } from '../helpers/portraitHelper'
-import { CharacterRepository, characterRepository } from '../repository'
-import { Character, JobLevel } from '../types'
+import { CharacterRepository } from '../repository'
 import { StatsAllocationService } from './statsAllocationService'
 
-export class CharacterService extends BaseService {
-  private static instance: CharacterService
-  private characterRepository: CharacterRepository
-
-  constructor() {
-    super()
-    this.characterRepository = characterRepository
-  }
-
-  public static getInstance() {
-    if (!CharacterService.instance) {
-      CharacterService.instance = new CharacterService()
-    }
-
-    return CharacterService.instance
-  }
-
+export class CharacterServerService {
   /**
-   * เพิ่ม XP (แยกการคำนวณออกจากการเลเวลอัพ)
+   * เพิ่ม XP
    */
-  async addXP(characterId: number, amount: number) {
+  static async addXP(characterId: number, amount: number) {
     const session = (await getServerSession()) || (await getDevSession())
     const userId = +session.user.id
 
-    console.log(`[Server] addXP To Character with ID: ${userId}`)
+    console.log(`[Server] addXP to User Character with ID: ${userId}`)
 
     const character =
       await CharacterRepository.findByIdWithJobLevels(characterId)
+
     if (!character) throw new Error('Character not found')
 
     let newCurrentXP = character.currentXP + amount
     let newLevel = character.level
     let newTotalXP = character.totalXP + amount
     let newNextLevelXP = character.nextLevelXP
-    let levelsGained = 0
+    let leveledUp = false
+    let portraitUpdated = false
+    let unlockedClassLevel: number | null = null
+    let newJobLevel: any = null
+    let aiReasoning: string | null = null
 
     const oldLevel = character.level
 
-    // ตรวจสอบการเลเวลอัพหลายระดับ
+    // ตรวจสอบการเลเวลอัพ
     while (newCurrentXP >= newNextLevelXP) {
       newCurrentXP -= newNextLevelXP
       newLevel++
-      levelsGained++
+      leveledUp = true
       newNextLevelXP = JobClassHelper.calculateNextLevelXP(newLevel)
     }
 
-    // อัพเดท XP เบื้องต้น (ยังไม่รวม stats)
-    const updatedCharacter =
-      await CharacterRepository.updateCharacterWithPortraitAndJob(characterId, {
-        currentXP: newCurrentXP,
-        level: newLevel,
-        totalXP: newTotalXP,
-        nextLevelXP: newNextLevelXP,
-      })
+    let updateData: any = {
+      currentXP: newCurrentXP,
+      level: newLevel,
+      totalXP: newTotalXP,
+      nextLevelXP: newNextLevelXP,
+    }
 
-    // ถ้ามีการเลเวลอัพ ให้เรียกใช้ฟังก์ชัน levelUp สำหรับแต่ละ level
-    let levelUpResults: any[] = []
-    let totalUnlockedClassLevels: number[] = []
-    let latestJobLevel = null
-    let allAiReasonings: string[] = []
-
-    if (levelsGained > 0) {
-      console.log(
-        `[AddXP] Character gained ${levelsGained} levels: ${oldLevel} → ${newLevel}`
+    // ถ้ามีการเลเวลอัพ ให้ใช้ AI วิเคราะห์ stats
+    if (leveledUp) {
+      const statGains = await StatsAllocationService.calculateStatGains(
+        characterId,
+        oldLevel,
+        newLevel,
+        character.jobClass.name
       )
 
-      for (let i = 0; i < levelsGained; i++) {
-        const currentLevelForLevelUp = oldLevel + i + 1
-        console.log(
-          `[AddXP] Processing level up for level ${currentLevelForLevelUp}`
+      aiReasoning = statGains.reasoning
+
+      // เพิ่ม stats ให้ character
+      updateData.statAGI = character.statAGI + statGains.agiGained
+      updateData.statSTR = character.statSTR + statGains.strGained
+      updateData.statDEX = character.statDEX + statGains.dexGained
+      updateData.statVIT = character.statVIT + statGains.vitGained
+      updateData.statINT = character.statINT + statGains.intGained
+      updateData.statPoints = character.statPoints + 5
+
+      // สร้าง Level History
+      await CharacterRepository.createLevelHistory({
+        characterId,
+        levelFrom: oldLevel,
+        levelTo: newLevel,
+        agiGained: statGains.agiGained,
+        strGained: statGains.strGained,
+        dexGained: statGains.dexGained,
+        vitGained: statGains.vitGained,
+        intGained: statGains.intGained,
+        reasoning: `AI Analysis (Auto Level Up): ${statGains.reasoning}`,
+      })
+
+      // ตรวจสอบการปลดล็อก class ใหม่
+      unlockedClassLevel = PortraitHelper.shouldUnlockNewClass(
+        newLevel,
+        oldLevel
+      )
+
+      if (unlockedClassLevel) {
+        const updatedPortraits = PortraitHelper.updateGeneratedPortraits(
+          character.generatedPortraits,
+          unlockedClassLevel
         )
 
-        try {
-          // เรียกใช้ฟังก์ชัน levelUp แต่ไม่อัพเดท level (เพราะอัพเดทแล้ว)
-          const levelUpResult = await this.processLevelUp(
-            characterId,
-            currentLevelForLevelUp - 1,
-            currentLevelForLevelUp,
-            false // ไม่ต้องอัพเดท level ใน DB
-          )
+        const newPortraitUrl = PortraitHelper.getCurrentPortraitUrl(
+          newLevel,
+          updatedPortraits
+        )
 
-          levelUpResults.push(levelUpResult)
+        updateData.generatedPortraits = updatedPortraits
+        updateData.currentPortraitUrl = newPortraitUrl
+        portraitUpdated = true
+      }
 
-          if (levelUpResult.unlockedClassLevel)
-            totalUnlockedClassLevels.push(levelUpResult.unlockedClassLevel)
+      // ตรวจสอบการอัพเดท job level
+      const jobLevelUpdate = JobClassHelper.shouldUpdateJobLevel(
+        character.currentJobLevel,
+        character.jobClass.levels,
+        newLevel
+      )
 
-          if (levelUpResult.newJobLevel)
-            latestJobLevel = levelUpResult.newJobLevel
-
-          if (levelUpResult.aiReasoning)
-            allAiReasonings.push(
-              `Lv.${currentLevelForLevelUp}: ${levelUpResult.aiReasoning}`
-            )
-        } catch (error) {
-          console.error(
-            `[AddXP] Error processing level up for level ${currentLevelForLevelUp}:`,
-            error
-          )
-        }
+      if (jobLevelUpdate.shouldUpdate && jobLevelUpdate.newJobLevel) {
+        updateData.jobLevelId = jobLevelUpdate.newJobLevel.id
+        newJobLevel = jobLevelUpdate.newJobLevel
       }
     }
 
-    // ดึงข้อมูล character ล่าสุดหลังจากการเลเวลอัพทั้งหมด
-    const getUserCharacters = await userService.getUserCharacters()
+    const updatedCharacter =
+      await CharacterRepository.updateCharacterWithPortraitAndJob(
+        characterId,
+        updateData
+      )
+
+    const dataCharacter = await userService.getUserCharacters()
 
     return {
-      character: getUserCharacters.character,
-      leveledUp: levelsGained > 0,
-      levelsGained,
+      character: dataCharacter.character,
+      leveledUp,
       xpAdded: amount,
-      unlockedClassLevels: totalUnlockedClassLevels,
-      newJobLevel: latestJobLevel,
-      portraitUpdated: totalUnlockedClassLevels.length > 0,
-      aiReasonings: allAiReasonings,
-      levelUpResults,
+      unlockedClassLevel,
+      newJobLevel,
+      portraitUpdated,
+      aiReasoning,
     }
   }
 
   /**
-   * เลเวลอัพ (เรียกใช้ processLevelUp)
+   * เลเวลอัพ
    */
-  async levelUp(characterId: number) {
+  static async levelUp(characterId: number) {
     const session = (await getServerSession()) || (await getDevSession())
     const userId = +session.user.id
 
-    console.log(`[Server] levelUp To Character with ID: ${userId}`)
+    console.log(`[Server] levelUp to User Character with ID: ${userId}`)
 
-    const character =
-      await CharacterRepository.findByIdWithJobLevels(characterId)
+    const character = await CharacterRepository.findByIdWithJobLevels(characterId)
+
     if (!character) throw new Error('Character not found')
 
     const oldLevel = character.level
     const newLevel = character.level + 1
-
-    // เรียกใช้ฟังก์ชัน processLevelUp พร้อมอัพเดท level
-    const result = await this.processLevelUp(
-      characterId,
-      oldLevel,
-      newLevel,
-      true
-    )
-
-    return {
-      ...result,
-      leveledUp: true,
-      levelsGained: 1,
-    }
-  }
-
-  /**
-   * ฟังก์ชันหลักสำหรับการเลเวลอัพ (แยกออกมาเพื่อ reuse)
-   */
-  private async processLevelUp(
-    characterId: number,
-    oldLevel: number,
-    newLevel: number,
-    shouldUpdateLevel: boolean = true
-  ) {
-    const character =
-      await CharacterRepository.findByIdWithJobLevels(characterId)
-    if (!character) throw new Error('Character not found')
-
-    console.log(
-      `[ProcessLevelUp] Processing level up: ${oldLevel} → ${newLevel}`
-    )
+    const newNextLevelXP = JobClassHelper.calculateNextLevelXP(newLevel)
 
     // ใช้ AI คำนวณ stats
     const statGains = await StatsAllocationService.calculateStatGains(
@@ -184,7 +159,8 @@ export class CharacterService extends BaseService {
       character.jobClass.name
     )
 
-    console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
+    console.log(`[LevelUp] Character ${characterId}: ${oldLevel} → ${newLevel}`)
+    console.log(`[LevelUp] Stat gains:`, statGains)
 
     // ตรวจสอบการปลดล็อก class ใหม่
     const unlockedClassLevel = PortraitHelper.shouldUnlockNewClass(
@@ -204,8 +180,6 @@ export class CharacterService extends BaseService {
         newLevel,
         updatedPortraits
       )
-
-      console.log(`[ProcessLevelUp] Unlocked class level ${unlockedClassLevel}`)
     }
 
     // ตรวจสอบการอัพเดท job level
@@ -215,7 +189,7 @@ export class CharacterService extends BaseService {
       newLevel
     )
 
-    // สร้าง Level History
+    // สร้าง Level History พร้อม AI reasoning
     const levelHistory = await CharacterRepository.createLevelHistory({
       characterId,
       levelFrom: oldLevel,
@@ -230,19 +204,15 @@ export class CharacterService extends BaseService {
 
     // เตรียมข้อมูลสำหรับอัพเดท character
     const updateData: any = {
+      level: newLevel,
+      currentXP: 0,
+      nextLevelXP: newNextLevelXP,
       statAGI: character.statAGI + statGains.agiGained,
       statSTR: character.statSTR + statGains.strGained,
       statDEX: character.statDEX + statGains.dexGained,
       statVIT: character.statVIT + statGains.vitGained,
       statINT: character.statINT + statGains.intGained,
       statPoints: character.statPoints + 5,
-    }
-
-    // อัพเดท level ถ้าจำเป็น (สำหรับการเรียกจาก levelUp โดยตรง)
-    if (shouldUpdateLevel) {
-      updateData.level = newLevel
-      updateData.currentXP = 0
-      updateData.nextLevelXP = JobClassHelper.calculateNextLevelXP(newLevel)
     }
 
     // เพิ่มข้อมูล portrait และ job level ถ้ามีการเปลี่ยนแปลง
@@ -274,13 +244,7 @@ export class CharacterService extends BaseService {
     }
 
     feedContent += ` 💪 STR +${statGains.strGained} 🧠 INT +${statGains.intGained} 🏃 AGI +${statGains.agiGained} 🎯 DEX +${statGains.dexGained} ❤️ VIT +${statGains.vitGained}`
-
-    // แสดง AI reasoning แบบสั้น ๆ ใน feed
-    const shortReasoning =
-      statGains.reasoning.length > 100
-        ? statGains.reasoning.substring(0, 100) + '...'
-        : statGains.reasoning
-    feedContent += ` | 🤖 ${shortReasoning}`
+    feedContent += ` | 🤖 AI: "${statGains.reasoning}"`
 
     await CharacterRepository.createFeedItem({
       content: feedContent,
@@ -290,10 +254,8 @@ export class CharacterService extends BaseService {
       levelHistoryId: levelHistory.id,
     })
 
-    const getUserCharacters = await userService.getUserCharacters()
-
     return {
-      character: getUserCharacters.character,
+      character: updatedCharacter,
       levelHistory,
       statGains,
       unlockedClassLevel,
@@ -304,16 +266,20 @@ export class CharacterService extends BaseService {
   }
 
   /**
-   * ส่งเควสประจำวัน (ไม่เปลี่ยน)
+   * ส่งเควสประจำวัน
    */
-  async submitDailyQuest(characterId: number) {
+  static async submitDailyQuest(characterId: number) {
     const character =
       await CharacterRepository.findByIdWithJobLevels(characterId)
-    if (!character) throw new Error('Character not found')
+    if (!character) {
+      throw new Error('Character not found')
+    }
 
     // หา daily quest
     const dailyQuest = await CharacterRepository.findActiveDailyQuest()
-    if (!dailyQuest) throw new Error('No daily quest available')
+    if (!dailyQuest) {
+      throw new Error('No daily quest available')
+    }
 
     // เช็ค assigned quest
     let assignedQuest = await CharacterRepository.findAssignedQuest(
@@ -352,7 +318,7 @@ export class CharacterService extends BaseService {
       status: 'completed',
     })
 
-    // เพิ่ม XP (จะเรียกใช้ processLevelUp ถ้ามีการเลเวลอัพ)
+    // เพิ่ม XP
     const xpResult = await this.addXP(characterId, dailyQuest.xpReward)
 
     // สร้าง Feed Item
@@ -389,12 +355,9 @@ export class CharacterService extends BaseService {
       xpEarned: dailyQuest.xpReward,
       tokensEarned: dailyQuest.baseTokenReward,
       leveledUp: xpResult.leveledUp,
-      levelsGained: xpResult.levelsGained,
-      unlockedClassLevels: xpResult.unlockedClassLevels,
+      unlockedClassLevel: xpResult.unlockedClassLevel,
       newJobLevel: xpResult.newJobLevel,
-      aiReasonings: xpResult.aiReasonings,
+      aiReasoning: xpResult.aiReasoning,
     }
   }
 }
-
-export const characterService = CharacterService.getInstance()
