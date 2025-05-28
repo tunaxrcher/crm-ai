@@ -30,6 +30,8 @@ import {
   TabsTrigger,
 } from '@src/components/ui/tabs'
 import { useCharacter } from '@src/contexts/CharacterContext'
+import { useQuestDetail } from '@src/features/quest/hook/api'
+import { useQuestSubmission } from '@src/features/quest/hook/useQuestSubmission'
 import { formatDeadline } from '@src/features/quest/utils'
 import {
   ArrowLeft,
@@ -42,12 +44,7 @@ import {
   Send,
   Sparkles,
   Upload,
-  X,
 } from 'lucide-react'
-
-import { mockAIAnalysis } from './mockAIAnalysis'
-// Import mock data
-import { mockQuests } from './mockQuestDetail'
 
 // Function to determine difficulty badge color
 const getDifficultyBadge = (difficulty: string) => {
@@ -55,19 +52,19 @@ const getDifficultyBadge = (difficulty: string) => {
     case 'easy':
       return (
         <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
-          {difficulty}
+          ง่าย
         </Badge>
       )
     case 'medium':
       return (
         <Badge className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30">
-          {difficulty}
+          ปานกลาง
         </Badge>
       )
     case 'hard':
       return (
         <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30">
-          {difficulty}
+          ยาก
         </Badge>
       )
     default:
@@ -93,7 +90,6 @@ const getQuestTypeIcon = (type: string) => {
 function ErrorBoundary({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<Error | null>(null)
 
-  // This effect is a workaround for error boundaries in client components
   useEffect(() => {
     setError(null)
   }, [children])
@@ -107,7 +103,6 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Try-catch for rendering children
   try {
     return <>{children}</>
   } catch (err: any) {
@@ -119,18 +114,28 @@ function ErrorBoundary({ children }: { children: React.ReactNode }) {
 // Props interface for the component
 interface QuestDetailProps {
   questId: string
+  userId: any
+  characterId: any
 }
 
-export default function QuestDetail({ questId }: QuestDetailProps) {
+export default function QuestDetail({
+  questId,
+  userId,
+  characterId,
+}: QuestDetailProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('details')
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [description, setDescription] = useState('')
   const [showAIResult, setShowAIResult] = useState(false)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [aiAnalysisProgress, setAiAnalysisProgress] = useState(0)
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [editableSummary, setEditableSummary] = useState('')
+
+  // *** ใช้ real hooks แทน mock data ***
+  const { data: quest, isLoading, error } = useQuestDetail(questId, userId)
+  const questSubmission = useQuestSubmission()
 
   // Notification system
   const { addNotification } = useNotification()
@@ -155,16 +160,25 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
     )
   }
 
-  // Get quest data
-  const quest = mockQuests[questId as keyof typeof mockQuests]
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="p-4 flex flex-col items-center justify-center h-60">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="mt-4 text-muted-foreground">กำลังโหลดข้อมูล</p>
+      </div>
+    )
+  }
 
-  // Handle if quest doesn't exist
-  if (!quest) {
+  // Handle error state
+  if (error || !quest) {
     return (
       <div className="p-4 flex flex-col items-center justify-center h-60">
         <h1 className="text-xl font-bold mb-2">Quest Not Found</h1>
         <p className="text-muted-foreground mb-4">
-          The quest with ID "{questId}" doesn't exist.
+          {error
+            ? 'Failed to load quest details'
+            : `The quest with ID "${questId}" doesn't exist.`}
         </p>
         <Button
           onClick={() => router.push('/quest')}
@@ -179,49 +193,75 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      const imageUrl = URL.createObjectURL(file)
-      setUploadedImage(imageUrl)
+      const fileURL = URL.createObjectURL(file)
+      setUploadedFile(file)
+
+      // ตรวจสอบชนิดของไฟล์
+      if (file.type.startsWith('image/')) {
+        setUploadedImage(fileURL) // ใช้กับ <img>
+      } else if (file.type.startsWith('video/')) {
+        setUploadedImage(fileURL) // ใช้กับ <video>
+      } else {
+        setUploadedImage(null)
+      }
     }
   }
 
-  // Handle simulated AI evaluation
-  const handleSubmitQuest = () => {
-    setIsLoading(true)
-    setAiAnalysisProgress(0)
+  // Handle quest submission
+  const handleSubmitQuest = async () => {
+    try {
+      setAiAnalysisProgress(0)
 
-    // Simulate AI processing with progress updates
-    const interval = setInterval(() => {
-      setAiAnalysisProgress((prev) => {
-        const newProgress = prev + Math.random() * 15
-        return newProgress >= 100 ? 100 : newProgress
+      // Simulate progress updates
+      const interval = setInterval(() => {
+        setAiAnalysisProgress((prev) => {
+          const newProgress = prev + Math.random() * 15
+          return newProgress >= 95 ? 95 : newProgress
+        })
+      }, 300)
+
+      // Submit quest to backend
+      const result = await questSubmission.mutateAsync({
+        questId,
+        characterId: characterId,
+        mediaFile: uploadedFile || undefined,
+        description: description || undefined,
       })
-    }, 300)
 
-    // Simulate AI evaluation completion after 3-5 seconds
-    setTimeout(
-      () => {
-        clearInterval(interval)
-        setAiAnalysisProgress(100)
+      // Complete progress
+      clearInterval(interval)
+      setAiAnalysisProgress(100)
 
-        setTimeout(() => {
-          setIsLoading(false)
-          setAiAnalysis(mockAIAnalysis)
-          setShowAIResult(true)
-        }, 500)
-      },
-      3000 + Math.random() * 2000
-    )
+      // Set editable summary from AI analysis
+      setEditableSummary(result.submission.mediaTranscript)
+
+      setTimeout(() => {
+        setShowAIResult(true)
+      }, 500)
+    } catch (error) {
+      console.error('Quest submission failed:', error)
+      addNotification({
+        type: 'error',
+        title: 'Submission Failed',
+        message:
+          error instanceof Error ? error.message : 'An unknown error occurred',
+        duration: 5000,
+      })
+    }
   }
 
   // Function to handle confirmation of AI evaluation
   const handleConfirmSubmission = () => {
     setShowAIResult(false)
 
-    // Add XP to character
-    const xpEarned = aiAnalysis?.xpEarned || quest.rewards.xp
+    const result = questSubmission.data
+    if (!result) return
+
+    // Add XP to character (from context)
+    const xpEarned = result.aiAnalysis.xpEarned
     addXp(xpEarned)
 
-    // Manually show XP gain notification
+    // Show notifications
     addNotification({
       type: 'reward',
       title: 'XP Gained',
@@ -229,7 +269,6 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
       duration: 3000,
     })
 
-    // Send a notification when quest is completed
     addNotification({
       type: 'success',
       title: 'Quest Completed',
@@ -246,21 +285,20 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
     // Show success dialog
     setShowSuccessDialog(true)
 
-    // Check if quest has isSpecial property and if it's true
-    if ('isSpecial' in quest && quest.isSpecial) {
-      unlockAchievement(1)
-    }
-
-    // Special case for the first quest to unlock the "First Steps" achievement
-    if (questId === 'q1') {
+    // Check for achievements (simplified logic)
+    if (questId === 'q1' || questId === '1') {
       unlockAchievement(1)
     }
   }
+
   // Navigate back to quests after successful submission
   const handleSuccessClose = () => {
     setShowSuccessDialog(false)
     router.push('/quest')
   }
+
+  // Mock requirements for display (since not in schema yet)
+  const mockRequirements = ['-', '-', '-']
 
   return (
     <ErrorBoundary>
@@ -273,19 +311,16 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
               className="flex items-center"
               onClick={() => router.push('/quest')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              <span>Back</span>
             </Button>
 
             <h2 className="text-lg font-semibold ai-gradient-text">
-              Quest Detail
+              {quest.title}
             </h2>
 
             <div className="w-[70px]"></div>
           </div>
 
-          <h1 className="text-xl font-bold ai-gradient-text text-center mb-2">
-            {quest.title}
-          </h1>
+          {/* <h1 className="text-xl font-bold ai-gradient-text text-center mb-2">{quest.title}</h1> */}
 
           <div className="flex items-center justify-center gap-4 mt-1">
             <div className="flex items-center">
@@ -299,14 +334,14 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
 
         <Tabs defaultValue="details" onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="submit">Submit Quest</TabsTrigger>
+            <TabsTrigger value="details">รายละเอียด</TabsTrigger>
+            <TabsTrigger value="submit">ส่งงาน</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Description</CardTitle>
+                <CardTitle className="text-base">คำอธิบาย</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm">{quest.description}</p>
@@ -324,14 +359,14 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Requirements</CardTitle>
+                <CardTitle className="text-base">เงื่อนไข</CardTitle>
                 <CardDescription>
                   Complete these tasks to succeed
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
-                  {quest.requirements.map((requirement, index) => (
+                  {mockRequirements.map((requirement, index) => (
                     <li key={index} className="flex items-start">
                       <div className="min-w-5 h-5 rounded-full bg-secondary flex items-center justify-center text-xs mr-3 mt-0.5">
                         {index + 1}
@@ -345,7 +380,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Rewards</CardTitle>
+                <CardTitle className="text-base">รางวัล</CardTitle>
                 <CardDescription>
                   What you'll earn upon completion
                 </CardDescription>
@@ -363,22 +398,6 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                     Helps you level up faster
                   </div>
                 </div>
-
-                <div className="hidden">
-                  <div className="text-sm mb-2">Estimated Stat Gains:</div>
-                  <div className="grid grid-cols-5 gap-2">
-                    {Object.entries(quest.rewards.stats).map(
-                      ([stat, value]) => (
-                        <div
-                          key={stat}
-                          className="bg-secondary/30 p-2 rounded-lg flex flex-col items-center">
-                          <span className="text-xs font-medium">{stat}</span>
-                          <span className="text-sm">+{value}</span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -386,25 +405,38 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
           <TabsContent value="submit" className="space-y-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Submit Your Work</CardTitle>
+                <CardTitle className="text-base">
+                  อัพโหลดภาพ หรือ วิดีโอประกอบงานที่คุณทำ
+                </CardTitle>
                 <CardDescription>
                   Upload evidence of your completed quest
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {uploadedImage ? (
+                  {uploadedImage && uploadedFile ? (
                     <div className="relative">
-                      <img
-                        src={uploadedImage}
-                        alt="Quest evidence"
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
+                      {uploadedFile.type.startsWith('image/') ? (
+                        <img
+                          src={uploadedImage}
+                          alt="Quest evidence"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                      ) : uploadedFile.type.startsWith('video/') ? (
+                        <video
+                          src={uploadedImage}
+                          controls
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                      ) : null}
                       <Button
                         variant="destructive"
                         size="sm"
                         className="absolute top-2 right-2"
-                        onClick={() => setUploadedImage(null)}>
+                        onClick={() => {
+                          setUploadedImage(null)
+                          setUploadedFile(null)
+                        }}>
                         Remove
                       </Button>
                     </div>
@@ -424,13 +456,27 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                         </span>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/*,video/*"
                           className="hidden"
                           onChange={handleFileChange}
                         />
                       </label>
                     </div>
                   )}
+
+                  {/* Description input */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">
+                      อธิบายรายละเอียด (ปล่อยว่างได้)
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="..."
+                      className="w-full p-3 border border-border rounded-lg bg-background resize-none"
+                      rows={3}
+                    />
+                  </div>
 
                   <div className="text-xs text-muted-foreground">
                     Supported formats: PNG, JPG, PDF, MP4 (max 20MB)
@@ -439,9 +485,12 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                   <div className="pt-4">
                     <Button
                       className="w-full ai-gradient-bg"
-                      disabled={!uploadedImage || isLoading}
+                      disabled={
+                        (!uploadedFile && !description) ||
+                        questSubmission.isPending
+                      }
                       onClick={handleSubmitQuest}>
-                      {isLoading ? (
+                      {questSubmission.isPending ? (
                         <span className="flex items-center">
                           <svg
                             className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
@@ -465,7 +514,7 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                       ) : (
                         <>
                           <Send className="h-4 w-4 mr-2" />
-                          Submit for AI Evaluation
+                          ส่งงาน
                         </>
                       )}
                     </Button>
@@ -473,14 +522,10 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                     <div className="mt-4 bg-secondary/20 p-3 rounded-lg">
                       <div className="text-sm mb-2">What happens next?</div>
                       <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>• Your submission will be evaluated by AI</li>
-                        <li>
-                          • You'll receive XP based on the quality of your work
-                        </li>
-                        <li>• Your stats will be analyzed and improved</li>
-                        <li>
-                          • Your submission will appear in the activity feed
-                        </li>
+                        <li>• ผลงานที่คุณส่งจะถูกประเมินโดย AI</li>
+                        <li>• สถิติของคุณจะถูกวิเคราะห์และปรับปรุง</li>
+                        <li>• ผลงานของคุณจะปรากฏในฟีดกิจกรรมทันที</li>
+                        <li>• สามารถแก้ไขข้อความได้ หากผิดพลาด</li>
                       </ul>
                     </div>
                   </div>
@@ -491,10 +536,12 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
         </Tabs>
 
         {/* AI Processing Dialog */}
-        {isLoading && (
-          <Dialog open={isLoading} onOpenChange={() => {}}>
+        {questSubmission.isPending && (
+          <Dialog open={questSubmission.isPending} onOpenChange={() => {}}>
             <DialogContent className="sm:max-w-md text-center py-8">
-              <div className="flex flex-col items-center space-y-6">
+              <div className="flex flex-col items-center space-y-4">
+                {' '}
+                {/* Adjust space-y if needed */}
                 <div className="relative w-20 h-20">
                   <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
                   <div className="absolute inset-2 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 animate-pulse"></div>
@@ -502,42 +549,41 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                     <Sparkles className="h-8 w-8 text-blue-400" />
                   </div>
                 </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">
-                    AI is Evaluating Your Work
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Please wait while our AI analyzes your submission...
-                  </p>
-                </div>
-
+                <DialogHeader className="text-center">
+                  <DialogTitle className="text-lg font-semibold">
+                    {' '}
+                    {/* Use original h3's styling */}
+                    เอไอกำลังตรวจสอบงานของคุณ
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground mt-1">
+                    {' '}
+                    {/* Use original p's styling, adjust margin as needed */}
+                    โปรดรอสักครู่ เอไอ กำลังวิเคราะห์...
+                  </DialogDescription>
+                </DialogHeader>
                 <div className="w-full max-w-xs">
                   <div className="flex justify-between text-xs mb-1">
                     <span>Analysis in progress</span>
                     <span>{Math.round(aiAnalysisProgress)}%</span>
                   </div>
                   <Progress value={aiAnalysisProgress} className="h-2" />
-
                   <div className="mt-2 text-xs text-muted-foreground space-y-1">
                     {aiAnalysisProgress > 20 && (
                       <div className="flex items-center">
                         <Check className="h-3 w-3 mr-1 text-green-400" />
-                        <span>Examining submission...</span>
+                        <span>กำลังตรวจสอบข้อมูล...</span>
                       </div>
                     )}
-
                     {aiAnalysisProgress > 50 && (
                       <div className="flex items-center">
                         <Check className="h-3 w-3 mr-1 text-green-400" />
-                        <span>Evaluating requirements completion...</span>
+                        <span>กำลังวิเคราะห์...</span>
                       </div>
                     )}
-
                     {aiAnalysisProgress > 80 && (
                       <div className="flex items-center">
                         <Check className="h-3 w-3 mr-1 text-green-400" />
-                        <span>Calculating rewards...</span>
+                        <span>คำนวน XP และบันทึกข้อมูล</span>
                       </div>
                     )}
                   </div>
@@ -551,33 +597,38 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
         <Dialog open={showAIResult} onOpenChange={setShowAIResult}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>AI Evaluation Results</DialogTitle>
+              <DialogTitle>ผลการวิเคราะห์</DialogTitle>
               <DialogDescription>
-                Here's the AI analysis of your quest submission
+                ระบบได้แสดงการส่งงานของคุณที่ Feed เรียบร้อยแล้ว
               </DialogDescription>
             </DialogHeader>
 
-            {aiAnalysis && (
+            {questSubmission.data && (
               <div className="space-y-4">
                 <div className="p-4 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-cyan-500/10 rounded-lg">
-                  <h3 className="font-semibold mb-2">Summary</h3>
-                  <p className="text-sm">{aiAnalysis.summary}</p>
+                  <h3 className="font-semibold mb-2">โพส</h3>
+                  <textarea
+                    value={editableSummary}
+                    onChange={(e) => setEditableSummary(e.target.value)}
+                    className="w-full p-2 border border-border rounded bg-background resize-none"
+                    rows={3}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-secondary/20 p-3 rounded-lg">
                     <div className="text-xs text-muted-foreground">Score</div>
                     <div className="text-xl font-bold">
-                      {aiAnalysis.score}/100
+                      {questSubmission.data.submission.score}/100
                     </div>
                   </div>
 
                   <div className="bg-secondary/20 p-3 rounded-lg">
                     <div className="text-xs text-muted-foreground">
-                      XP Earned
+                      XP ที่ได้รับ
                     </div>
                     <div className="text-xl font-bold text-yellow-400">
-                      {aiAnalysis.xpEarned} XP
+                      {questSubmission.data.submission.xpEarned} XP
                     </div>
                   </div>
                 </div>
@@ -585,30 +636,35 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                 <div>
                   <h3 className="font-semibold mb-2">Requirements Check</h3>
                   <div className="space-y-1 text-sm">
-                    {Object.entries(aiAnalysis.requirements).map(
-                      ([req, completed]) => (
-                        <div key={req} className="flex items-center">
-                          {completed ? (
-                            <Check className="h-4 w-4 mr-2 text-green-400" />
-                          ) : (
-                            <X className="h-4 w-4 mr-2 text-red-400" />
-                          )}
-                          <span>{req}</span>
-                        </div>
-                      )
-                    )}
+                    {/* {Object.entries(
+                      questSubmission.data.aiAnalysis.requirements
+                    ).map(([req, completed]) => (
+                      <div key={req} className="flex items-center">
+                        {completed ? (
+                          <Check className="h-4 w-4 mr-2 text-green-400" />
+                        ) : (
+                          <X className="h-4 w-4 mr-2 text-red-400" />
+                        )}
+                        <span>{req}</span>
+                      </div>
+                    ))} */}
+                    <div className="flex items-center">
+                      <span>-</span>
+                    </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-2">Feedback</h3>
-                  <p className="text-sm">{aiAnalysis.feedback}</p>
+                  <h3 className="font-semibold mb-2">Feedback จาก เอไอ</h3>
+                  <p className="text-sm">
+                    {questSubmission.data.aiAnalysis.feedback}
+                  </p>
                 </div>
 
                 <div>
                   <h3 className="font-semibold mb-2">Tags</h3>
                   <div className="flex flex-wrap gap-2">
-                    {aiAnalysis.tags.map((tag: string) => (
+                    {questSubmission.data.aiAnalysis.tags.map((tag: string) => (
                       <Badge key={tag} variant="outline">
                         {tag}
                       </Badge>
@@ -619,13 +675,13 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
             )}
 
             <DialogFooter className="flex space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setShowAIResult(false)}>
-                Cancel
-              </Button>
+              {/* <Button variant="outline" onClick={() => setShowAIResult(false)}>
+                ปิด
+              </Button> */}
               <Button
                 className="ai-gradient-bg"
                 onClick={handleConfirmSubmission}>
-                Confirm Submission
+                ไปดู Feed ของคุณ
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -639,17 +695,29 @@ export default function QuestDetail({ questId }: QuestDetailProps) {
                 <Check className="h-8 w-8 text-green-500" />
               </div>
 
-              <h2 className="text-xl font-bold mb-2">Quest Completed!</h2>
-
-              <p className="text-muted-foreground mb-6">
-                Your submission has been successfully processed
-              </p>
+              <DialogHeader className="text-center mb-6">
+                {' '}
+                {/* Added mb-6 to maintain spacing */}
+                <DialogTitle className="text-xl font-bold">
+                  {' '}
+                  {/* Use original h2's styling */}
+                  Quest Completed!
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground mt-1">
+                  {' '}
+                  {/* Use original p's styling, adjust margin as needed */}
+                  Your submission has been successfully processed
+                </DialogDescription>
+              </DialogHeader>
 
               <div className="flex items-center justify-center w-full mb-4">
                 <div className="flex items-center bg-secondary/30 px-6 py-3 rounded-lg">
                   <Award className="h-6 w-6 mr-2 text-yellow-400" />
                   <span className="text-lg font-bold text-yellow-400">
-                    +{aiAnalysis?.xpEarned || quest.rewards.xp} XP
+                    +
+                    {questSubmission.data?.aiAnalysis.xpEarned ||
+                      quest.rewards.xp}{' '}
+                    XP
                   </span>
                 </div>
               </div>

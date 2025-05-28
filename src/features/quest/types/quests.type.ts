@@ -1,4 +1,3 @@
-// src/features/quest/types/index.ts
 export type QuestType = 'daily' | 'weekly' | 'no-deadline'
 export type QuestDifficulty = 'easy' | 'medium' | 'hard'
 export type QuestStatus = 'active' | 'completed' | 'failed' | 'expired'
@@ -47,7 +46,6 @@ export interface AssignedQuestWithDetails {
   assignedAt: Date
   expiresAt: Date | null
   status: 'active' | 'completed' | 'failed' | 'expired'
-  questId: number
   quest: {
     id: number
     title: string
@@ -65,7 +63,6 @@ export interface AssignedQuestWithDetails {
   }
   questSubmissions?: Array<{
     id: number
-    questId: number
     xpEarned: number
     submittedAt: Date
   }>

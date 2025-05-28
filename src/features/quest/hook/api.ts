@@ -1,160 +1,82 @@
-'use client'
+// src/features/quest/hook/api.ts
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
-// Custom hooks for Quest feature API calls
-import { useCallback, useEffect, useState } from 'react'
+import { questService } from '../service/client'
+import { CompletedQuest, GroupedQuests, Quest } from '../types/index'
 
-import { completeQuest, fetchQuestById, fetchQuests } from '../service/client'
-import {
-  CompleteQuestResponse,
-  CompletedQuest,
-  GroupedQuests,
-  Quest,
-} from '../types'
+// Hook สำหรับดึงข้อมูลภารกิจทั้งหมด
+export const useQuests = (userId?: number) => {
+  const queryClient = useQueryClient()
 
-/**
- * Hook to fetch all quests
- */
-export function useQuests() {
-  const [activeQuests, setActiveQuests] = useState<Quest[]>([])
-  const [completedQuests, setCompletedQuests] = useState<CompletedQuest[]>([])
-  const [groupedQuests, setGroupedQuests] = useState<GroupedQuests>({
-    daily: [],
-    weekly: [],
-    'no-deadline': [],
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['quests', userId],
+    queryFn: async () => {
+      if (!userId) {
+        throw new Error('User ID is required')
+      }
+      return await questService.fetchQuests(userId)
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // 5 นาที
+    gcTime: 10 * 60 * 1000, // 10 นาที (เปลี่ยนจาก cacheTime)
   })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const loadQuests = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const data = await fetchQuests()
-
-      if (!data || !data.activeQuests || !data.completedQuests) {
-        throw new Error('Invalid response format from server')
+  // จัดกลุ่มภารกิจตามประเภท
+  const groupedQuests: GroupedQuests | undefined = data?.activeQuests
+    ? {
+        daily: data.activeQuests.filter((quest) => quest.type === 'daily'),
+        weekly: data.activeQuests.filter((quest) => quest.type === 'weekly'),
+        'no-deadline': data.activeQuests.filter(
+          (quest) => quest.type === 'no-deadline'
+        ),
       }
+    : undefined
 
-      setActiveQuests(data.activeQuests)
-      setCompletedQuests(data.completedQuests)
+  const completedQuests: CompletedQuest[] | undefined = data?.completedQuests
 
-      // Group quests by type
-      const grouped: GroupedQuests = {
-        daily: [],
-        weekly: [],
-        'no-deadline': [],
-      }
-
-      data.activeQuests.forEach((quest) => {
-        if (quest && quest.type && grouped[quest.type]) {
-          grouped[quest.type].push(quest)
-        }
-      })
-
-      setGroupedQuests(grouped)
-      setError(null)
-    } catch (err) {
-      console.error('Error loading quests:', err)
-      setError(
-        err instanceof Error ? err : new Error('An unknown error occurred')
-      )
-    } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
-    }
-  }, [])
-
-  // Initial load
-  useEffect(() => {
-    loadQuests()
-  }, [loadQuests])
-
-  // Function to refresh quests
-  const refreshQuests = () => {
-    setIsRefreshing(true)
-    loadQuests()
+  // ฟังก์ชันสำหรับ refresh ข้อมูล
+  const refreshQuests = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['quests', userId] })
+    return refetch()
   }
 
   return {
-    activeQuests,
-    completedQuests,
     groupedQuests,
+    completedQuests,
     isLoading,
-    isRefreshing,
     error,
     refreshQuests,
+    rawData: data,
   }
 }
 
-/**
- * Hook to fetch a single quest by ID
- */
-export function useQuest(id: string) {
-  const [quest, setQuest] = useState<Quest | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-
-  useEffect(() => {
-    const loadQuest = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const data = await fetchQuestById(id)
-        setQuest(data)
-      } catch (err) {
-        console.error(`Error loading quest ${id}:`, err)
-        setError(
-          err instanceof Error ? err : new Error('An unknown error occurred')
-        )
-      } finally {
-        setIsLoading(false)
+// Hook สำหรับดึงรายละเอียดภารกิจเดียว
+export const useQuestDetail = (questId?: string, userId?: number) => {
+  return useQuery({
+    queryKey: ['quest', questId, userId],
+    queryFn: async () => {
+      if (!questId || !userId) {
+        throw new Error('Quest ID and User ID are required')
       }
-    }
-
-    if (id) {
-      loadQuest()
-    }
-  }, [id])
-
-  return {
-    quest,
-    isLoading,
-    error,
-  }
+      return await questService.fetchQuestById(questId, userId)
+    },
+    enabled: !!(questId && userId),
+    staleTime: 5 * 60 * 1000, // 5 นาที
+    gcTime: 10 * 60 * 1000, // 10 นาที
+  })
 }
 
-/**
- * Hook for completing a quest
- */
-export function useCompleteQuest() {
-  const [isCompleting, setIsCompleting] = useState(false)
-  const [completionResult, setCompletionResult] =
-    useState<CompleteQuestResponse | null>(null)
-  const [error, setError] = useState<Error | null>(null)
+// Hook สำหรับ prefetch ข้อมูลภารกิจ (ใช้เมื่อต้องการโหลดข้อมูลล่วงหน้า)
+export const usePrefetchQuests = () => {
+  const queryClient = useQueryClient()
 
-  const completeQuestById = async (questId: string) => {
-    try {
-      setIsCompleting(true)
-      setError(null)
-      const result = await completeQuest(questId)
-      setCompletionResult(result)
-      return result
-    } catch (err) {
-      console.error(`Error completing quest ${questId}:`, err)
-      setError(
-        err instanceof Error ? err : new Error('An unknown error occurred')
-      )
-      throw err
-    } finally {
-      setIsCompleting(false)
-    }
+  const prefetchQuests = async (userId: number) => {
+    await queryClient.prefetchQuery({
+      queryKey: ['quests', userId],
+      queryFn: () => questService.fetchQuests(userId),
+      staleTime: 5 * 60 * 1000,
+    })
   }
 
-  return {
-    completeQuestById,
-    isCompleting,
-    completionResult,
-    error,
-  }
+  return { prefetchQuests }
 }

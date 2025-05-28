@@ -1,93 +1,133 @@
-// Client-side service for Quest feature
-import {
-  CompleteQuestRequest,
-  CompleteQuestResponse,
-  CompletedQuest,
-  Quest,
-  QuestsResponse,
-} from '../types'
+import { BaseService } from '@src/lib/service/server/baseService'
 
-/**
- * Fetch all quests for the current user
- */
-export async function fetchQuests(): Promise<QuestsResponse> {
-  try {
-    const response = await fetch('/api/quest')
+import { Quest, QuestListResponse } from '../types'
+import { QuestSubmissionResponse } from '../types/submission'
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Failed to fetch quests: ${response.status} ${errorText}`)
-    }
+export class QuestService extends BaseService {
+  private static instance: QuestService
 
-    const data = await response.json()
+  private baseUrl = '/api/quests'
 
-    // Validate the response has the expected properties
-    if (!data || typeof data !== 'object') {
-      throw new Error('Invalid response format')
-    }
-
-    // Default values for missing properties
-    const result: QuestsResponse = {
-      activeQuests: Array.isArray(data.activeQuests) ? data.activeQuests : [],
-      completedQuests: Array.isArray(data.completedQuests)
-        ? data.completedQuests
-        : [],
-    }
-
-    return result
-  } catch (error) {
-    console.error('Error in fetchQuests:', error)
-    // Re-throw error for the hook to handle
-    throw error
+  constructor() {
+    super()
   }
-}
 
-/**
- * Fetch a single quest by ID
- */
-export async function fetchQuestById(id: string): Promise<Quest> {
-  try {
-    const response = await fetch(`/api/quest/${id}`)
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Failed to fetch quest: ${response.status} ${errorText}`)
+  public static getInstance() {
+    if (!QuestService.instance) {
+      QuestService.instance = new QuestService()
     }
-
-    return await response.json()
-  } catch (error) {
-    console.error(`Error fetching quest ${id}:`, error)
-    throw error
+    return QuestService.instance
   }
-}
 
-/**
- * Complete a quest
- */
-export async function completeQuest(
-  questId: string
-): Promise<CompleteQuestResponse> {
-  try {
-    const payload: CompleteQuestRequest = { questId }
+  // ดึงรายการภารกิจทั้งหมด
+  async fetchQuests(userId: number): Promise<QuestListResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}?userId=${userId}`)
 
-    const response = await fetch('/api/quest/complete', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to fetch quests')
+      }
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(
-        `Failed to complete quest: ${response.status} ${errorText}`
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching quests:', error)
+      throw error
+    }
+  }
+
+  // ดึงรายละเอียดภารกิจเดียว
+  async fetchQuestById(questId: string, userId: number): Promise<Quest> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/${questId}?userId=${userId}`
       )
-    }
 
-    return await response.json()
-  } catch (error) {
-    console.error(`Error completing quest ${questId}:`, error)
-    throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to fetch quest details')
+      }
+
+      const quest = await response.json()
+      return quest
+    } catch (error) {
+      console.error('Error fetching quest details:', error)
+      throw error
+    }
   }
 }
+
+export const questService = new QuestService()
+
+export class QuestSubmissionService {
+  // ส่ง quest submission
+  async submitQuest(
+    questId: string,
+    characterId: number,
+    mediaFile?: File,
+    description?: string
+  ): Promise<QuestSubmissionResponse> {
+    try {
+      const formData = new FormData()
+      formData.append('characterId', characterId.toString())
+
+      if (description) {
+        formData.append('description', description)
+      }
+
+      if (mediaFile) {
+        formData.append('mediaFile', mediaFile)
+      }
+
+      const response = await fetch(`/api/quests/${questId}/submit`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit quest')
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error submitting quest:', error)
+      throw error
+    }
+  }
+
+  // อัพเดท summary
+  async updateSubmissionSummary(
+    questId: string,
+    submissionId: number,
+    summary: string
+  ): Promise<{ success: boolean }> {
+    try {
+      const response = await fetch(`/api/quests/${questId}/submit`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          submissionId,
+          summary,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update summary')
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error updating summary:', error)
+      throw error
+    }
+  }
+}
+
+export const questSubmissionService = new QuestSubmissionService()

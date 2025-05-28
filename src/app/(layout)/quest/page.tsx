@@ -2,19 +2,19 @@
 
 import { useEffect, useState } from 'react'
 
-import QuestPageComponent from '@src/features/quest/components/QuestPage'
+import QuestPageComponent from '@src/features/quest/components/index'
+import { useAuth } from '@src/hooks/useAuth'
 
 export default function QuestPage() {
-  // Simple error boundary
+  // const { user } = useAuth()
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
 
+  // if (!user) return <div></div>
+
   useEffect(() => {
     try {
-      // Detect errors that may occur during hydration or rendering
-      if (hasError) {
-        console.error('Quest page error:', errorMessage)
-      }
+      if (hasError) console.error('Quest page error:', errorMessage)
     } catch (error) {
       setHasError(true)
       setErrorMessage(error instanceof Error ? error.message : 'Unknown error')
@@ -39,5 +39,5 @@ export default function QuestPage() {
     )
   }
 
-  return <QuestPageComponent />
+  return <QuestPageComponent userId={1} />
 }

@@ -136,7 +136,14 @@ export default function QuestTypeSection({
             <div
               key={quest.id}
               className="flex items-center justify-between p-3 rounded-lg border border-transparent quest-item-hover cursor-pointer"
-              onClick={() => onQuestClick(quest.id)}>
+              onClick={() => {
+                if (type === 'weekly' || type === 'no-deadline') {
+                  alert('โหมดนี้กำลังทดสอบ')
+                  return
+                }
+
+                onQuestClick(quest.id)
+              }}>
               <div className="flex-1">
                 <div className="flex items-center">
                   <div className="mr-2">

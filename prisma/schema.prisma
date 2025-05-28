@@ -162,6 +162,7 @@ model FeedItem {
   id                Int                   @id @default(autoincrement())
   content           String                @db.Text
   type              String
+  post              String?               @db.Text
   mediaType         EnumMediaType         @default(text)
   mediaUrl          String?
   createdAt         DateTime              @default(now())
@@ -320,23 +321,29 @@ model AssignedQuest {
 }
 
 model QuestSubmission {
-  id          Int           @id @default(autoincrement())
-  mediaType   EnumMediaType
-  mediaUrl    String?
-  description String?       @db.Text
-  tags        Json?
-  ratingAGI   Int?
-  ratingSTR   Int?
-  ratingDEX   Int?
-  ratingVIT   Int?
-  ratingINT   Int?
-  xpEarned    Int
-  submittedAt DateTime      @default(now())
-  characterId Int
-  questId     Int
-  feedItems   FeedItem[]
-  character   Character     @relation(fields: [characterId], references: [id])
-  quest       Quest         @relation(fields: [questId], references: [id])
+  id                     Int           @id @default(autoincrement())
+  mediaType              EnumMediaType
+  mediaUrl               String?
+  description            String?       @db.Text
+  tags                   Json?
+  ratingAGI              Int?
+  ratingSTR              Int?
+  ratingDEX              Int?
+  ratingVIT              Int?
+  ratingINT              Int?
+  xpEarned               Int
+  feedback               String?       @db.Text
+  score                  Int?
+  submittedAt            DateTime      @default(now())
+  mediaTranscript        String?       @db.Text
+  mediaRevisedTranscript String?       @db.Text
+  mediaAnalysis          String?       @db.Text
+  characterId            Int
+  questId                Int
+
+  feedItems FeedItem[]
+  character Character  @relation(fields: [characterId], references: [id])
+  quest     Quest      @relation(fields: [questId], references: [id])
 
   @@index([characterId], map: "QuestSubmission_characterId_fkey")
   @@index([questId], map: "QuestSubmission_questId_fkey")
@@ -410,8 +417,9 @@ model QuestToken {
   completedAt  DateTime  @default(now())
   character    Character @relation(fields: [characterId], references: [id])
   quest        Quest     @relation(fields: [questId], references: [id])
-  user         UserToken @relation(fields: [userId], references: [userId], map: "QuestToken_userId_user_fkey")
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "QuestToken_userId_user_fkey")
+
+  userToken UserToken @relation(fields: [userId], references: [userId], map: "QuestToken_userId_userToken_fkey")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "QuestToken_userId_user_fkey")
 
   @@index([completedAt])
   @@index([userId, questId])
@@ -430,8 +438,9 @@ model TokenTransaction {
   balanceBefore Int
   balanceAfter  Int
   createdAt     DateTime                 @default(now())
-  user          UserToken                @relation(fields: [userId], references: [userId], map: "TokenTransaction_userId_user_fkey")
-  user          User                     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "TokenTransaction_userId_user_fkey")
+
+  userToken UserToken @relation(fields: [userId], references: [userId], map: "TokenTransaction_userId_userToken_fkey")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, map: "TokenTransaction_userId_user_fkey")
 
   @@index([userId], map: "TokenTransaction_userId_userToken_fkey")
 }

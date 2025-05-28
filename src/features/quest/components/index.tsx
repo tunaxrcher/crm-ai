@@ -22,10 +22,14 @@ import { formatDeadline } from '../utils'
 import CompletedQuestList from './CompletedQuestList'
 import QuestTypeSection from './QuestTypeSection'
 
-function QuestPageComponent() {
+type QuestPageProps = {
+  userId: number
+}
+
+function QuestPageComponent({ userId }: QuestPageProps) {
   const router = useRouter()
   const { groupedQuests, completedQuests, isLoading, error, refreshQuests } =
-    useQuests()
+    useQuests(userId)
   const [activeTab, setActiveTab] = useState('active')
   const [expandedTypes, setExpandedTypes] = useState({
     daily: true,
@@ -187,10 +191,33 @@ function QuestPageComponent() {
               formatDeadline={formatDeadline}
             />
           )}
+
+          {/* ถ้าไม่มีภารกิจเลย */}
+          {Object.values(safeGroupedQuests).every(
+            (quests) => quests.length === 0
+          ) && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">ไม่มีภารกิจในขณะนี้</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                ภารกิจใหม่จะปรากฏขึ้นเมื่อถึงเวลา
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4">
-          <CompletedQuestList completedQuests={safeCompletedQuests} />
+          {safeCompletedQuests.length > 0 ? (
+            <CompletedQuestList completedQuests={safeCompletedQuests} />
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                ยังไม่มีภารกิจที่เสร็จสิ้น
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                เมื่อทำภารกิจเสร็จจะแสดงที่นี่
+              </p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

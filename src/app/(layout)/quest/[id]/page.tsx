@@ -1,10 +1,15 @@
-import QuestDetail from './QuestDetail'
+import QuestDetail from '@src/features/quest/components/QuestDetail'
 
 interface PageProps {
   params: Promise<{ id: string }>
 }
 
 export default async function Page({ params }: PageProps) {
+  // const { user } = useAuth()
+
   const { id } = await params
-  return <QuestDetail questId={id} />
+
+  // if (!user) return <div></div>
+
+  return <QuestDetail questId={id} userId={1} characterId={1} />
 }
