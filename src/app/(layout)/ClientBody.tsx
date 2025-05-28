@@ -1,3 +1,4 @@
+// src/app/ClientBody.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -9,10 +10,17 @@ import { ImageWithFallback } from '@src/components/shared'
 import NotificationSheet from '@src/components/shared/NotificationSheet'
 import {
   AchievementUnlockedNotification,
+  ClassUnlockNotification,
+  JobTitleNotification,
   LevelUpNotification,
+  XPGainedNotification,
 } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
 import { Activity, Gift, ScrollText, Trophy, User } from 'lucide-react'
+
+// src/app/ClientBody.tsx
+
+// src/app/ClientBody.tsx
 
 // Client body wrapper without notification provider
 export default function ClientBody({
@@ -35,9 +43,17 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   // State for special notification animations
+  const [showXPGained, setShowXPGained] = useState(false)
   const [showLevelUp, setShowLevelUp] = useState(false)
+  const [showClassUnlock, setShowClassUnlock] = useState(false)
+  const [showJobTitle, setShowJobTitle] = useState(false)
   const [showAchievement, setShowAchievement] = useState(false)
+
+  // Data for notifications
+  const [xpData, setXpData] = useState({ amount: 0, questTitle: '' })
   const [currentLevel, setCurrentLevel] = useState(1)
+  const [classData, setClassData] = useState({ level: 0, portraitUrl: '' })
+  const [jobData, setJobData] = useState({ title: '', level: 0 })
   const [achievement, setAchievement] = useState({
     name: '',
     description: '',
@@ -50,29 +66,74 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
 
   // Register animation effects
   useEffect(() => {
-    if (!character || typeof character.level !== 'number') return
-
-    const handleLevelUp = () => {
-      setCurrentLevel(character.level)
-      setShowLevelUp(true)
+    // ฟัง quest:xpgained event
+    const handleXPGained = (event: any) => {
+      const { amount, questTitle } = event.detail || {}
+      if (amount && questTitle) {
+        setXpData({ amount, questTitle })
+        setShowXPGained(true)
+      }
     }
 
-    const handleAchievementUnlocked = (achievement: any) => {
-      setAchievement(achievement)
+    // ฟัง character:levelup event
+    const handleLevelUp = (event: any) => {
+      const { level } = event.detail || {}
+      if (level) {
+        setCurrentLevel(level)
+        setShowLevelUp(true)
+      }
+    }
+
+    // ฟัง character:classunlock event
+    const handleClassUnlock = (event: any) => {
+      const { classLevel, portraitUrl } = event.detail || {}
+      if (classLevel) {
+        setClassData({ level: classLevel, portraitUrl: portraitUrl || '' })
+        setShowClassUnlock(true)
+      }
+    }
+
+    // ฟัง character:jobtitle event
+    const handleJobTitle = (event: any) => {
+      const { newTitle, level } = event.detail || {}
+      if (newTitle) {
+        setJobData({ title: newTitle, level: level || 0 })
+        setShowJobTitle(true)
+      }
+    }
+
+    // ฟัง character:achievement event
+    const handleAchievementUnlocked = (event: any) => {
+      const achievementData = event.detail || {}
+      setAchievement({
+        name: achievementData.name || 'Achievement Unlocked',
+        description: achievementData.description || 'Congratulations!',
+        icon: achievementData.icon || (
+          <Trophy className="h-10 w-10 text-amber-400" />
+        ),
+        reward: achievementData.reward || '',
+      })
       setShowAchievement(true)
     }
 
+    // เพิ่ม event listeners
+    window.addEventListener('quest:xpgained', handleXPGained)
     window.addEventListener('character:levelup', handleLevelUp)
+    window.addEventListener('character:classunlock', handleClassUnlock)
+    window.addEventListener('character:jobtitle', handleJobTitle)
     window.addEventListener('character:achievement', handleAchievementUnlocked)
 
     return () => {
+      window.removeEventListener('quest:xpgained', handleXPGained)
       window.removeEventListener('character:levelup', handleLevelUp)
+      window.removeEventListener('character:classunlock', handleClassUnlock)
+      window.removeEventListener('character:jobtitle', handleJobTitle)
       window.removeEventListener(
         'character:achievement',
         handleAchievementUnlocked
       )
     }
-  }, [character])
+  }, [])
 
   // Skip footer on character creation page
   const isCharacterCreation = pathname === '/character/create'
@@ -169,10 +230,31 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Special notification animations */}
+      <XPGainedNotification
+        xpAmount={xpData.amount}
+        questTitle={xpData.questTitle}
+        isVisible={showXPGained}
+        onClose={() => setShowXPGained(false)}
+      />
+
       <LevelUpNotification
         level={currentLevel}
         isVisible={showLevelUp}
         onClose={() => setShowLevelUp(false)}
+      />
+
+      <ClassUnlockNotification
+        classLevel={classData.level}
+        portraitUrl={classData.portraitUrl}
+        isVisible={showClassUnlock}
+        onClose={() => setShowClassUnlock(false)}
+      />
+
+      <JobTitleNotification
+        newTitle={jobData.title}
+        jobLevel={jobData.level}
+        isVisible={showJobTitle}
+        onClose={() => setShowJobTitle(false)}
       />
 
       <AchievementUnlockedNotification

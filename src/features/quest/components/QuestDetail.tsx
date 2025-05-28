@@ -21,7 +21,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@src/components/ui/dialog'
-import { useNotification } from '@src/components/ui/notification-system'
+import {
+  AchievementUnlockedNotification,
+  ClassUnlockNotification,
+  LevelUpNotification,
+  XPGainedNotification,
+  useNotification,
+} from '@src/components/ui/notification-system'
 import { Progress } from '@src/components/ui/progress'
 import {
   Tabs,
@@ -30,6 +36,7 @@ import {
   TabsTrigger,
 } from '@src/components/ui/tabs'
 import { useCharacter } from '@src/contexts/CharacterContext'
+import { useQuestNotifications } from '@src/features/quest/hook/useQuestNotifications'
 import { formatDeadline } from '@src/features/quest/utils'
 import {
   ArrowLeft,
@@ -151,6 +158,7 @@ export default function QuestDetail({
   const updateSummary = useUpdateQuestSubmission()
   const { addNotification } = useNotification()
   const { addXp, unlockAchievement } = useCharacter()
+  const { handleQuestSubmissionNotifications } = useQuestNotifications()
 
   // ตรวจสอบว่าเควสนี้ส่งแล้วหรือยัง
   const isQuestCompleted = quest?.completed || submission !== null
@@ -187,6 +195,16 @@ export default function QuestDetail({
       // Set editable summary from AI analysis
       setEditableSummary(result.submission.mediaTranscript)
 
+      // แสดง notification ตามลำดับ
+      if (result.characterUpdate) {
+        console.log('debug notification: ')
+        await handleQuestSubmissionNotifications({
+          xpEarned: result.submission.xpEarned,
+          questTitle: quest?.title || 'Unknown Quest',
+          characterUpdate: result.characterUpdate,
+        })
+      }
+
       setTimeout(() => {
         setShowAIResult(true)
       }, 500)
@@ -194,9 +212,11 @@ export default function QuestDetail({
       console.error('Quest submission failed:', error)
       addNotification({
         type: 'error',
-        title: 'Submission Failed',
+        title: 'การส่งงานล้มเหลว',
         message:
-          error instanceof Error ? error.message : 'An unknown error occurred',
+          error instanceof Error
+            ? error.message
+            : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ',
         duration: 5000,
       })
     }
@@ -338,6 +358,21 @@ export default function QuestDetail({
 
   return (
     <ErrorBoundary>
+      {/* <XPGainedNotification xpAmount={100} isVisible={true} questTitle='test' onClose={() => {}}/> */}
+      {/* <LevelUpNotification isVisible={true} level={10} onClose={() => {}}/> */}
+      {/* <AchievementUnlockedNotification isVisible={true} achievement={ {
+    name: 'นักสู้หน้าใหม่',
+    description: 'ทำเควสครบ 10 ครั้ง',
+    icon: <Sparkles className="h-8 w-8 text-amber-400" />,
+    reward: '+50 XP และตราสัญลักษณ์พิเศษ',
+  }} onClose={() => {}}  /> */}
+      {/* <ClassUnlockNotification
+        classLevel={80}
+        isVisible={true}
+        onClose={() => {}}
+        key={1}
+        portraitUrl="https://tawnychatai2.sgp1.digitaloceanspaces.com/80.png"
+      /> */}
       <div className="p-4 pb-20">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">

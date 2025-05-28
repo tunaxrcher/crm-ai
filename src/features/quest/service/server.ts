@@ -1,8 +1,11 @@
 // src/features/quest/service/server.ts
+import { characterService } from '@src/features/character/service/server'
 import { getDevSession, getServerSession } from '@src/lib/auth'
 import { openaiService } from '@src/lib/service/openaiService'
 import { s3UploadService } from '@src/lib/service/s3UploadService'
 import { BaseService } from '@src/lib/service/server/baseService'
+
+// เพิ่มบรรทัดนี้
 
 import {
   QuestRepository,
@@ -10,12 +13,7 @@ import {
   questRepository,
   questSubmissionRepository,
 } from '../repository'
-import {
-  Quest,
-  QuestDifficulty,
-  QuestListResponse,
-  QuestType,
-} from '../types'
+import { Quest, QuestDifficulty, QuestListResponse, QuestType } from '../types'
 import { OpenAIPrompt } from '../types/index'
 
 export class QuestService extends BaseService {
@@ -357,7 +355,6 @@ export class QuestSubmissionService extends BaseService {
             mediaType,
             mediaUrl,
             description,
-
             aiAnalysis,
             mediaAnalysis,
           })
@@ -368,7 +365,11 @@ export class QuestSubmissionService extends BaseService {
           characterId
         )
 
-        // // 8. อัพเดท character XP
+        // 8. อัพเดท character XP (เพิ่มบรรทัดนี้)
+        const characterUpdateResult = await characterService.addXP(
+          characterId,
+          quest.xpReward
+        )
 
         // 9. สร้าง feed item
         await questSubmissionRepository.createQuestCompletionFeedItem(
@@ -384,9 +385,9 @@ export class QuestSubmissionService extends BaseService {
 
         let successMessage = 'Quest completed successfully!'
 
-        //   if (characterUpdate.leveledUp) {
-        //     successMessage = `Quest completed! You gained ${characterUpdate.levelsGained} level(s)!`
-        //   }
+        if (characterUpdateResult.leveledUp) {
+          successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s)!`
+        }
 
         if (mediaAnalysis) {
           const mediaType = mediaFile ? this.getMediaType(mediaFile) : 'unknown'
@@ -405,6 +406,7 @@ export class QuestSubmissionService extends BaseService {
           aiAnalysis,
           submission,
           mediaType,
+          characterUpdate: characterUpdateResult, // เพิ่มข้อมูลการอัพเดท character
         }
       }
     } catch (error) {
@@ -414,21 +416,6 @@ export class QuestSubmissionService extends BaseService {
       )
     }
   }
-
-  // อัพเดท summary ของ quest submission
-  // async updateSubmissionSummary(submissionId: number, newSummary: string) {
-  //   try {
-  //     const updated = await questSubmissionRepository.updateSubmissionSummary(
-  //       submissionId,
-  //       newSummary
-  //     )
-
-  //     return updated
-  //   } catch (error) {
-  //     console.error('Error updating submission summary:', error)
-  //     throw new Error('Failed to update submission summary')
-  //   }
-  // }
 
   async getQuestSubmission(questId: string, characterId: number) {
     try {
@@ -444,7 +431,6 @@ export class QuestSubmissionService extends BaseService {
     }
   }
 
-  // แก้ไข method updateSubmissionSummary
   async updateSubmissionSummary(submissionId: number, newSummary: string) {
     try {
       // 1. อัปเดต quest submission
@@ -467,7 +453,7 @@ export class QuestSubmissionService extends BaseService {
       return {
         success: true,
         message: 'Summary updated successfully',
-        submission: updatedSubmission, // ส่งข้อมูลที่อัปเดตกลับไป
+        submission: updatedSubmission,
         updatedContent: newSummary,
       }
     } catch (error) {

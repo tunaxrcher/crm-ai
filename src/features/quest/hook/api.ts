@@ -100,7 +100,9 @@ export const useQuestSubmission = () => {
       characterId: number
       mediaFile?: File
       description?: string
-    }): Promise<QuestSubmissionResponse> => {
+    }): Promise<QuestSubmissionResponse & { 
+      characterUpdate?: any 
+    }> => {
       return await questSubmissionService.submitQuest(
         questId,
         characterId,
@@ -127,6 +129,11 @@ export const useQuestSubmission = () => {
       // Invalidate character data since XP might have changed
       queryClient.invalidateQueries({
         queryKey: ['character'],
+      })
+
+      // Invalidate user data for character context
+      queryClient.invalidateQueries({
+        queryKey: ['me', 'character'],
       })
 
       console.log('Quest submitted successfully:', data)

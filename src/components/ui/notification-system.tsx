@@ -3,6 +3,8 @@
 import type React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
 
+import Image from 'next/image'
+
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Badge } from '@src/components/ui/badge'
 import { Button } from '@src/components/ui/button'
@@ -478,23 +480,29 @@ export const LevelUpNotification: React.FC<{
 
   // Remove framer-motion for this basic version if desired, but keeping as is for now
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/90">
       <div className="text-center">
         <div className="mb-4">
-          <Sparkles className="h-24 w-24 mx-auto text-yellow-400" />
+          <Image
+            src="/auto-import-evx-logo.png"
+            alt="Auto Import EVX Logo"
+            width={120}
+            height={40}
+            className="mx-auto"
+          />
         </div>
 
-        <h2 className="text-4xl font-bold mb-2 ai-gradient-text">Level Up!</h2>
+        <h2 className="text-4xl font-bold mb-2 ai-gradient-text">เลเวลอัพ!</h2>
 
-        <div className="text-xl mb-6">You've reached level {level}</div>
+        <div className="text-xl mb-6">คุณอัพสู่เลเวล {level} ยินดีด้วย</div>
 
-        <p className="text-muted-foreground mb-8">
+        {/* <p className="text-muted-foreground mb-8">
           New quests and rewards are now available!
-        </p>
+        </p> */}
 
         <div>
           <Button className="ai-gradient-bg" onClick={onClose}>
-            Continue
+            เยี่ยมเลย!
           </Button>
         </div>
       </div>
@@ -527,21 +535,30 @@ export const AchievementUnlockedNotification: React.FC<{
 
   // Remove framer-motion for this basic version if desired, but keeping as is for now
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
-      <div className="text-center bg-card p-8 rounded-xl shadow-lg border border-primary/20 max-w-md">
-        <div className="mb-4 w-20 h-20 mx-auto rounded-full bg-amber-500/20 flex items-center justify-center">
-          {achievement.icon}
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/90">
+      <div className="text-center">
+        <div className="mb-4">
+          <Image
+            src="/auto-import-evx-logo.png"
+            alt="Auto Import EVX Logo"
+            width={120}
+            height={40}
+            className="mx-auto"
+          />
         </div>
 
-        <div className="space-y-2 mb-6">
+        <h2 className="text-4xl font-bold mb-2 ai-gradient-text">
+          {' '}
           <Badge className="bg-amber-500/20 text-amber-400">
             Achievement Unlocked
           </Badge>
-          <h2 className="text-2xl font-bold">{achievement.name}</h2>
-          <p className="text-muted-foreground">{achievement.description}</p>
-        </div>
+        </h2>
 
-        {achievement.reward && (
+        <div className="text-xl mb-6">{achievement.name}</div>
+
+        <p className="text-muted-foreground mb-8">{achievement.description}</p>
+
+        {/* {achievement.reward && (
           <div className="mb-6 p-3 bg-secondary/20 rounded-lg text-center">
             <div className="flex items-center justify-center mb-1">
               <Gift className="h-4 w-4 mr-1 text-purple-400" />
@@ -549,11 +566,210 @@ export const AchievementUnlockedNotification: React.FC<{
             </div>
             <div className="text-sm">{achievement.reward}</div>
           </div>
-        )}
+        )} */}
 
         <div>
           <Button className="ai-gradient-bg" onClick={onClose}>
             Claim Reward
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export const XPGainedNotification: React.FC<{
+  xpAmount: number
+  questTitle: string
+  isVisible: boolean
+  onClose: () => void
+}> = ({ xpAmount, questTitle, isVisible, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        handleClose()
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isVisible, onClose])
+
+  const handleClose = () => {
+    onClose()
+    // Dispatch event เมื่อปิด notification
+    window.dispatchEvent(new CustomEvent('xp:closed'))
+  }
+
+  if (!isVisible) return null
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/90">
+      <div className="text-center">
+        <div className="mb-4">
+          <Image
+            src="/auto-import-evx-logo.png"
+            alt="Auto Import EVX Logo"
+            width={120}
+            height={40}
+            className="mx-auto"
+          />
+        </div>
+
+        <h2 className="text-4xl font-bold mb-2 ai-gradient-text">
+          ส่งงานสำเร็จ!
+        </h2>
+
+        <div className="text-xl mb-6">ได้รับ {xpAmount} XP!</div>
+
+        {/* <p className="text-muted-foreground mb-8">{questTitle}</p> */}
+
+        <div>
+          <Button className="ai-gradient-bg" onClick={handleClose}>
+            เยี่ยม!
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Class Unlock Notification Animation Component
+export const ClassUnlockNotification: React.FC<{
+  classLevel: number
+  portraitUrl?: string
+  isVisible: boolean
+  onClose: () => void
+}> = ({ classLevel, portraitUrl, isVisible, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        handleClose()
+      }, 5000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isVisible, onClose])
+
+  const handleClose = () => {
+    onClose()
+    // Dispatch event เมื่อปิด notification
+    window.dispatchEvent(new CustomEvent('classunlock:closed'))
+  }
+
+  if (!isVisible) return null
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/90">
+      <div className="text-center">
+        <div className="mb-4">
+          <Image
+            src="/auto-import-evx-logo.png"
+            alt="Auto Import EVX Logo"
+            width={120}
+            height={40}
+            className="mx-auto"
+          />
+        </div>
+
+        <div className="space-y-2 mb-6">
+          <Badge className="bg-cyan-500/20 text-cyan-400">
+            ปลดล็อกภาพใหม่!
+          </Badge>
+          <h2 className="text-4xl font-bold mb-2 ai-gradient-text">
+            ภาพตัวละครใหม่!
+          </h2>
+
+          <p className="text-muted-foreground">
+            คุณได้ปลดล็อกภาพตัวละครระดับ {classLevel} แล้ว!
+          </p>
+        </div>
+
+        {/* <div className="text-xl mb-6">ได้รับ {xpAmount} XP!</div> */}
+
+        {/* <p className="text-muted-foreground mb-8">{questTitle}</p> */}
+
+        {portraitUrl && (
+          <div className="mb-6 flex justify-center">
+            <Image
+              src={portraitUrl}
+              alt={`Portrait Level ${classLevel}`}
+              width={120}
+              height={40}
+              className="mx-auto"
+            />
+          </div>
+        )}
+
+        <div className="mb-6 p-3 bg-secondary/20 rounded-lg text-center">
+          <div className="flex items-center justify-center mb-1">
+            <Gift className="h-4 w-4 mr-1 text-cyan-400" />
+            <span className="font-medium">รางวัล</span>
+          </div>
+          <div className="text-sm">Portrait Level {classLevel}</div>
+        </div>
+
+        <div>
+          <Button className="ai-gradient-bg" onClick={handleClose}>
+            ดูภาพใหม่
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Job Title Notification Animation Component
+export const JobTitleNotification: React.FC<{
+  newTitle: string
+  jobLevel: number
+  isVisible: boolean
+  onClose: () => void
+}> = ({ newTitle, jobLevel, isVisible, onClose }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        handleClose()
+      }, 5000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isVisible, onClose])
+
+  const handleClose = () => {
+    onClose()
+    // Dispatch event เมื่อปิด notification
+    window.dispatchEvent(new CustomEvent('jobtitle:closed'))
+  }
+
+  if (!isVisible) return null
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/90">
+      <div className="text-center bg-card p-8 rounded-xl shadow-lg border border-primary/20 max-w-md">
+        <div className="mb-4 w-20 h-20 mx-auto rounded-full bg-purple-500/20 flex items-center justify-center">
+          <span className="text-4xl">👑</span>
+        </div>
+
+        <div className="space-y-2 mb-6">
+          <Badge className="bg-purple-500/20 text-purple-400">
+            เลื่อนตำแหน่ง!
+          </Badge>
+          <h2 className="text-2xl font-bold">ตำแหน่งใหม่!</h2>
+          <p className="text-muted-foreground">คุณได้เลื่อนตำแหน่งเป็น</p>
+          <p className="text-xl font-bold ai-gradient-text">"{newTitle}"</p>
+        </div>
+
+        <div className="mb-6 p-3 bg-secondary/20 rounded-lg text-center">
+          <div className="flex items-center justify-center mb-1">
+            <Trophy className="h-4 w-4 mr-1 text-purple-400" />
+            <span className="font-medium">รางวัล</span>
+          </div>
+          <div className="text-sm">{newTitle} Title</div>
+        </div>
+
+        <div>
+          <Button className="ai-gradient-bg" onClick={handleClose}>
+            เยี่ยมมาก!
           </Button>
         </div>
       </div>
