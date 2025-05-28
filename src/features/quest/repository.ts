@@ -311,7 +311,6 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
     mediaUrl?: string
   ) {
     try {
-
       const feedItem = await this.prisma.feedItem.create({
         data: {
           content: `ทำเควส "${questTitle}" สำเร็จและได้รับ ${xpEarned} XP!`,
@@ -416,18 +415,74 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
   }
 
   // อัพเดท summary ของ quest submission
-  async updateSubmissionSummary(submissionId: number, newSummary: string) {
-    try {
-      const updated = await this.prisma.questSubmission.update({
-        where: { id: submissionId },
-        data: { description: newSummary },
-      })
+  // async updateSubmissionSummary(submissionId: number, newSummary: string) {
+  //   try {
+  //     const updated = await this.prisma.questSubmission.update({
+  //       where: { id: submissionId },
+  //       data: { description: newSummary },
+  //     })
 
-      return updated
-    } catch (error) {
-      console.error('Error updating submission summary:', error)
-      throw new Error('Failed to update submission summary')
-    }
+  //     return updated
+  //   } catch (error) {
+  //     console.error('Error updating submission summary:', error)
+  //     throw new Error('Failed to update submission summary')
+  //   }
+  // }
+
+  async getQuestSubmissionByQuestAndCharacter(
+    questId: number,
+    characterId: number
+  ) {
+    return await this.prisma.questSubmission.findFirst({
+      where: {
+        questId,
+        characterId,
+      },
+      include: {
+        quest: true,
+        character: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    })
+  }
+
+  // แก้ไข updateSubmissionSummary เพื่อส่งข้อมูลที่ครบถ้วน
+  async updateSubmissionSummary(submissionId: number, newSummary: string) {
+    const updatedSubmission = await this.prisma.questSubmission.update({
+      where: { id: submissionId },
+      data: {
+        mediaRevisedTranscript: newSummary,
+      },
+      include: {
+        quest: true,
+        character: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    })
+
+    return updatedSubmission
+  }
+
+  // แก้ไข updateRelatedFeedItem เพื่อให้ส่ง content ที่อัปเดตแล้ว
+  async updateRelatedFeedItem(submissionId: number, newContent: string) {
+    const updatedFeedItems = await this.prisma.feedItem.updateMany({
+      where: {
+        questSubmissionId: submissionId,
+        type: 'quest_completion',
+      },
+      data: {
+        content: newContent,
+        updatedAt: new Date(),
+      },
+    })
+
+    return updatedFeedItems
   }
 }
 export const questSubmissionRepository = new QuestSubmissionRepository()

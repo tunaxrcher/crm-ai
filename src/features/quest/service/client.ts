@@ -1,7 +1,7 @@
 import { BaseService } from '@src/lib/service/server/baseService'
 
 import { Quest, QuestListResponse } from '../types'
-import { QuestSubmissionResponse } from '../types/submission'
+import { QuestSubmissionResponse } from '../types/questsubmission.type'
 
 export class QuestService extends BaseService {
   private static instance: QuestService
@@ -98,14 +98,37 @@ export class QuestSubmissionService {
     }
   }
 
-  // อัพเดท summary
-  async updateSubmissionSummary(
+  async fetchQuestSubmission(questId: string, characterId: number) {
+    try {
+      const response = await fetch(
+        `/api/quests/${questId}/submission?characterId=${characterId}`
+      )
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null // ยังไม่มีการส่งงาน
+        }
+
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to fetch quest submission')
+      }
+
+      const data = await response.json()
+
+      return data
+    } catch (error) {
+      console.error('Error fetching quest submission:', error)
+      throw error
+    }
+  }
+
+  async updateQuestSubmission(
     questId: string,
     submissionId: number,
     summary: string
-  ): Promise<{ success: boolean }> {
+  ): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`/api/quests/${questId}/submit`, {
+      const response = await fetch(`/api/quests/${questId}/submission`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -118,9 +141,8 @@ export class QuestSubmissionService {
 
       const data = await response.json()
 
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(data.message || 'Failed to update summary')
-      }
 
       return data
     } catch (error) {

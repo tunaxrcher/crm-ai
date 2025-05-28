@@ -1,8 +1,12 @@
 // src/features/quest/hook/api.ts
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { questService } from '../service/client'
-import { CompletedQuest, GroupedQuests, Quest } from '../types/index'
+import { questService, questSubmissionService } from '../service/client'
+import {
+  CompletedQuest,
+  GroupedQuests,
+  QuestSubmissionResponse,
+} from '../types/index'
 
 // Hook สำหรับดึงข้อมูลภารกิจทั้งหมด
 export const useQuests = (userId?: number) => {
@@ -79,4 +83,116 @@ export const usePrefetchQuests = () => {
   }
 
   return { prefetchQuests }
+}
+
+// Hook สำหรับ submit quest
+export const useQuestSubmission = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      questId,
+      characterId,
+      mediaFile,
+      description,
+    }: {
+      questId: string
+      characterId: number
+      mediaFile?: File
+      description?: string
+    }): Promise<QuestSubmissionResponse> => {
+      return await questSubmissionService.submitQuest(
+        questId,
+        characterId,
+        mediaFile,
+        description
+      )
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate and refetch quests data
+      queryClient.invalidateQueries({
+        queryKey: ['quests'],
+      })
+
+      // Invalidate specific quest if we're tracking it
+      queryClient.invalidateQueries({
+        queryKey: ['quest', variables.questId],
+      })
+
+      // Invalidate quest submission data
+      queryClient.invalidateQueries({
+        queryKey: ['questSubmission', variables.questId, variables.characterId],
+      })
+
+      // Invalidate character data since XP might have changed
+      queryClient.invalidateQueries({
+        queryKey: ['character'],
+      })
+
+      console.log('Quest submitted successfully:', data)
+    },
+    onError: (error) => {
+      console.error('Quest submission failed:', error)
+    },
+  })
+}
+
+// Hook สำหรับอัปเดต summary พร้อมอัปเดต feed item
+export const useUpdateQuestSubmission = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      questId,
+      submissionId,
+      summary,
+    }: {
+      questId: string
+      submissionId: number
+      summary: string
+    }) => {
+      return await questSubmissionService.updateQuestSubmission(
+        questId,
+        submissionId,
+        summary
+      )
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate quest submission data
+      queryClient.invalidateQueries({
+        queryKey: ['questSubmission', variables.questId],
+      })
+
+      // Invalidate feed data since the post content changed
+      queryClient.invalidateQueries({
+        queryKey: ['feed'],
+      })
+
+      console.log('Summary updated successfully:', data)
+    },
+    onError: (error) => {
+      console.error('Summary update failed:', error)
+    },
+  })
+}
+
+export const useQuestSubmissionQuery = (
+  questId?: string,
+  characterId?: number
+) => {
+  return useQuery({
+    queryKey: ['questSubmission', questId, characterId],
+    queryFn: async () => {
+      if (!questId || !characterId) {
+        throw new Error('Quest ID and Character ID are required')
+      }
+      return await questSubmissionService.fetchQuestSubmission(
+        questId,
+        characterId
+      )
+    },
+    enabled: !!(questId && characterId),
+    staleTime: 5 * 60 * 1000, // 5 นาที
+    gcTime: 10 * 60 * 1000, // 10 นาที
+  })
 }

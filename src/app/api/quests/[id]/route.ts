@@ -9,6 +9,7 @@ export async function GET(
 ) {
   try {
     console.log(`[API] Fetching Quest By ID`)
+
     const { id: questId } = await context.params
 
     const { searchParams } = new URL(request.url)

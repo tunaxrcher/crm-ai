@@ -416,14 +416,60 @@ export class QuestSubmissionService extends BaseService {
   }
 
   // อัพเดท summary ของ quest submission
+  // async updateSubmissionSummary(submissionId: number, newSummary: string) {
+  //   try {
+  //     const updated = await questSubmissionRepository.updateSubmissionSummary(
+  //       submissionId,
+  //       newSummary
+  //     )
+
+  //     return updated
+  //   } catch (error) {
+  //     console.error('Error updating submission summary:', error)
+  //     throw new Error('Failed to update submission summary')
+  //   }
+  // }
+
+  async getQuestSubmission(questId: string, characterId: number) {
+    try {
+      const submission =
+        await questSubmissionRepository.getQuestSubmissionByQuestAndCharacter(
+          parseInt(questId),
+          characterId
+        )
+      return submission
+    } catch (error) {
+      console.error('Error in getQuestSubmission:', error)
+      throw new Error('Failed to fetch quest submission')
+    }
+  }
+
+  // แก้ไข method updateSubmissionSummary
   async updateSubmissionSummary(submissionId: number, newSummary: string) {
     try {
-      const updated = await questSubmissionRepository.updateSubmissionSummary(
+      // 1. อัปเดต quest submission
+      const updatedSubmission =
+        await questSubmissionRepository.updateSubmissionSummary(
+          submissionId,
+          newSummary
+        )
+
+      if (!updatedSubmission) {
+        throw new Error('Submission not found')
+      }
+
+      // 2. อัปเดต feed item ที่เกี่ยวข้อง
+      await questSubmissionRepository.updateRelatedFeedItem(
         submissionId,
         newSummary
       )
 
-      return updated
+      return {
+        success: true,
+        message: 'Summary updated successfully',
+        submission: updatedSubmission, // ส่งข้อมูลที่อัปเดตกลับไป
+        updatedContent: newSummary,
+      }
     } catch (error) {
       console.error('Error updating submission summary:', error)
       throw new Error('Failed to update submission summary')
