@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import Image from 'next/image'
 
+import NotificationQueueDebug from '@src/components/NotificationQueueDebug'
 import { ErrorDisplay, SkeletonLoading } from '@src/components/shared'
 import { Button } from '@src/components/ui/button'
 import {
@@ -32,7 +33,9 @@ export default function CharacterPageComponent() {
     refetch,
     addXp,
     showLevelUpAnimation,
-    addXpFromAPI, levelUpFromAPI, submitDailyQuestFromAPI
+    addXpFromAPI,
+    levelUpFromAPI,
+    submitDailyQuestFromAPI,
   } = useCharacter()
 
   // State
@@ -174,27 +177,26 @@ export default function CharacterPageComponent() {
                 🔔 ทดสอบ Notification
               </Button>
 
-             <Button
-  variant="outline"
-  onClick={() => addXpFromAPI(100)}
-  className="w-full">
-  ➕ เพิ่ม 100 XP (AI)
-</Button>
+              <Button
+                variant="outline"
+                onClick={() => addXpFromAPI(100)}
+                className="w-full">
+                ➕ เพิ่ม 100 XP (AI)
+              </Button>
 
-<Button
-  variant="outline"
-  onClick={levelUpFromAPI}
-  className="w-full">
-  ⬆️ เลเวลอัพ (AI)
-</Button>
+              <Button
+                variant="outline"
+                onClick={levelUpFromAPI}
+                className="w-full">
+                ⬆️ เลเวลอัพ (AI)
+              </Button>
 
-<Button
-  variant="outline"
-  onClick={submitDailyQuestFromAPI}
-  className="w-full">
-  🚀 ส่งเควสประจำวัน (AI)
-</Button>
-
+              <Button
+                variant="outline"
+                onClick={submitDailyQuestFromAPI}
+                className="w-full">
+                🚀 ส่งเควสประจำวัน (AI)
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -206,6 +208,8 @@ export default function CharacterPageComponent() {
           jobClass={jobClass}
         />
       </div>
+
+      <NotificationQueueDebug />
 
       {/* Styles */}
       <style jsx global>{`

@@ -175,8 +175,8 @@ export default function QuestDetail({
       // Simulate progress updates
       const interval = setInterval(() => {
         setAiAnalysisProgress((prev) => {
-          const newProgress = prev + Math.random() * 15
-          return newProgress >= 95 ? 95 : newProgress
+          const newProgress = prev + Math.random() * 10
+          return newProgress >= 99 ? 99 : newProgress
         })
       }, 300)
 
@@ -195,14 +195,15 @@ export default function QuestDetail({
       // Set editable summary from AI analysis
       setEditableSummary(result.submission.mediaTranscript)
 
-      // แสดง notification ตามลำดับ
+      // แสดง notification โดยไม่ต้องรอ (ลบ await ออก)
       if (result.characterUpdate) {
         console.log('debug notification: ')
-        await handleQuestSubmissionNotifications({
+        handleQuestSubmissionNotifications({
           xpEarned: result.submission.xpEarned,
           questTitle: quest?.title || 'Unknown Quest',
           characterUpdate: result.characterUpdate,
         })
+        // ไม่ต้องใส่ await ที่นี่แล้ว! Queue จะจัดการเอง
       }
 
       setTimeout(() => {
@@ -316,63 +317,10 @@ export default function QuestDetail({
     router.push('/quest')
   }
 
-  // const handleConfirmSubmission = () => {
-  //   const result = questSubmission.data
-  //   if (!result) return
-
-  //   // Add XP to character (from context)
-  //   const xpEarned = result.aiAnalysis.xpEarned
-  //   addXp(xpEarned)
-
-  //   // Show notifications
-  //   addNotification({
-  //     type: 'reward',
-  //     title: 'XP Gained',
-  //     message: `You earned ${xpEarned} XP!`,
-  //     duration: 3000,
-  //   })
-
-  //   addNotification({
-  //     type: 'success',
-  //     title: 'Quest Completed',
-  //     message: `You've successfully completed "${quest?.title}"`,
-  //     duration: 5000,
-  //     action: {
-  //       label: 'View Rewards',
-  //       onClick: () => {
-  //         router.push('/character')
-  //       },
-  //     },
-  //   })
-
-  //   // Show success dialog
-  //   setShowSuccessDialog(true)
-
-  //   // Check for achievements (simplified logic)
-  //   if (questId === 'q1' || questId === '1') {
-  //     unlockAchievement(1)
-  //   }
-  // }
-
   const mockRequirements = ['-', '-', '-']
 
   return (
     <ErrorBoundary>
-      {/* <XPGainedNotification xpAmount={100} isVisible={true} questTitle='test' onClose={() => {}}/> */}
-      {/* <LevelUpNotification isVisible={true} level={10} onClose={() => {}}/> */}
-      {/* <AchievementUnlockedNotification isVisible={true} achievement={ {
-    name: 'นักสู้หน้าใหม่',
-    description: 'ทำเควสครบ 10 ครั้ง',
-    icon: <Sparkles className="h-8 w-8 text-amber-400" />,
-    reward: '+50 XP และตราสัญลักษณ์พิเศษ',
-  }} onClose={() => {}}  /> */}
-      {/* <ClassUnlockNotification
-        classLevel={80}
-        isVisible={true}
-        onClose={() => {}}
-        key={1}
-        portraitUrl="https://tawnychatai2.sgp1.digitaloceanspaces.com/80.png"
-      /> */}
       <div className="p-4 pb-20">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -804,9 +752,11 @@ export default function QuestDetail({
                       <div className="mt-4 bg-secondary/20 p-3 rounded-lg">
                         <div className="text-sm mb-2">What happens next?</div>
                         <ul className="text-xs text-muted-foreground space-y-1">
+                          <li>• AI จะตรวจสอบข้อมูลของคุณ</li>
                           <li>• ผลงานที่คุณส่งจะถูกประเมินโดย AI</li>
-                          <li>• สถิติของคุณจะถูกวิเคราะห์และปรับปรุง</li>
+                          <li>• AI จะคำนวน คำนวน XP และบันทึกข้อมูล</li>
                           <li>• ผลงานของคุณจะปรากฏในฟีดกิจกรรมทันที</li>
+                          <hr />
                           <li>• สามารถแก้ไขข้อความได้ หากผิดพลาด</li>
                         </ul>
                       </div>
@@ -864,7 +814,7 @@ export default function QuestDetail({
                         <span>คำนวน XP และบันทึกข้อมูล</span>
                       </div>
                     )}
-                    {aiAnalysisProgress > 98 && (
+                    {aiAnalysisProgress > 97 && (
                       <div className="flex items-center">
                         <Check className="h-3 w-3 mr-1 text-green-400" />
                         <span>โพสต์ลงฟีด</span>
@@ -889,16 +839,18 @@ export default function QuestDetail({
 
             {questSubmission.data && (
               <div className="space-y-4">
-                <div className="p-4 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-cyan-500/10 rounded-lg">
-                  <h3 className="font-semibold mb-2">โพสต์</h3>
-                  <textarea
-                    value={editableSummary}
-                    onChange={(e) => setEditableSummary(e.target.value)}
-                    className="w-full p-2 border border-border rounded bg-background resize-none"
-                    rows={3}
-                    placeholder="แก้ไขเนื้อหาโพสต์..."
-                  />
-                </div>
+                {questSubmission.data.mediaType == 'video' && (
+                  <div className="p-4 bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-cyan-500/10 rounded-lg">
+                    <h3 className="font-semibold mb-2">โพสต์</h3>
+                    <textarea
+                      value={editableSummary}
+                      onChange={(e) => setEditableSummary(e.target.value)}
+                      className="w-full p-2 border border-border rounded bg-background resize-none"
+                      rows={3}
+                      placeholder="แก้ไขเนื้อหาโพสต์..."
+                    />
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-secondary/20 p-3 rounded-lg">
@@ -948,35 +900,37 @@ export default function QuestDetail({
             )}
 
             <DialogFooter className="flex space-x-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={handleUpdateQuestSubmissionInDialog}
-                disabled={updateSummary.isPending}>
-                {updateSummary.isPending ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    กำลังอัปเดต...
-                  </span>
-                ) : (
-                  'อัพเดทแก้ไขโพสต์'
-                )}
-              </Button>
+              {questSubmission.data?.mediaType == 'video' && (
+                <Button
+                  variant="outline"
+                  onClick={handleUpdateQuestSubmissionInDialog}
+                  disabled={updateSummary.isPending}>
+                  {updateSummary.isPending ? (
+                    <span className="flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      กำลังอัปเดต...
+                    </span>
+                  ) : (
+                    'อัพเดทแก้ไขโพสต์'
+                  )}
+                </Button>
+              )}
               <Button
                 className="ai-gradient-bg"
                 disabled={updateSummary.isPending}

@@ -14,6 +14,8 @@ import {
   JobClassData as JobClass,
 } from '@src/features/user/types'
 
+import { notificationQueue } from '@src/lib/notificationQueue'
+
 interface Achievement {
   id: number
   name: string
@@ -233,72 +235,168 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({
     await fetchCharacterData()
   }
 
-  const addXpFromAPI = async (amount: number) => {
-    try {
-      const result = await characterService.addXP(amount)
+const addXpFromAPI = async (amount: number) => {
+  try {
+    const result = await characterService.addXP(amount)
 
-      if (result.success) {
-        setCharacter(result.data.character)
+    console.log(result)
 
-        if (result.data.leveledUp) {
-          dispatchCharacterEvent('character:levelup', {
+    if (result.success) {
+      setCharacter(result.data.character)
+
+      // เพิ่ม notifications เข้า queue โดยไม่ต้องรอ
+      if (result.data.leveledUp) {
+        notificationQueue.enqueue({
+          type: 'levelup',
+          data: {
             level: result.data.character.level,
-            unlockedClassLevel: result.data.unlockedClassLevel,
-            newJobLevel: result.data.newJobLevel,
-            portraitUpdated: result.data.portraitUpdated,
-          })
-        }
-
-        if (result.data.unlockedClassLevel) {
-          dispatchCharacterEvent('character:classunlock', {
-            classLevel: result.data.unlockedClassLevel,
-            portraitUrl: result.data.character.currentPortraitUrl,
-          })
-        }
-
-        if (result.data.newJobLevel) {
-          dispatchCharacterEvent('character:jobtitleup', {
-            newTitle: result.data.newJobLevel.title,
-            level: result.data.newJobLevel.level,
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Error adding XP:', error)
-    }
-  }
-
-  const levelUpFromAPI = async () => {
-    try {
-      const result = await characterService.levelUp()
-      if (result.success) {
-        setCharacter(result.data.character)
-
-        dispatchCharacterEvent('character:levelup', {
-          level: result.data.character.level,
-          unlockedClassLevel: result.data.unlockedClassLevel,
-          newJobLevel: result.data.newJobLevel,
-          portraitUpdated: result.data.portraitUpdated,
+          },
+          priority: 1
         })
+      }
 
-        if (result.data.unlockedClassLevel) {
-          dispatchCharacterEvent('character:classunlock', {
-            classLevel: result.data.unlockedClassLevel,
-            portraitUrl: result.data.character.currentPortraitUrl,
+      // Class Unlock notifications
+      if (result.data.unlockedClassLevels) {
+        console.log('hi')
+        result.data.unlockedClassLevels.forEach((classLevel: number, index: number) => {
+          notificationQueue.enqueue({
+            type: 'classunlock',
+            data: {
+              classLevel: classLevel,
+              portraitUrl: result.data.character.currentPortraitUrl,
+            },
+            priority: 2 + index
           })
-        }
+        })
+      }
 
-        if (result.data.newJobLevel) {
-          dispatchCharacterEvent('character:jobtitleup', {
+      // Job Title notification
+      if (result.data.newJobLevel) {
+        notificationQueue.enqueue({
+          type: 'jobtitle',
+          data: {
             newTitle: result.data.newJobLevel.title,
             level: result.data.newJobLevel.level,
-          })
-        }
+          },
+          priority: 10
+        })
       }
-    } catch (error) {
-      console.error('Error leveling up:', error)
     }
+  } catch (error) {
+    console.error('Error adding XP:', error)
   }
+}
+
+  // const addXpFromAPI = async (amount: number) => {
+  //   try {
+  //     const result = await characterService.addXP(amount)
+
+  //     if (result.success) {
+  //       setCharacter(result.data.character)
+
+  //       if (result.data.leveledUp) {
+  //         dispatchCharacterEvent('character:levelup', {
+  //           level: result.data.character.level,
+  //           unlockedClassLevel: result.data.unlockedClassLevel,
+  //           newJobLevel: result.data.newJobLevel,
+  //           portraitUpdated: result.data.portraitUpdated,
+  //         })
+  //       }
+
+  //       if (result.data.unlockedClassLevel) {
+  //         dispatchCharacterEvent('character:classunlock', {
+  //           classLevel: result.data.unlockedClassLevel,
+  //           portraitUrl: result.data.character.currentPortraitUrl,
+  //         })
+  //       }
+
+  //       if (result.data.newJobLevel) {
+  //         dispatchCharacterEvent('character:jobtitleup', {
+  //           newTitle: result.data.newJobLevel.title,
+  //           level: result.data.newJobLevel.level,
+  //         })
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error adding XP:', error)
+  //   }
+  // }
+
+  // const levelUpFromAPI = async () => {
+  //   try {
+  //     const result = await characterService.levelUp()
+  //     if (result.success) {
+  //       setCharacter(result.data.character)
+
+  //       dispatchCharacterEvent('character:levelup', {
+  //         level: result.data.character.level,
+  //         unlockedClassLevel: result.data.unlockedClassLevel,
+  //         newJobLevel: result.data.newJobLevel,
+  //         portraitUpdated: result.data.portraitUpdated,
+  //       })
+
+  //       if (result.data.unlockedClassLevel) {
+  //         dispatchCharacterEvent('character:classunlock', {
+  //           classLevel: result.data.unlockedClassLevel,
+  //           portraitUrl: result.data.character.currentPortraitUrl,
+  //         })
+  //       }
+
+  //       if (result.data.newJobLevel) {
+  //         dispatchCharacterEvent('character:jobtitleup', {
+  //           newTitle: result.data.newJobLevel.title,
+  //           level: result.data.newJobLevel.level,
+  //         })
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error leveling up:', error)
+  //   }
+  // }
+
+const levelUpFromAPI = async () => {
+  try {
+    const result = await characterService.levelUp()
+    if (result.success) {
+      setCharacter(result.data.character)
+
+      // เพิ่ม notifications เข้า queue
+      notificationQueue.enqueue({
+        type: 'levelup',
+        data: {
+          level: result.data.character.level,
+        },
+        priority: 1
+      })
+
+      if (result.data.unlockedClassLevels && result.data.unlockedClassLevels.length > 0) {
+        result.data.unlockedClassLevels.forEach((classLevel: number, index: number) => {
+          notificationQueue.enqueue({
+            type: 'classunlock',
+            data: {
+              classLevel: classLevel,
+              portraitUrl: result.data.character.currentPortraitUrl,
+            },
+            priority: 2 + index
+          })
+        })
+      }
+
+      if (result.data.newJobLevel) {
+        notificationQueue.enqueue({
+          type: 'jobtitle',
+          data: {
+            newTitle: result.data.newJobLevel.title,
+            level: result.data.newJobLevel.level,
+          },
+          priority: 10
+        })
+      }
+    }
+  } catch (error) {
+    console.error('Error leveling up:', error)
+  }
+}
 
   const submitDailyQuestFromAPI = async () => {
     try {
