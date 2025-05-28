@@ -403,7 +403,6 @@ class OpenAIService {
         {
           "summary": "สรุปสั้นๆ ว่าผู้ใช้ทำอะไรสำเร็จ (รวมเนื้อหาสื่อหากมี)",
           "score": 85,
-          "xpEarned": 120,
           "requirements": {
             "ข้อกำหนดที่ 1": true,
             "ข้อกำหนดที่ 2": false

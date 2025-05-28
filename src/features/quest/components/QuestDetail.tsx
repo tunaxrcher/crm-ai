@@ -659,7 +659,7 @@ export default function QuestDetail({
                     อัพโหลดภาพ หรือ วิดีโอประกอบงานที่คุณทำ
                   </CardTitle>
                   <CardDescription>
-                    Upload evidence of your completed quest
+                    Supported formats: PNG, JPG, MP4 (max 20MB)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -718,7 +718,7 @@ export default function QuestDetail({
                     {/* Description input */}
                     <div>
                       <label className="text-sm font-medium mb-2 block">
-                        อธิบายรายละเอียด (ไม่จำเป็นต้องระบุ)
+                        หากอยากบอกรายละเอียด
                       </label>
                       <textarea
                         value={description}
@@ -727,10 +727,6 @@ export default function QuestDetail({
                         className="w-full p-3 border border-border rounded-lg bg-background resize-none"
                         rows={3}
                       />
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      Supported formats: PNG, JPG, PDF, MP4 (max 20MB)
                     </div>
 
                     <div className="pt-4">

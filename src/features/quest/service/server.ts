@@ -11,13 +11,12 @@ import {
   questSubmissionRepository,
 } from '../repository'
 import {
-  CompletedQuest,
   Quest,
   QuestDifficulty,
   QuestListResponse,
   QuestType,
 } from '../types'
-import { OpenAIPrompt, QuestSubmissionResponse } from '../types/index'
+import { OpenAIPrompt } from '../types/index'
 
 export class QuestService extends BaseService {
   private static instance: QuestService
@@ -353,6 +352,7 @@ export class QuestSubmissionService extends BaseService {
         const submission =
           await questSubmissionRepository.createQuestSubmission({
             questId,
+            questXpEarned: quest.xpReward,
             characterId,
             mediaType,
             mediaUrl,

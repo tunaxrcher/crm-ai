@@ -221,6 +221,7 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
   // บันทึก quest submission
   async createQuestSubmission(data: {
     questId: number
+    questXpEarned: number
     characterId: number
     mediaType: string
     mediaUrl?: string
@@ -243,7 +244,8 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
         ratingDEX: data.aiAnalysis.ratings.dex,
         ratingVIT: data.aiAnalysis.ratings.vit,
         ratingINT: data.aiAnalysis.ratings.int,
-        xpEarned: data.aiAnalysis.xpEarned,
+        // xpEarned: data.aiAnalysis.xpEarned,
+        xpEarned: data.questXpEarned,
         feedback: data.aiAnalysis.feedback,
         score: data.aiAnalysis.score,
         submittedAt: new Date(),
