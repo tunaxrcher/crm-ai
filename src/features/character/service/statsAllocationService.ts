@@ -26,13 +26,6 @@ export class StatsAllocationService {
         `[StatAllocation] Starting AI analysis for character ${characterId}`
       )
 
-      // ทดสอบ AI connection ก่อน
-      const aiAvailable = await StatAnalysisService.testAIConnection()
-      if (!aiAvailable) {
-        console.warn('[StatAllocation] AI not available, using fallback')
-        return this.getBasicStatGains(jobClassName)
-      }
-
       // ดึง quest submissions ย้อนหลัง
       const questSubmissions =
         await CharacterRepository.getQuestSubmissionsBetweenLevels(
@@ -41,9 +34,7 @@ export class StatsAllocationService {
           currentLevel
         )
 
-      console.log(
-        `[StatAllocation] Found ${questSubmissions.length} quest submissions`
-      )
+      console.log(`[StatAllocation] Found ${questSubmissions.length} quest submissions`)
 
       // แปลงข้อมูลให้เหมาะสำหรับ AI
       const questData = questSubmissions.map((submission) => ({

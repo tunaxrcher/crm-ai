@@ -35,7 +35,7 @@ export default function CharacterPageComponent() {
     showLevelUpAnimation,
     addXpFromAPI,
     levelUpFromAPI,
-    submitDailyQuestFromAPI,
+    // submitDailyQuestFromAPI,
   } = useCharacter()
 
   // State
@@ -43,6 +43,7 @@ export default function CharacterPageComponent() {
   const [radarAnimation, setRadarAnimation] = useState(0)
   const [statHighlight, setStatHighlight] = useState(0)
   const { addNotification } = useNotification()
+  const [loadingAction, setLoadingAction] = useState<string | null>(null)
 
   // Animate the radar chart
   useEffect(() => {
@@ -112,6 +113,33 @@ export default function CharacterPageComponent() {
     // }, 1500)
   }
 
+  const handleAddXp = async () => {
+    setLoadingAction('addXp')
+    try {
+      await addXpFromAPI(100)
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
+  const handleLevelUp = async () => {
+    setLoadingAction('levelUp')
+    try {
+      await levelUpFromAPI()
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
+  // const handleSubmitDailyQuest = async () => {
+  //   setLoadingAction('submitQuest')
+  //   try {
+  //     await submitDailyQuestFromAPI()
+  //   } finally {
+  //     setLoadingAction(null)
+  //   }
+  // }
+
   return (
     <div className="flex flex-col min-h-screen relative">
       {/* Background Image with Blur */}
@@ -157,8 +185,6 @@ export default function CharacterPageComponent() {
 
         <AchievementSection achievements={character.achievements} />
 
-        <QuestStatistics questStats={character.questStats} />
-
         {/* Development testing button */}
         <hr className="mt-5" />
         {process.env.NODE_ENV === 'development' && (
@@ -176,30 +202,32 @@ export default function CharacterPageComponent() {
                 className="w-full">
                 🔔 ทดสอบ Notification
               </Button>
-
               <Button
                 variant="outline"
-                onClick={() => addXpFromAPI(100)}
+                onClick={handleAddXp}
+                disabled={loadingAction === 'addXp'}
                 className="w-full">
-                ➕ เพิ่ม 100 XP (AI)
+                {loadingAction === 'addXp'
+                  ? '⏳ กำลังเพิ่ม XP...'
+                  : '➕ เพิ่ม 100 XP (AI)'}
               </Button>
 
               <Button
                 variant="outline"
-                onClick={levelUpFromAPI}
+                onClick={handleLevelUp}
+                disabled={loadingAction === 'levelUp'}
                 className="w-full">
-                ⬆️ เลเวลอัพ (AI)
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={submitDailyQuestFromAPI}
-                className="w-full">
-                🚀 ส่งเควสประจำวัน (AI)
+                {loadingAction === 'levelUp'
+                  ? '⏳ กำลังเลเวลอัพ...'
+                  : '⬆️ เลเวลอัพ (AI)'}
               </Button>
             </CardContent>
           </Card>
         )}
+
+        <hr />
+
+        <QuestStatistics questStats={character.questStats} />
 
         <JobProgressionDialog
           open={showProgressionDialog}

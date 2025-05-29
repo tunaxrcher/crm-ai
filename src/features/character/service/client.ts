@@ -69,6 +69,81 @@ export class CharacterService extends BaseService {
 
     return response.json()
   }
-}
 
+  async createCharacter(payload: CharacterCreatePayload) {
+    const formData = new FormData()
+
+    formData.append('jobClassId', payload.jobClassId)
+    formData.append('name', payload.name)
+    formData.append('portraitType', payload.portraitType)
+
+    if (payload.file) formData.append('file', payload.file)
+
+    const res = await fetch('/api/character/generate', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!res.ok) throw new Error(await res.text())
+
+    return res.json()
+  }
+
+  async confirmCharacter(payload: CharacterConfirmPayload) {
+    const res = await fetch('/api/character/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) throw new Error(await res.text())
+
+    return res.json()
+  }
+}
 export const characterService = CharacterService.getInstance()
+
+export class JobClassService extends BaseService {
+  private static instance: JobClassService
+
+  constructor() {
+    super()
+  }
+
+  public static getInstance() {
+    if (!JobClassService.instance) {
+      JobClassService.instance = new JobClassService()
+    }
+    return JobClassService.instance
+  }
+
+  // Fetch jobClasss
+  async fetchJobClass() {
+    const response = await fetch(`/api/jobClasss`)
+
+    if (!response.ok) {
+      throw new Error(`Error fetching jobClasss: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+
+    return data
+  }
+}
+export const jobClassService = JobClassService.getInstance()
+
+export class JobLevelService extends BaseService {
+  private static instance: JobLevelService
+
+  constructor() {
+    super()
+  }
+
+  public static getInstance() {
+    if (!JobLevelService.instance) {
+      JobLevelService.instance = new JobLevelService()
+    }
+    return JobLevelService.instance
+  }
+}
+export const jobLevelService = JobLevelService.getInstance()

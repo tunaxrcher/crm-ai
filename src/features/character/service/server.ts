@@ -1,4 +1,3 @@
-// src/features/user/service/server.ts
 import { userService } from '@src/features/user/service/server'
 import { getDevSession, getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/service/server/baseService'
@@ -6,7 +5,14 @@ import 'server-only'
 
 import { JobClassHelper } from '../helpers/jobClassHelper'
 import { PortraitHelper } from '../helpers/portraitHelper'
-import { CharacterRepository, characterRepository } from '../repository'
+import {
+  CharacterRepository,
+  JobClassRepository,
+  JobLevelRepository,
+  characterRepository,
+  jobClassRepository,
+  jobLevelRepository,
+} from '../repository'
 import { Character, JobLevel } from '../types'
 import { StatsAllocationService } from './statsAllocationService'
 
@@ -183,7 +189,6 @@ export class CharacterService extends BaseService {
       newLevel,
       character.jobClass.name
     )
-
     console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
 
     // ตรวจสอบการปลดล็อก class ใหม่
@@ -396,5 +401,51 @@ export class CharacterService extends BaseService {
     }
   }
 }
-
 export const characterService = CharacterService.getInstance()
+
+export class JobClassService extends BaseService {
+  private static instance: JobClassService
+  private jobClassRepository: JobClassRepository
+
+  constructor() {
+    super()
+    this.jobClassRepository = jobClassRepository
+  }
+
+  public static getInstance() {
+    if (!JobClassService.instance) {
+      JobClassService.instance = new JobClassService()
+    }
+
+    return JobClassService.instance
+  }
+
+  async getAllJobClasss() {
+    return this.jobClassRepository.findAll()
+  }
+
+  async getJobClass(id: number) {
+    return this.jobClassRepository.findById(id)
+  }
+}
+export const jobClassService = JobClassService.getInstance()
+
+export class JobLevelService extends BaseService {
+  private static instance: JobLevelService
+  private jobLevelRepository: JobLevelRepository
+
+  constructor() {
+    super()
+    this.jobLevelRepository = jobLevelRepository
+  }
+
+  public static getInstance() {
+    if (!JobLevelService.instance) {
+      JobLevelService.instance = new JobLevelService()
+    }
+
+    return JobLevelService.instance
+  }
+}
+
+export const jobLevelService = JobLevelService.getInstance()

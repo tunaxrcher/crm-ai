@@ -57,6 +57,7 @@ model JobLevel {
   title                  String
   description            String?     @db.Text
   imageUrl               String?
+  personaDescription     String?     @db.Text
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
   jobClassId             Int
@@ -84,6 +85,7 @@ model Character {
   originalFaceImage  String?
   generatedPortraits Json?
   levelHistory       Json?
+  personaTraits      String?                @db.Text
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   userId             Int                    @unique

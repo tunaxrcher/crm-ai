@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
@@ -21,7 +21,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@src/components/ui/tabs'
-import { useJobClasses } from '@src/features/character/hook/api'
+import { useGetJobClass } from '@src/features/character/hook/api'
 import { JobClass } from '@src/features/character/types'
 import {
   BadgePercent,
@@ -44,11 +44,13 @@ export default function CharacterCreation() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
 
   // Fetch job classes from API
-  const { jobClasses, isLoading, error, refetchJobClasses } = useJobClasses()
-
-  // Get selected job class details
-  const selectedJobClass =
-    jobClasses.find((jc) => jc.id === selectedJobClassId) || null
+  // const { jobClasses, isLoading, error, refetchJobClasses } = useJobClasses()
+  const {
+    data: jobClasses,
+    isLoading,
+    error,
+    refetch: refetchJobClasses,
+  } = useGetJobClass()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -98,6 +100,10 @@ export default function CharacterCreation() {
     )
   }
 
+  // Get selected job class details
+  const selectedJobClass =
+    jobClasses.find((jc) => jc.id === selectedJobClassId) || null
+
   // Get job class icon
   const getJobClassIcon = (jobClass: JobClass) => {
     switch (jobClass.id) {
@@ -118,9 +124,7 @@ export default function CharacterCreation() {
         <h1 className="text-2xl font-bold ai-gradient-text">
           สร้างตัวละครของคุณ
         </h1>
-        <p className="text-muted-foreground">
-          ปรับแต่งตัวละครเพื่อการผจญภัยใน CRM RPG
-        </p>
+        <p className="text-muted-foreground">ผ่านระบบ AI (ทดสอบ)</p>
       </div>
 
       <div className="flex justify-between items-center mb-8">
@@ -197,14 +201,12 @@ export default function CharacterCreation() {
 
           <Card>
             <CardHeader>
-              <CardTitle>ใส่ชื่อตัวละคร</CardTitle>
-              <CardDescription>
-                นี่จะเป็นตัวตนของคุณในโลก CRM RPG
-              </CardDescription>
+              <CardTitle>ใส่ชื่อ</CardTitle>
+              <CardDescription></CardDescription>
             </CardHeader>
             <CardContent>
               <Input
-                placeholder="ชื่อตัวละคร"
+                placeholder="ใส่ชื่อ"
                 value={characterName}
                 onChange={(e) => setCharacterName(e.target.value)}
                 className="mb-4"

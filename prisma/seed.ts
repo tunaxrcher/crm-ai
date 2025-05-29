@@ -216,8 +216,327 @@ async function cleanupDB() {
 }
 
 // ========== ฟังก์ชันสร้าง JobClass และ JobLevel ==========
+// async function createJobClasses() {
+//   // สร้างอาชีพ 6 อาชีพ
+//   const jobClassData = [
+//     {
+//       name: 'นักการตลาด',
+//       description:
+//         'ผู้ที่มีความสามารถในการวิเคราะห์ตลาด วางแผนและดำเนินกลยุทธ์ทางการตลาด',
+//       imageUrl: 'https://source.unsplash.com/featured/?marketing',
+//       jobLevels: [
+//         {
+//           level: 1,
+//           requiredCharacterLevel: 1,
+//           title: 'นักการตลาดฝึกหัด',
+//           description: 'เริ่มต้นเส้นทางการเป็นนักการตลาด ยังต้องเรียนรู้อีกมาก',
+//         },
+//         {
+//           level: 10,
+//           requiredCharacterLevel: 10,
+//           title: 'ผู้ช่วยนักการตลาด',
+//           description:
+//             'เริ่มเข้าใจหลักการพื้นฐานของการตลาด สามารถช่วยทีมในงานง่ายๆ ได้',
+//         },
+//         {
+//           level: 35,
+//           requiredCharacterLevel: 35,
+//           title: 'นักการตลาดมือฉมัง',
+//           description:
+//             'เชี่ยวชาญการวิเคราะห์การตลาด และสามารถวางแผนแคมเปญได้อย่างมีประสิทธิภาพ',
+//         },
+//         {
+//           level: 60,
+//           requiredCharacterLevel: 60,
+//           title: 'หัวหน้าฝ่ายการตลาด',
+//           description: 'ควบคุมและบริหารทีมการตลาด กำหนดแนวทางกลยุทธ์หลักได้',
+//         },
+//         {
+//           level: 80,
+//           requiredCharacterLevel: 80,
+//           title: 'ผู้อำนวยการฝ่ายการตลาด',
+//           description:
+//             'กำหนดวิสัยทัศน์และกลยุทธ์ระดับองค์กร สร้างแบรนด์ที่แข็งแกร่ง',
+//         },
+//         {
+//           level: 99,
+//           requiredCharacterLevel: 99,
+//           title: 'กูรูด้านการตลาด',
+//           description:
+//             'ปรมาจารย์ด้านการตลาด ผู้กำหนดเทรนด์และนวัตกรรมใหม่ให้วงการ',
+//         },
+//       ],
+//     },
+//     {
+//       name: 'นักบัญชี',
+//       description:
+//         'ผู้ที่มีความสามารถในการจัดการบัญชี วิเคราะห์การเงิน และวางแผนภาษี',
+//       imageUrl: 'https://source.unsplash.com/featured/?accounting',
+//       jobLevels: [
+//         {
+//           level: 1,
+//           requiredCharacterLevel: 1,
+//           title: 'พนักงานบัญชีฝึกหัด',
+//           description:
+//             'เริ่มต้นเรียนรู้ระบบบัญชีเบื้องต้น ตรวจสอบเอกสารและบันทึกรายการ',
+//         },
+//         {
+//           level: 10,
+//           requiredCharacterLevel: 10,
+//           title: 'เจ้าหน้าที่บัญชี',
+//           description: 'สามารถจัดทำบัญชีรายรับรายจ่าย และงบการเงินเบื้องต้นได้',
+//         },
+//         {
+//           level: 35,
+//           requiredCharacterLevel: 35,
+//           title: 'นักบัญชีอาวุโส',
+//           description:
+//             'วิเคราะห์งบการเงิน วางแผนภาษี และให้คำปรึกษาทางการเงินได้',
+//         },
+//         {
+//           level: 60,
+//           requiredCharacterLevel: 60,
+//           title: 'ผู้จัดการฝ่ายบัญชี',
+//           description:
+//             'ดูแลระบบบัญชีทั้งหมดขององค์กร พัฒนาระบบและควบคุมการเงิน',
+//         },
+//         {
+//           level: 80,
+//           requiredCharacterLevel: 80,
+//           title: 'ผู้อำนวยการฝ่ายการเงิน',
+//           description: 'กำหนดนโยบายการเงินและการลงทุน วางแผนกลยุทธ์ทางการเงิน',
+//         },
+//         {
+//           level: 99,
+//           requiredCharacterLevel: 99,
+//           title: 'ปรมาจารย์ด้านการเงิน',
+//           description:
+//             'เชี่ยวชาญด้านการเงินและภาษีระดับสูง สามารถคาดการณ์แนวโน้มทางเศรษฐกิจ',
+//         },
+//       ],
+//     },
+//     {
+//       name: 'นักขาย',
+//       description:
+//         'ผู้ที่มีความสามารถในการนำเสนอสินค้า เจรจาต่อรอง และปิดการขาย',
+//       imageUrl: 'https://source.unsplash.com/featured/?sales',
+//       jobLevels: [
+//         {
+//           level: 1,
+//           requiredCharacterLevel: 1,
+//           title: 'พนักงานขายฝึกหัด',
+//           description: 'เรียนรู้สินค้าและบริการ ฝึกฝนทักษะการนำเสนอและการขาย',
+//         },
+//         {
+//           level: 10,
+//           requiredCharacterLevel: 10,
+//           title: 'พนักงานขาย',
+//           description:
+//             'สามารถนำเสนอสินค้า ตอบคำถามลูกค้า และทำยอดขายได้ตามเป้า',
+//         },
+//         {
+//           level: 35,
+//           requiredCharacterLevel: 35,
+//           title: 'นักขายมืออาชีพ',
+//           description:
+//             'เจรจาต่อรองเก่ง ปิดการขายได้เก่ง สร้างความสัมพันธ์กับลูกค้าได้ดี',
+//         },
+//         {
+//           level: 60,
+//           requiredCharacterLevel: 60,
+//           title: 'ผู้จัดการฝ่ายขาย',
+//           description: 'วางแผนกลยุทธ์การขาย บริหารทีมขาย และพัฒนาศักยภาพทีม',
+//         },
+//         {
+//           level: 80,
+//           requiredCharacterLevel: 80,
+//           title: 'ผู้อำนวยการฝ่ายขาย',
+//           description:
+//             'กำหนดนโยบายและเป้าหมายการขายระดับองค์กร สร้างพันธมิตรทางธุรกิจ',
+//         },
+//         {
+//           level: 99,
+//           requiredCharacterLevel: 99,
+//           title: 'ราชาแห่งการขาย',
+//           description:
+//             'ปรมาจารย์ด้านการขาย ผู้สร้างปรากฏการณ์ยอดขายและพลิกโฉมวงการ',
+//         },
+//       ],
+//     },
+//     {
+//       name: 'ดีไซน์เนอร์',
+//       description:
+//         'ผู้ที่มีความสามารถในการออกแบบ สร้างสรรค์งานศิลปะ และพัฒนาแนวคิดใหม่ๆ',
+//       imageUrl: 'https://source.unsplash.com/featured/?designer',
+//       jobLevels: [
+//         {
+//           level: 1,
+//           requiredCharacterLevel: 1,
+//           title: 'นักออกแบบหัดใหม่',
+//           description: 'เรียนรู้หลักการออกแบบพื้นฐาน และการใช้เครื่องมือออกแบบ',
+//         },
+//         {
+//           level: 10,
+//           requiredCharacterLevel: 10,
+//           title: 'นักออกแบบ',
+//           description: 'สามารถสร้างงานออกแบบตามโจทย์ได้ มีสไตล์เป็นของตัวเอง',
+//         },
+//         {
+//           level: 35,
+//           requiredCharacterLevel: 35,
+//           title: 'ดีไซน์เนอร์มืออาชีพ',
+//           description:
+//             'ออกแบบงานที่มีเอกลักษณ์ สร้างสรรค์ไอเดียใหม่ๆ ที่โดดเด่น',
+//         },
+//         {
+//           level: 60,
+//           requiredCharacterLevel: 60,
+//           title: 'ครีเอทีฟไดเรกเตอร์',
+//           description: 'กำหนดทิศทางการออกแบบ นำเทรนด์ สร้างอัตลักษณ์ที่ชัดเจน',
+//         },
+//         {
+//           level: 80,
+//           requiredCharacterLevel: 80,
+//           title: 'ผู้อำนวยการฝ่ายครีเอทีฟ',
+//           description:
+//             'บริหารทีมครีเอทีฟ กำหนดวิสัยทัศน์ และสร้างแบรนด์ที่แข็งแกร่ง',
+//         },
+//         {
+//           level: 99,
+//           requiredCharacterLevel: 99,
+//           title: 'ปรมาจารย์แห่งการออกแบบ',
+//           description:
+//             'ผู้กำหนดเทรนด์การออกแบบระดับโลก สร้างสรรค์นวัตกรรมที่เปลี่ยนแปลงวงการ',
+//         },
+//       ],
+//     },
+//     {
+//       name: 'โปรแกรมเมอร์',
+//       description:
+//         'ผู้ที่มีความสามารถในการเขียนโปรแกรม พัฒนาซอฟต์แวร์ และแก้ไขปัญหาทางเทคนิค',
+//       imageUrl: 'https://source.unsplash.com/featured/?programmer',
+//       jobLevels: [
+//         {
+//           level: 1,
+//           requiredCharacterLevel: 1,
+//           title: 'โปรแกรมเมอร์ฝึกหัด',
+//           description: 'เรียนรู้ภาษาโปรแกรมพื้นฐาน เขียนโค้ดง่ายๆ ได้',
+//         },
+//         {
+//           level: 10,
+//           requiredCharacterLevel: 10,
+//           title: 'จูเนียร์โปรแกรมเมอร์',
+//           description: 'เขียนโค้ดได้หลายภาษา แก้บั๊กและพัฒนาฟีเจอร์ใหม่ได้',
+//         },
+//         {
+//           level: 35,
+//           requiredCharacterLevel: 35,
+//           title: 'ซีเนียร์โปรแกรมเมอร์',
+//           description:
+//             'ออกแบบระบบขนาดใหญ่ แก้ปัญหาซับซ้อน พัฒนาแอปพลิเคชันเต็มรูปแบบได้',
+//         },
+//         {
+//           level: 60,
+//           requiredCharacterLevel: 60,
+//           title: 'โปรแกรมเมอร์ผู้เชี่ยวชาญ',
+//           description:
+//             'เชี่ยวชาญการพัฒนาซอฟต์แวร์ขั้นสูง วางโครงสร้างที่ซับซ้อนได้',
+//         },
+//         {
+//           level: 80,
+//           requiredCharacterLevel: 80,
+//           title: 'สถาปนิกซอฟต์แวร์',
+//           description:
+//             'ออกแบบสถาปัตยกรรมซอฟต์แวร์ กำหนดมาตรฐานและแนวทางการพัฒนา',
+//         },
+//         {
+//           level: 99,
+//           requiredCharacterLevel: 99,
+//           title: 'เทพแห่งโค้ด',
+//           description:
+//             'ปรมาจารย์การเขียนโปรแกรม สร้างนวัตกรรมและเทคโนโลยีที่เปลี่ยนแปลงโลก',
+//         },
+//       ],
+//     },
+//     {
+//       name: 'ช่าง',
+//       description:
+//         'ผู้ที่มีความสามารถในการสร้าง ซ่อมแซม และบำรุงรักษาโครงสร้างและเครื่องจักร',
+//       imageUrl: 'https://source.unsplash.com/featured/?mechanic',
+//       jobLevels: [
+//         {
+//           level: 1,
+//           requiredCharacterLevel: 1,
+//           title: 'ช่างฝึกหัด',
+//           description: 'เรียนรู้การใช้เครื่องมือพื้นฐาน และทำงานซ่อมแซมง่ายๆ',
+//         },
+//         {
+//           level: 10,
+//           requiredCharacterLevel: 10,
+//           title: 'ช่างทั่วไป',
+//           description:
+//             'ซ่อมแซมและบำรุงรักษาอุปกรณ์ทั่วไปได้ แก้ปัญหาเบื้องต้นได้',
+//         },
+//         {
+//           level: 35,
+//           requiredCharacterLevel: 35,
+//           title: 'ช่างชำนาญการ',
+//           description: 'แก้ไขปัญหาซับซ้อนได้ ซ่อมแซมระบบที่มีความซับซ้อนสูงได้',
+//         },
+//         {
+//           level: 60,
+//           requiredCharacterLevel: 60,
+//           title: 'หัวหน้าช่าง',
+//           description: 'ควบคุมทีมช่าง วางแผนการซ่อมบำรุง และพัฒนาระบบใหม่ๆ',
+//         },
+//         {
+//           level: 80,
+//           requiredCharacterLevel: 80,
+//           title: 'วิศวกรอาวุโส',
+//           description:
+//             'ออกแบบและพัฒนาระบบวิศวกรรมขั้นสูง แก้ปัญหาที่ซับซ้อนมาก',
+//         },
+//         {
+//           level: 99,
+//           requiredCharacterLevel: 99,
+//           title: 'อัจฉริยะด้านวิศวกรรม',
+//           description:
+//             'สร้างนวัตกรรมและสิ่งประดิษฐ์ที่ปฏิวัติวงการ พัฒนาเทคโนโลยีล้ำสมัย',
+//         },
+//       ],
+//     },
+//   ]
+
+//   const createdJobClasses = []
+
+//   for (const jobClass of jobClassData) {
+//     const createdJobClass = await prisma.jobClass.create({
+//       data: {
+//         name: jobClass.name,
+//         description: jobClass.description,
+//         imageUrl: jobClass.imageUrl,
+//       },
+//     })
+
+//     // สร้าง JobLevel สำหรับแต่ละ JobClass
+//     for (const level of jobClass.jobLevels) {
+//       await prisma.jobLevel.create({
+//         data: {
+//           level: level.level,
+//           requiredCharacterLevel: level.requiredCharacterLevel,
+//           title: level.title,
+//           description: level.description,
+//           jobClassId: createdJobClass.id,
+//         },
+//       })
+//     }
+
+//     createdJobClasses.push(createdJobClass)
+//   }
+
+//   return createdJobClasses
+// }
 async function createJobClasses() {
-  // สร้างอาชีพ 6 อาชีพ
   const jobClassData = [
     {
       name: 'นักการตลาด',
@@ -230,6 +549,8 @@ async function createJobClasses() {
           requiredCharacterLevel: 1,
           title: 'นักการตลาดฝึกหัด',
           description: 'เริ่มต้นเส้นทางการเป็นนักการตลาด ยังต้องเรียนรู้อีกมาก',
+          personaDescription:
+            'Wearing wrinkled shirt holding old brochures, carrying phone with cracked screen',
         },
         {
           level: 10,
@@ -237,6 +558,8 @@ async function createJobClasses() {
           title: 'ผู้ช่วยนักการตลาด',
           description:
             'เริ่มเข้าใจหลักการพื้นฐานของการตลาด สามารถช่วยทีมในงานง่ายๆ ได้',
+          personaDescription:
+            'Wearing neat shirt with new smartphone + small notebook',
         },
         {
           level: 35,
@@ -244,12 +567,16 @@ async function createJobClasses() {
           title: 'นักการตลาดมือฉมัง',
           description:
             'เชี่ยวชาญการวิเคราะห์การตลาด และสามารถวางแผนแคมเปญได้อย่างมีประสิทธิภาพ',
+          personaDescription:
+            'Wearing light suit holding presentation tablet with basic graphic media',
         },
         {
           level: 60,
           requiredCharacterLevel: 60,
           title: 'หัวหน้าฝ่ายการตลาด',
           description: 'ควบคุมและบริหารทีมการตลาด กำหนดแนวทางกลยุทธ์หลักได้',
+          personaDescription:
+            'Wearing high-tech suit with bluetooth headset/mic and hologram graphs',
         },
         {
           level: 80,
@@ -257,6 +584,8 @@ async function createJobClasses() {
           title: 'ผู้อำนวยการฝ่ายการตลาด',
           description:
             'กำหนดวิสัยทัศน์และกลยุทธ์ระดับองค์กร สร้างแบรนด์ที่แข็งแกร่ง',
+          personaDescription:
+            'Premium business suit with floating presentation screens, professional presenter',
         },
         {
           level: 99,
@@ -264,6 +593,8 @@ async function createJobClasses() {
           title: 'กูรูด้านการตลาด',
           description:
             'ปรมาจารย์ด้านการตลาด ผู้กำหนดเทรนด์และนวัตกรรมใหม่ให้วงการ',
+          personaDescription:
+            'Futuristic strategy suit, surrounded by UI holograms, executive-level aura',
         },
       ],
     },
@@ -279,12 +610,16 @@ async function createJobClasses() {
           title: 'พนักงานบัญชีฝึกหัด',
           description:
             'เริ่มต้นเรียนรู้ระบบบัญชีเบื้องต้น ตรวจสอบเอกสารและบันทึกรายการ',
+          personaDescription:
+            'Old shirt with papers in hand, using calculator with missing buttons',
         },
         {
           level: 10,
           requiredCharacterLevel: 10,
           title: 'เจ้าหน้าที่บัญชี',
           description: 'สามารถจัดทำบัญชีรายรับรายจ่าย และงบการเงินเบื้องต้นได้',
+          personaDescription:
+            'Digital accounting notebook, formal attire, starting to use modern devices',
         },
         {
           level: 35,
@@ -292,6 +627,8 @@ async function createJobClasses() {
           title: 'นักบัญชีอาวุโส',
           description:
             'วิเคราะห์งบการเงิน วางแผนภาษี และให้คำปรึกษาทางการเงินได้',
+          personaDescription:
+            'Neat shirt with tablet, digital calculator attached',
         },
         {
           level: 60,
@@ -299,12 +636,16 @@ async function createJobClasses() {
           title: 'ผู้จัดการฝ่ายบัญชี',
           description:
             'ดูแลระบบบัญชีทั้งหมดขององค์กร พัฒนาระบบและควบคุมการเงิน',
+          personaDescription:
+            'Agile attire with AR analysis system surrounding',
         },
         {
           level: 80,
           requiredCharacterLevel: 80,
           title: 'ผู้อำนวยการฝ่ายการเงิน',
           description: 'กำหนดนโยบายการเงินและการลงทุน วางแผนกลยุทธ์ทางการเงิน',
+          personaDescription:
+            'Elegant suit with holo-data financial analysis floating in air',
         },
         {
           level: 99,
@@ -312,6 +653,8 @@ async function createJobClasses() {
           title: 'ปรมาจารย์ด้านการเงิน',
           description:
             'เชี่ยวชาญด้านการเงินและภาษีระดับสูง สามารถคาดการณ์แนวโน้มทางเศรษฐกิจ',
+          personaDescription:
+            'Holographic accounting floating around, hand-controlled, expert aura',
         },
       ],
     },
@@ -326,6 +669,8 @@ async function createJobClasses() {
           requiredCharacterLevel: 1,
           title: 'พนักงานขายฝึกหัด',
           description: 'เรียนรู้สินค้าและบริการ ฝึกฝนทักษะการนำเสนอและการขาย',
+          personaDescription:
+            'Faded polo shirt with crumpled proposals, worried face',
         },
         {
           level: 10,
@@ -333,6 +678,8 @@ async function createJobClasses() {
           title: 'พนักงานขาย',
           description:
             'สามารถนำเสนอสินค้า ตอบคำถามลูกค้า และทำยอดขายได้ตามเป้า',
+          personaDescription:
+            'Wearing shirt + tie, holding tablet showing products',
         },
         {
           level: 35,
@@ -340,12 +687,16 @@ async function createJobClasses() {
           title: 'นักขายมืออาชีพ',
           description:
             'เจรจาต่อรองเก่ง ปิดการขายได้เก่ง สร้างความสัมพันธ์กับลูกค้าได้ดี',
+          personaDescription:
+            'Holding smart device with graphs, presenting confidently',
         },
         {
           level: 60,
           requiredCharacterLevel: 60,
           title: 'ผู้จัดการฝ่ายขาย',
           description: 'วางแผนกลยุทธ์การขาย บริหารทีมขาย และพัฒนาศักยภาพทีม',
+          personaDescription:
+            'Modern business suit with AR goggles, floating product images',
         },
         {
           level: 80,
@@ -353,6 +704,8 @@ async function createJobClasses() {
           title: 'ผู้อำนวยการฝ่ายขาย',
           description:
             'กำหนดนโยบายและเป้าหมายการขายระดับองค์กร สร้างพันธมิตรทางธุรกิจ',
+          personaDescription:
+            'Luxury suit with team leader badge, selling through smart charts',
         },
         {
           level: 99,
@@ -360,6 +713,8 @@ async function createJobClasses() {
           title: 'ราชาแห่งการขาย',
           description:
             'ปรมาจารย์ด้านการขาย ผู้สร้างปรากฏการณ์ยอดขายและพลิกโฉมวงการ',
+          personaDescription:
+            'Surrounded by hologram customers and multi-dimensional products, leadership aura',
         },
       ],
     },
@@ -374,12 +729,15 @@ async function createJobClasses() {
           requiredCharacterLevel: 1,
           title: 'นักออกแบบหัดใหม่',
           description: 'เรียนรู้หลักการออกแบบพื้นฐาน และการใช้เครื่องมือออกแบบ',
+          personaDescription: 'Wrinkled t-shirt with ink-stained sketchbook',
         },
         {
           level: 10,
           requiredCharacterLevel: 10,
           title: 'นักออกแบบ',
           description: 'สามารถสร้างงานออกแบบตามโจทย์ได้ มีสไตล์เป็นของตัวเอง',
+          personaDescription:
+            'Slightly stylish attire, holding iPad with stylus',
         },
         {
           level: 35,
@@ -387,12 +745,15 @@ async function createJobClasses() {
           title: 'ดีไซน์เนอร์มืออาชีพ',
           description:
             'ออกแบบงานที่มีเอกลักษณ์ สร้างสรรค์ไอเดียใหม่ๆ ที่โดดเด่น',
+          personaDescription: 'Cool jacket holding tablet with UI design work',
         },
         {
           level: 60,
           requiredCharacterLevel: 60,
           title: 'ครีเอทีฟไดเรกเตอร์',
           description: 'กำหนดทิศทางการออกแบบ นำเทรนด์ สร้างอัตลักษณ์ที่ชัดเจน',
+          personaDescription:
+            'AR glasses with UI screens placed around, showing 3D work',
         },
         {
           level: 80,
@@ -400,6 +761,8 @@ async function createJobClasses() {
           title: 'ผู้อำนวยการฝ่ายครีเอทีฟ',
           description:
             'บริหารทีมครีเอทีฟ กำหนดวิสัยทัศน์ และสร้างแบรนด์ที่แข็งแกร่ง',
+          personaDescription:
+            'Custom designer outfit with rotating presentation screens in motion',
         },
         {
           level: 99,
@@ -407,6 +770,8 @@ async function createJobClasses() {
           title: 'ปรมาจารย์แห่งการออกแบบ',
           description:
             'ผู้กำหนดเทรนด์การออกแบบระดับโลก สร้างสรรค์นวัตกรรมที่เปลี่ยนแปลงวงการ',
+          personaDescription:
+            'Legendary designer with work floating as installation art, iconic pose',
         },
       ],
     },
@@ -421,12 +786,15 @@ async function createJobClasses() {
           requiredCharacterLevel: 1,
           title: 'โปรแกรมเมอร์ฝึกหัด',
           description: 'เรียนรู้ภาษาโปรแกรมพื้นฐาน เขียนโค้ดง่ายๆ ได้',
+          personaDescription:
+            'Worn hoodie holding old laptop, screen showing errors',
         },
         {
           level: 10,
           requiredCharacterLevel: 10,
           title: 'จูเนียร์โปรแกรมเมอร์',
           description: 'เขียนโค้ดได้หลายภาษา แก้บั๊กและพัฒนาฟีเจอร์ใหม่ได้',
+          personaDescription: 'Wearing new hoodie, coding on mid-spec laptop',
         },
         {
           level: 35,
@@ -434,6 +802,8 @@ async function createJobClasses() {
           title: 'ซีเนียร์โปรแกรมเมอร์',
           description:
             'ออกแบบระบบขนาดใหญ่ แก้ปัญหาซับซ้อน พัฒนาแอปพลิเคชันเต็มรูปแบบได้',
+          personaDescription:
+            'Techwear shirt with laptop and slight hologram tools',
         },
         {
           level: 60,
@@ -441,6 +811,8 @@ async function createJobClasses() {
           title: 'โปรแกรมเมอร์ผู้เชี่ยวชาญ',
           description:
             'เชี่ยวชาญการพัฒนาซอฟต์แวร์ขั้นสูง วางโครงสร้างที่ซับซ้อนได้',
+          personaDescription:
+            'Multiple holographic screens overlapping, floating keyboard',
         },
         {
           level: 80,
@@ -448,6 +820,8 @@ async function createJobClasses() {
           title: 'สถาปนิกซอฟต์แวร์',
           description:
             'ออกแบบสถาปัตยกรรมซอฟต์แวร์ กำหนดมาตรฐานและแนวทางการพัฒนา',
+          personaDescription:
+            'Custom developer suit with hacker pro style code',
         },
         {
           level: 99,
@@ -455,6 +829,8 @@ async function createJobClasses() {
           title: 'เทพแห่งโค้ด',
           description:
             'ปรมาจารย์การเขียนโปรแกรม สร้างนวัตกรรมและเทคโนโลยีที่เปลี่ยนแปลงโลก',
+          personaDescription:
+            'Living in cybernetic code world with data streams flowing around',
         },
       ],
     },
@@ -469,6 +845,8 @@ async function createJobClasses() {
           requiredCharacterLevel: 1,
           title: 'ช่างฝึกหัด',
           description: 'เรียนรู้การใช้เครื่องมือพื้นฐาน และทำงานซ่อมแซมง่ายๆ',
+          personaDescription:
+            'Torn/stained mechanic suit holding bent screwdriver, unsure posture',
         },
         {
           level: 10,
@@ -476,18 +854,24 @@ async function createJobClasses() {
           title: 'ช่างทั่วไป',
           description:
             'ซ่อมแซมและบำรุงรักษาอุปกรณ์ทั่วไปได้ แก้ปัญหาเบื้องต้นได้',
+          personaDescription:
+            'Cleaner mechanic suit, portable tools, eager posture',
         },
         {
           level: 35,
           requiredCharacterLevel: 35,
           title: 'ช่างชำนาญการ',
           description: 'แก้ไขปัญหาซับซ้อนได้ ซ่อมแซมระบบที่มีความซับซ้อนสูงได้',
+          personaDescription:
+            'Wearing utility shirt with toolbelt using laser measuring',
         },
         {
           level: 60,
           requiredCharacterLevel: 60,
           title: 'หัวหน้าช่าง',
           description: 'ควบคุมทีมช่าง วางแผนการซ่อมบำรุง และพัฒนาระบบใหม่ๆ',
+          personaDescription:
+            'Mechanical arm/AR engineering glasses, repair drone floating nearby',
         },
         {
           level: 80,
@@ -495,6 +879,8 @@ async function createJobClasses() {
           title: 'วิศวกรอาวุโส',
           description:
             'ออกแบบและพัฒนาระบบวิศวกรรมขั้นสูง แก้ปัญหาที่ซับซ้อนมาก',
+          personaDescription:
+            'Half-body exosuit with part control system, high-level mechanic pose',
         },
         {
           level: 99,
@@ -502,6 +888,8 @@ async function createJobClasses() {
           title: 'อัจฉริยะด้านวิศวกรรม',
           description:
             'สร้างนวัตกรรมและสิ่งประดิษฐ์ที่ปฏิวัติวงการ พัฒนาเทคโนโลยีล้ำสมัย',
+          personaDescription:
+            'Futuristic mechanic armor with AI mechanical arms, energy flowing around, elegant posture',
         },
       ],
     },
@@ -518,7 +906,7 @@ async function createJobClasses() {
       },
     })
 
-    // สร้าง JobLevel สำหรับแต่ละ JobClass
+    // Create JobLevel for each JobClass with personaDescription and personaTraits
     for (const level of jobClass.jobLevels) {
       await prisma.jobLevel.create({
         data: {
@@ -526,6 +914,7 @@ async function createJobClasses() {
           requiredCharacterLevel: level.requiredCharacterLevel,
           title: level.title,
           description: level.description,
+          personaDescription: level.personaDescription,
           jobClassId: createdJobClass.id,
         },
       })
@@ -623,30 +1012,44 @@ export async function createCharacters(users: any[], jobClasses: any[]) {
     let statVIT = baseStats
     let statINT = baseStats
 
+    let personaTraits = ''
+
     switch (jobClass.name) {
       case 'นักการตลาด':
         statAGI += faker.number.int({ min: 5, max: 15 })
         statINT += faker.number.int({ min: 5, max: 10 })
+        personaTraits =
+          'bright confident eyes, styled hair, charismatic smile, and energetic posture'
         break
       case 'นักบัญชี':
         statINT += faker.number.int({ min: 10, max: 20 })
         statDEX += faker.number.int({ min: 3, max: 8 })
+        personaTraits =
+          'focused eyes behind glasses, neat hair, serious expression, and organized appearance'
         break
       case 'นักขาย':
         statAGI += faker.number.int({ min: 8, max: 15 })
         statSTR += faker.number.int({ min: 3, max: 8 })
+        personaTraits =
+          'friendly eyes, approachable smile, neat appearance, and persuasive charm'
         break
       case 'ดีไซน์เนอร์':
         statDEX += faker.number.int({ min: 10, max: 20 })
         statINT += faker.number.int({ min: 5, max: 10 })
+        personaTraits =
+          'creative eyes, artistic hairstyle, unique fashion sense, and innovative aura'
         break
       case 'โปรแกรมเมอร์':
         statINT += faker.number.int({ min: 15, max: 25 })
         statVIT += faker.number.int({ min: 3, max: 8 })
+        personaTraits =
+          'intelligent eyes, casual hair, focused expression, and tech-savvy appearance'
         break
       case 'ช่าง':
         statSTR += faker.number.int({ min: 10, max: 20 })
         statDEX += faker.number.int({ min: 5, max: 15 })
+        personaTraits =
+          'practical eyes, short hair, determined face, and strong build'
         break
     }
 
@@ -666,6 +1069,7 @@ export async function createCharacters(users: any[], jobClasses: any[]) {
         statVIT,
         statINT,
         currentPortraitUrl: currentUrl,
+        personaTraits,
         userId: user.id,
         jobClassId: jobClass.id,
         jobLevelId: selectedJobLevel.id,
