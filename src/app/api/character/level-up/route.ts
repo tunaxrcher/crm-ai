@@ -4,9 +4,8 @@ import { characterService } from '@src/features/character/service/server'
 
 export async function POST(_request: NextRequest) {
   try {
-    const characterId = 1
 
-    const result = await characterService.levelUp(characterId)
+    const result = await characterService.levelUp()
 
     return NextResponse.json({
       success: true,

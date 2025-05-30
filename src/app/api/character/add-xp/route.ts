@@ -12,10 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid XP amount' }, { status: 400 })
     }
 
-    // ในที่นี้ hardcode characterId = 1 เพื่อทดสอบ
-    const characterId = 1
-
-    const result = await characterService.addXP(characterId, amount)
+    const result = await characterService.addXP(amount)
 
     return NextResponse.json({
       success: true,

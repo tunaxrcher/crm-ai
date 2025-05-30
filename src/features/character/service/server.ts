@@ -121,14 +121,18 @@ export class CharacterService extends BaseService {
   /**
    * เพิ่ม XP (แยกการคำนวณออกจากการเลเวลอัพ)
    */
-  async addXP(characterId: number, amount: number) {
+  async addXP(amount: number) {
     const session = await getServerSession()
     const userId = +session.user.id
 
     console.log(`[Server] addXP To Character with ID: ${userId}`)
 
+    const userCharacter = await characterRepository.findByUserId(userId)
+    if (!userCharacter) throw new Error('User Character not found')
+    const characterId = userCharacter.id
+
     const character =
-      await CharacterRepository.findByIdWithJobLevels(characterId)
+      await characterRepository.findByIdWithJobLevels(characterId)
     if (!character) throw new Error('Character not found')
 
     let newCurrentXP = character.currentXP + amount
@@ -149,7 +153,7 @@ export class CharacterService extends BaseService {
 
     // อัพเดท XP เบื้องต้น (ยังไม่รวม stats)
     const updatedCharacter =
-      await CharacterRepository.updateCharacterWithPortraitAndJob(characterId, {
+      await characterRepository.updateCharacterWithPortraitAndJob(characterId, {
         currentXP: newCurrentXP,
         level: newLevel,
         totalXP: newTotalXP,
@@ -222,14 +226,18 @@ export class CharacterService extends BaseService {
   /**
    * เลเวลอัพ (เรียกใช้ processLevelUp)
    */
-  async levelUp(characterId: number) {
+  async levelUp() {
     const session = await getServerSession()
     const userId = +session.user.id
 
     console.log(`[Server] levelUp To Character with ID: ${userId}`)
 
+    const userCharacter = await characterRepository.findByUserId(userId)
+    if (!userCharacter) throw new Error('User Character not found')
+    const characterId = userCharacter.id
+
     const character =
-      await CharacterRepository.findByIdWithJobLevels(characterId)
+      await characterRepository.findByIdWithJobLevels(characterId)
     if (!character) throw new Error('Character not found')
 
     const oldLevel = character.level
@@ -259,8 +267,8 @@ export class CharacterService extends BaseService {
     newLevel: number,
     shouldUpdateLevel: boolean = true
   ) {
-    const character =
-      await CharacterRepository.findByIdWithJobLevels(characterId)
+
+    const character = await characterRepository.findByIdWithJobLevels(characterId)
     if (!character) throw new Error('Character not found')
 
     console.log(
@@ -286,7 +294,7 @@ export class CharacterService extends BaseService {
 
     if (unlockedClassLevel) {
       updatedPortraits = PortraitHelper.updateGeneratedPortraits(
-        character.generatedPortraits,
+        character.originalFaceImage,
         unlockedClassLevel
       )
 
@@ -306,7 +314,7 @@ export class CharacterService extends BaseService {
     )
 
     // สร้าง Level History
-    const levelHistory = await CharacterRepository.createLevelHistory({
+    const levelHistory = await characterRepository.createLevelHistory({
       characterId,
       levelFrom: oldLevel,
       levelTo: newLevel,
@@ -347,7 +355,7 @@ export class CharacterService extends BaseService {
 
     // อัพเดท Character
     const updatedCharacter =
-      await CharacterRepository.updateCharacterWithPortraitAndJob(
+      await characterRepository.updateCharacterWithPortraitAndJob(
         characterId,
         updateData
       )
@@ -372,7 +380,7 @@ export class CharacterService extends BaseService {
         : statGains.reasoning
     feedContent += ` | 🤖 ${shortReasoning}`
 
-    await CharacterRepository.createFeedItem({
+    await characterRepository.createFeedItem({
       content: feedContent,
       type: 'level_up',
       mediaType: 'text',
@@ -398,15 +406,15 @@ export class CharacterService extends BaseService {
    */
   async submitDailyQuest(characterId: number) {
     const character =
-      await CharacterRepository.findByIdWithJobLevels(characterId)
+      await characterRepository.findByIdWithJobLevels(characterId)
     if (!character) throw new Error('Character not found')
 
     // หา daily quest
-    const dailyQuest = await CharacterRepository.findActiveDailyQuest()
+    const dailyQuest = await characterRepository.findActiveDailyQuest()
     if (!dailyQuest) throw new Error('No daily quest available')
 
     // เช็ค assigned quest
-    let assignedQuest = await CharacterRepository.findAssignedQuest(
+    let assignedQuest = await characterRepository.findAssignedQuest(
       characterId,
       dailyQuest.id,
       'active'
@@ -414,7 +422,7 @@ export class CharacterService extends BaseService {
 
     // สร้าง assigned quest ถ้าไม่มี
     if (!assignedQuest) {
-      assignedQuest = await CharacterRepository.createAssignedQuest({
+      assignedQuest = await characterRepository.createAssignedQuest({
         questId: dailyQuest.id,
         characterId,
         userId: character.userId,
@@ -424,7 +432,7 @@ export class CharacterService extends BaseService {
     }
 
     // สร้าง Quest Submission
-    const questSubmission = await CharacterRepository.createQuestSubmission({
+    const questSubmission = await characterRepository.createQuestSubmission({
       mediaType: 'text',
       description: `Completed daily quest: ${dailyQuest.title}`,
       ratingAGI: Math.floor(Math.random() * 5) + 1,
@@ -438,7 +446,7 @@ export class CharacterService extends BaseService {
     })
 
     // อัพเดทสถานะ assigned quest
-    await CharacterRepository.updateAssignedQuest(assignedQuest.id, {
+    await characterRepository.updateAssignedQuest(assignedQuest.id, {
       status: 'completed',
     })
 
@@ -446,7 +454,7 @@ export class CharacterService extends BaseService {
     const xpResult = await this.addXP(characterId, dailyQuest.xpReward)
 
     // สร้าง Feed Item
-    await CharacterRepository.createFeedItem({
+    await characterRepository.createFeedItem({
       content: `${character.user.name} ได้ทำเควส "${dailyQuest.title}" สำเร็จและได้รับ ${dailyQuest.xpReward} XP!`,
       type: 'quest_completion',
       mediaType: 'text',
@@ -455,7 +463,7 @@ export class CharacterService extends BaseService {
     })
 
     // จัดการ tokens
-    await CharacterRepository.createQuestToken({
+    await characterRepository.createQuestToken({
       userId: character.userId,
       questId: dailyQuest.id,
       characterId,
@@ -464,9 +472,9 @@ export class CharacterService extends BaseService {
       multiplier: 1.0,
     })
 
-    const userToken = await CharacterRepository.findUserToken(character.userId)
+    const userToken = await characterRepository.findUserToken(character.userId)
     if (userToken) {
-      await CharacterRepository.updateUserToken(character.userId, {
+      await characterRepository.updateUserToken(character.userId, {
         currentTokens: userToken.currentTokens + dailyQuest.baseTokenReward,
         totalEarnedTokens:
           userToken.totalEarnedTokens + dailyQuest.baseTokenReward,
@@ -532,8 +540,7 @@ export class CharacterService extends BaseService {
         jobClass.name,
         jobClass.levels,
         undefined,
-        personaTraits,
-        '2'
+        personaTraits
       )
     } else if (portraitType === 'upload' && faceImageUrl) {
       // ใช้ภาพที่ upload มาเป็น reference
@@ -541,8 +548,7 @@ export class CharacterService extends BaseService {
         jobClass.name,
         jobClass.levels,
         faceImageUrl,
-        personaTraits,
-        '2'
+        personaTraits
       )
     }
 
