@@ -153,22 +153,12 @@ export class ReplicateService {
     let model: ReplicateModelConfig | undefined
 
     if (preferredModelId) model = getModelById(preferredModelId)
-    console.log('Debug preferredModelId', preferredModelId)
+    console.log('Debug preferredModelId', model)
 
     if (!model) model = selectBestModel(!!faceImage)
     console.log('Debug model', model)
 
     console.log(`[Replicate] Selected model: ${model.id}`)
-
-    // สร้าง dynamic prompt
-    // const prompt = openAIVisionService.generateDynamicPrompt(
-    //   jobClass,
-    //   level,
-    //   classLevel,
-    //   personaTraits || 'professional appearance with confident demeanor',
-    //   jobLevel.personaDescription ||
-    //     'Looks weak, torn clothes, mismatched outfit, flip-flops, useless tools'
-    // )
 
     const style = 'Use a 3D cartoon, semi-realistic, Pixar-style illustration.'
 
@@ -176,6 +166,7 @@ export class ReplicateService {
         Create an avatar of a character, profession: ${jobClassName}, EVX level ${level} (Class ${classLevel}), based on the user's input photo. 
 
         ${style}
+        full-body shot, from head to toe, full length, standing pose, full figure, complete legs and feet, no cropping, centered composition, camera view from distance, see all limbs
 
         The character should be stylized but believable. The final image must show the entire body from head to toe, in full-body composition with warm lighting and clean background.
 

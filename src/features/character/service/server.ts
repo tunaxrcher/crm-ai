@@ -1,7 +1,6 @@
 import { userService } from '@src/features/user/service/server'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
-import { s3UploadService } from '@src/lib/service/s3UploadService'
 import { BaseService } from '@src/lib/service/server/baseService'
 import bcrypt from 'bcrypt'
 import 'server-only'
@@ -17,12 +16,10 @@ import {
   jobLevelRepository,
 } from '../repository'
 import {
-  Character,
   CharacterConfirmPayload,
   CharacterConfirmResponse,
   CharacterGenerateResponse,
   GeneratedPortrait,
-  JobLevel,
 } from '../types'
 import { openAIVisionService } from './openaiVisionService'
 import { replicateService } from './replicateService'
@@ -43,6 +40,82 @@ export class CharacterService extends BaseService {
     }
 
     return CharacterService.instance
+  }
+
+  /**
+   * Calculate XP required for a specific level
+   * Formula: baseXP * level^rate
+   */
+  private calculateXPForLevel(level: number): number {
+    const baseXP = 50
+    const rate = 1.45
+    return Math.floor(baseXP * Math.pow(level, rate))
+  }
+
+  /**
+   * Create a new character
+   */
+  private async createCharacter(params: {
+    userId: number
+    name: string
+    jobClassId: number
+    jobLevelId: number
+    portraitUrl: string
+    originalFaceImage?: string
+    personaTraits: string
+  }): Promise<any> {
+    const {
+      userId,
+      name,
+      jobClassId,
+      jobLevelId,
+      portraitUrl,
+      originalFaceImage,
+      personaTraits,
+    } = params
+
+    // Calculate starting XP values
+    const level = 1
+    const currentXP = 0
+    const nextLevelXP = this.calculateXPForLevel(level + 1)
+    const totalXP = 0
+
+    // เตรียม generatedPortraits โดยใช้รูปเดียวกันสำหรับทุก level
+    const generatedPortraits: Record<string, string> = {
+      '1': portraitUrl,
+      '10': '', // ว่างไว้ก่อน จะ generate เมื่อถึง level
+      '35': '',
+      '60': '',
+      '80': '',
+      '99': '',
+    }
+
+    // สร้าง character
+    const character = await prisma.character.create({
+      data: {
+        name,
+        level,
+        currentXP,
+        nextLevelXP,
+        totalXP,
+        statPoints: 0,
+        statAGI: 0,
+        statSTR: 0,
+        statDEX: 0,
+        statVIT: 0,
+        statINT: 0,
+        currentPortraitUrl: portraitUrl,
+        customPortrait: true,
+        originalFaceImage: originalFaceImage || null,
+        generatedPortraits,
+        personaTraits,
+        userId,
+        jobClassId,
+        jobLevelId,
+      },
+    })
+
+    return character
   }
 
   /**
@@ -414,6 +487,17 @@ export class CharacterService extends BaseService {
   }
 
   /**
+   * Calculate total cumulative XP required to reach a level
+   */
+  private calculateTotalXPForLevel(level: number): number {
+    let totalXP = 0
+    for (let i = 1; i <= level; i++) {
+      totalXP += this.calculateXPForLevel(i)
+    }
+    return totalXP
+  }
+
+  /**
    * Generate character portraits using AI
    */
   async generateCharacterPortraits(
@@ -466,7 +550,6 @@ export class CharacterService extends BaseService {
     const sessionId = `char_gen_${Date.now()}_${Math.random().toString(36).substring(7)}`
 
     // เก็บข้อมูลใน cache หรือ session storage
-    // ในตัวอย่างนี้จะใช้ memory cache ง่ายๆ
     global.characterGenerationSessions =
       global.characterGenerationSessions || {}
     global.characterGenerationSessions[sessionId] = {
@@ -474,7 +557,7 @@ export class CharacterService extends BaseService {
       name,
       portraits,
       originalFaceImage: faceImageUrl,
-      personaTraits, // เก็บ persona traits ที่วิเคราะห์ได้
+      personaTraits,
       createdAt: new Date(),
     }
 
@@ -498,14 +581,18 @@ export class CharacterService extends BaseService {
   async confirmCharacterCreation(
     payload: CharacterConfirmPayload
   ): Promise<CharacterConfirmResponse> {
-    // const session = await getServerSession()
-
     const jobClassId = payload.jobClassId
-    let userId: number
-    let credentials: { username: string; password: string } | undefined
+
+    // ดึงข้อมูล job class และ first job level
+    const jobClass = await jobClassRepository.findById(jobClassId)
+    if (!jobClass || jobClass.levels.length === 0) {
+      throw new Error('Invalid job class')
+    }
+
+    const firstJobLevel = jobClass.levels[0]
 
     // สร้าง user ใหม่
-    const rawPassword = Math.random().toString(36).substring(2, 15) // สร้าง password แบบสุ่ม
+    const rawPassword = Math.random().toString(36).substring(2, 15)
     const hashedPassword = await bcrypt.hash(rawPassword, 10)
     const username =
       payload.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now()
@@ -521,36 +608,12 @@ export class CharacterService extends BaseService {
         xp: 0,
       },
     })
-    userId = newUser.id
 
-    // เก็บ credentials เพื่อส่งกลับให้ frontend
-    credentials = { username, password: rawPassword }
-
-    // ดึงข้อมูล job class และ first job level
-    const jobClass = await jobClassRepository.findById(jobClassId)
-    if (!jobClass) throw new Error('Job class not found')
-
-    if (!jobClass || jobClass.levels.length === 0)
-      throw new Error('Invalid job class')
-
-    const firstJobLevel = jobClass.levels[0]
-
-    // เตรียม generatedPortraits โดยใช้รูปเดียวกันสำหรับทุก level
-    const generatedPortraits: Record<string, string> = {
-      '1': payload.portraitUrl,
-      '10': '', // ว่างไว้ก่อน จะ generate เมื่อถึง level
-      '35': '',
-      '60': '',
-      '80': '',
-      '99': '',
-    }
-
-    // ถ้ามี originalFaceImage จาก payload ให้ใช้ ไม่งั้นดึงจาก session
+    // ดึงข้อมูลจาก session ถ้ามี
     let originalFaceImage = payload.originalFaceImage
-    let personaTraits = this.generatePersonaTraits(jobClass.name) // default traits
+    let personaTraits = this.generatePersonaTraits(jobClass.name)
 
     if (global.characterGenerationSessions) {
-      // ลองหา session data
       const sessions = Object.values(global.characterGenerationSessions)
       const recentSession = sessions.find(
         (s: any) =>
@@ -563,36 +626,22 @@ export class CharacterService extends BaseService {
     }
 
     // สร้าง character
-    const character = await prisma.character.create({
-      data: {
-        name: payload.name,
-        level: 1,
-        currentXP: 0,
-        nextLevelXP: 1000,
-        totalXP: 0,
-        statPoints: 0,
-        statAGI: 10,
-        statSTR: 10,
-        statDEX: 10,
-        statVIT: 10,
-        statINT: 10,
-        currentPortraitUrl: payload.portraitUrl,
-        customPortrait: true,
-        originalFaceImage: originalFaceImage || null,
-        generatedPortraits: generatedPortraits,
-        personaTraits: personaTraits,
-        userId,
-        jobClassId: payload.jobClassId,
-        jobLevelId: firstJobLevel.id,
-      },
+    const character = await this.createCharacter({
+      userId: newUser.id,
+      name: payload.name,
+      jobClassId: payload.jobClassId,
+      jobLevelId: firstJobLevel.id,
+      portraitUrl: payload.portraitUrl,
+      originalFaceImage,
+      personaTraits,
     })
 
     // สร้าง user token
     await prisma.userToken.create({
       data: {
-        userId,
-        currentTokens: 100, // เริ่มต้นให้ 100 tokens
-        totalEarnedTokens: 100,
+        userId: newUser.id,
+        currentTokens: 0,
+        totalEarnedTokens: 0,
         totalSpentTokens: 0,
       },
     })
@@ -600,7 +649,7 @@ export class CharacterService extends BaseService {
     // สร้าง quest streak
     await prisma.questStreak.create({
       data: {
-        userId,
+        userId: newUser.id,
         currentStreak: 0,
         longestStreak: 0,
       },
@@ -609,9 +658,62 @@ export class CharacterService extends BaseService {
     return {
       success: true,
       character,
-      userId,
+      userId: newUser.id,
       message: 'Character created successfully',
-      credentials, // ส่ง credentials กลับถ้ามีการสร้าง user ใหม่
+      credentials: { username, password: rawPassword },
+    }
+  }
+
+  /**
+   * Add XP to character and handle level up
+   */
+  async addXPToCharacter(
+    characterId: number,
+    xpToAdd: number
+  ): Promise<{
+    leveledUp: boolean
+    newLevel?: number
+    currentXP: number
+    nextLevelXP: number
+  }> {
+    const character = await prisma.character.findUnique({
+      where: { id: characterId },
+    })
+
+    if (!character) {
+      throw new Error('Character not found')
+    }
+
+    let currentXP = character.currentXP + xpToAdd
+    let totalXP = character.totalXP + xpToAdd
+    let level = character.level
+    let leveledUp = false
+
+    // Check for level up
+    while (currentXP >= character.nextLevelXP) {
+      currentXP -= character.nextLevelXP
+      level++
+      leveledUp = true
+    }
+
+    const nextLevelXP = this.calculateXPForLevel(level + 1)
+
+    // Update character
+    await prisma.character.update({
+      where: { id: characterId },
+      data: {
+        level,
+        currentXP,
+        nextLevelXP,
+        totalXP,
+      },
+    })
+
+    return {
+      leveledUp,
+      newLevel: leveledUp ? level : undefined,
+      currentXP,
+      nextLevelXP,
     }
   }
 
@@ -635,6 +737,7 @@ export class CharacterService extends BaseService {
     )
   }
 }
+
 export const characterService = CharacterService.getInstance()
 
 export class JobClassService extends BaseService {
