@@ -22,16 +22,21 @@ import {
   TabsTrigger,
 } from '@src/components/ui/tabs'
 import { useGetJobClass } from '@src/features/character/hook/api'
-import { JobClass } from '@src/features/character/types'
+import { characterService } from '@src/features/character/service/client'
+import { CharacterConfirmPayload, CharacterConfirmResponse, CharacterCreatePayload, GeneratedPortrait, JobClass } from '@src/features/character/types'
+import { useMutation } from '@tanstack/react-query'
 import {
   BadgePercent,
   Briefcase,
   ChevronRight,
   LineChart,
+  Loader2,
   Receipt,
   Upload,
   UserCircle2,
 } from 'lucide-react'
+import { signIn } from 'next-auth/react'
+import { toast } from 'sonner'
 
 export default function CharacterCreation() {
   const router = useRouter()
@@ -41,10 +46,16 @@ export default function CharacterCreation() {
   )
   const [characterName, setCharacterName] = useState<string>('')
   const [portrait, setPortrait] = useState<'upload' | 'generate'>('upload')
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [generatedPortraits, setGeneratedPortraits] = useState<
+    GeneratedPortrait[]
+  >([])
+  const [selectedPortrait, setSelectedPortrait] =
+    useState<GeneratedPortrait | null>(null)
+  const [sessionId, setSessionId] = useState<string>('')
 
   // Fetch job classes from API
-  // const { jobClasses, isLoading, error, refetchJobClasses } = useJobClasses()
   const {
     data: jobClasses,
     isLoading,
@@ -52,9 +63,59 @@ export default function CharacterCreation() {
     refetch: refetchJobClasses,
   } = useGetJobClass()
 
+  // Mutation for generating portraits
+  const generateMutation = useMutation({
+    mutationFn: (payload: CharacterCreatePayload) =>
+      characterService.generatePortraits(payload),
+    onSuccess: (data) => {
+      setGeneratedPortraits(data.portraits)
+      setSessionId(data.sessionId)
+      setCurrentStep(4)
+    },
+    onError: (error) => {
+      toast.error('Failed to generate portraits')
+      console.error(error)
+    },
+  })
+
+  // Mutation for confirming character
+  const confirmMutation = useMutation({
+    mutationFn: (payload: CharacterConfirmPayload) =>
+      characterService.confirmCharacter(payload),
+    onSuccess: async (data: CharacterConfirmResponse) => {
+      // ถ้ามี credentials (user ใหม่) ให้ login อัตโนมัติ
+      if (data.credentials) {
+        const result = await signIn('credentials', {
+          username: data.credentials.username,
+          password: data.credentials.password,
+          redirect: false,
+        })
+
+        if (result?.ok) {
+          toast.success('Character created and logged in successfully!')
+          router.push('/quest')
+        } else {
+          toast.error(
+            'Character created but failed to login. Please login manually.'
+          )
+          router.push('/auth/login')
+        }
+      } else {
+        // ถ้าเป็น user เก่า redirect ไปหน้า quest เลย
+        toast.success('Character created successfully!')
+        router.push('/quest')
+      }
+    },
+    onError: (error) => {
+      toast.error('Failed to create character')
+      console.error(error)
+    },
+  })
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setUploadedFile(file)
       const imageUrl = URL.createObjectURL(file)
       setUploadedImage(imageUrl)
     }
@@ -64,14 +125,40 @@ export default function CharacterCreation() {
     setSelectedJobClassId(jobClassId)
   }
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (currentStep === 1 && selectedJobClassId) {
       setCurrentStep(2)
     } else if (currentStep === 2 && characterName.trim() !== '') {
       setCurrentStep(3)
     } else if (currentStep === 3) {
-      // In a real app, we would save the character data to backend
-      router.push('/quest')
+      // Generate portraits
+      const payload: CharacterCreatePayload = {
+        jobClassId: selectedJobClassId!,
+        name: characterName,
+        portraitType: portrait,
+        ...(portrait === 'upload' && uploadedFile
+          ? { file: uploadedFile }
+          : {}),
+      }
+
+      await generateMutation.mutate(payload)
+    } else if (currentStep === 4 && selectedPortrait) {
+      // Confirm character creation
+      const generatedPortraitsMap: Record<string, string> = {}
+      generatedPortraits.forEach((p) => {
+        const level = p.id.split('_')[1]
+        generatedPortraitsMap[level] = p.url
+      })
+
+      const payload: CharacterConfirmPayload = {
+        jobClassId: parseInt(selectedJobClassId!),
+        name: characterName,
+        portraitUrl: selectedPortrait.url,
+        originalFaceImage: undefined, // จะได้มาจาก session ที่ server
+        generatedPortraits: generatedPortraitsMap,
+      }
+
+      await confirmMutation.mutate(payload)
     }
   }
 
@@ -330,8 +417,99 @@ export default function CharacterCreation() {
               className="flex-1">
               ย้อนกลับ
             </Button>
-            <Button className="flex-1 ai-gradient-bg" onClick={handleNextStep}>
-              สร้างตัวละคร
+            <Button
+              className="flex-1 ai-gradient-bg"
+              onClick={handleNextStep}
+              disabled={generateMutation.isPending}>
+              {generateMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังสร้าง...
+                </>
+              ) : (
+                'สร้างตัวละคร'
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Select Generated Portrait */}
+      {currentStep === 4 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold mb-4">ตัวละครของคุณ</h2>
+
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <div className="flex flex-col items-center">
+                {generatedPortraits.length > 0 && (
+                  <>
+                    <img
+                      src={generatedPortraits[0].url}
+                      alt="Generated character"
+                      className="w-48 h-48 object-cover rounded-full mb-4 border-4 ai-gradient-border"
+                    />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Model: {generatedPortraits[0].model}
+                    </p>
+                  </>
+                )}
+
+                <div className="w-full bg-secondary/30 rounded-lg p-4 text-center">
+                  <p className="text-sm mb-2">
+                    ชื่อ:{' '}
+                    <span className="ai-gradient-text font-semibold">
+                      {characterName}
+                    </span>
+                  </p>
+                  <p className="text-sm mb-2">
+                    อาชีพ:{' '}
+                    <span className="ai-gradient-text font-semibold">
+                      {selectedJobClass?.name}
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    Level 1:{' '}
+                    <span className="ai-gradient-text font-semibold">
+                      {selectedJobClass?.levels[0]?.title}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="text-center text-sm text-muted-foreground">
+            <p>ระบบได้สร้างตัวละครให้คุณแล้ว</p>
+            <p>รูปตัวละครจะเปลี่ยนไปตามระดับที่สูงขึ้น</p>
+          </div>
+
+          <div className="flex space-x-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentStep(3)}
+              className="flex-1">
+              ย้อนกลับ
+            </Button>
+            <Button
+              className="flex-1 ai-gradient-bg"
+              onClick={() => {
+                if (generatedPortraits.length > 0) {
+                  setSelectedPortrait(generatedPortraits[0])
+                  handleNextStep()
+                }
+              }}
+              disabled={
+                generatedPortraits.length === 0 || confirmMutation.isPending
+              }>
+              {confirmMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลังสร้าง...
+                </>
+              ) : (
+                'ยืนยันการสร้าง'
+              )}
             </Button>
           </div>
         </div>

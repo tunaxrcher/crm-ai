@@ -72,3 +72,41 @@ export interface LevelRequirement {
   level: number
   requiredXP: number
 }
+
+export interface CharacterCreatePayload {
+  jobClassId: string
+  name: string
+  portraitType: 'upload' | 'generate'
+  file?: File
+}
+
+export interface CharacterConfirmPayload {
+  jobClassId: number
+  name: string
+  portraitUrl: string
+  originalFaceImage?: string
+  generatedPortraits: Record<string, string>
+}
+
+export interface GeneratedPortrait {
+  id: string
+  url: string
+  prompt: string
+  model: string
+}
+
+export interface CharacterGenerateResponse {
+  portraits: GeneratedPortrait[]
+  sessionId: string
+}
+
+export interface CharacterConfirmResponse {
+  success: boolean
+  character: any
+  userId: number
+  message: string
+  credentials?: {
+    username: string
+    password: string
+  }
+}
