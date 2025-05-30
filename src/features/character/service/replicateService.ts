@@ -8,8 +8,8 @@ import {
   replicateModels,
   selectBestModel,
 } from '../config/replicateModels'
-import { openAIVisionService } from './openaiVisionService'
 import { GeneratedPortrait } from '../types'
+import { openAIVisionService } from './openaiVisionService'
 
 export class ReplicateService {
   private static instance: ReplicateService
@@ -36,6 +36,7 @@ export class ReplicateService {
     additionalParams?: Partial<ModelInputParams>
   ): Promise<string> {
     // เตรียม input params
+
     const inputParams: ModelInputParams = {
       prompt,
       faceImage,
@@ -79,9 +80,7 @@ export class ReplicateService {
     // รอผลลัพธ์
     const result = await this.waitForPrediction(prediction.id)
 
-    if (result.error) {
-      throw new Error(`Prediction failed: ${result.error}`)
-    }
+    if (result.error) throw new Error(`Prediction failed: ${result.error}`)
 
     // ดึง output ตาม model
     const imageUrl = model.outputExtractor(result.output)
@@ -91,7 +90,7 @@ export class ReplicateService {
   }
 
   private async waitForPrediction(predictionId: string): Promise<any> {
-    const maxAttempts = 120 // รอสูงสุด 2 นาที
+    const maxAttempts = 300 // รอสูงสุด 2 นาที
     let attempts = 0
 
     while (attempts < maxAttempts) {
@@ -135,8 +134,8 @@ export class ReplicateService {
     throw new Error('Prediction timeout')
   }
 
-  async generatePortraitsForAllLevels(
-    jobClass: string,
+  async generatePortraits(
+    jobClassName: string,
     jobLevels: any[],
     faceImage?: string,
     personaTraits?: string,
@@ -147,41 +146,53 @@ export class ReplicateService {
     // สร้างภาพเฉพาะ level 1 เท่านั้น
     const level = 1
     const classLevel = 1
+
     const jobLevel = jobLevels[0] // ใช้ job level แรก
 
     // เลือก model
     let model: ReplicateModelConfig | undefined
 
-    if (preferredModelId) {
-      model = getModelById(preferredModelId)
-    }
+    if (preferredModelId) model = getModelById(preferredModelId)
+    console.log('Debug preferredModelId', preferredModelId)
 
-    if (!model) {
-      // เลือก model อัตโนมัติตามเงื่อนไข
-      model = selectBestModel(!!faceImage)
-    }
+    if (!model) model = selectBestModel(!!faceImage)
+    console.log('Debug model', model)
 
     console.log(`[Replicate] Selected model: ${model.id}`)
 
     // สร้าง dynamic prompt
-    const prompt = openAIVisionService.generateDynamicPrompt(
-      jobClass,
-      level,
-      classLevel,
-      personaTraits || 'professional appearance with confident demeanor',
-      jobLevel.personaDescription ||
-        'Looks weak, torn clothes, mismatched outfit, flip-flops, useless tools'
-    )
+    // const prompt = openAIVisionService.generateDynamicPrompt(
+    //   jobClass,
+    //   level,
+    //   classLevel,
+    //   personaTraits || 'professional appearance with confident demeanor',
+    //   jobLevel.personaDescription ||
+    //     'Looks weak, torn clothes, mismatched outfit, flip-flops, useless tools'
+    // )
+
+    const style = 'Use a 3D cartoon, semi-realistic, Pixar-style illustration.'
+
+    const prompt = `
+        Create an avatar of a character, profession: ${jobClassName}, EVX level ${level} (Class ${classLevel}), based on the user's input photo. 
+
+        ${style}
+
+        The character should be stylized but believable. The final image must show the entire body from head to toe, in full-body composition with warm lighting and clean background.
+
+        Character traits: ${personaTraits}
+
+        ${jobLevel.personaDescription}
+        
+        Keep the same facial structure, image size, character scale, and overall art style across all class evolutions. Only the expression, pose, outfit, and gear may change to reflect progression.
+    `
+
+    console.log(prompt)
 
     try {
       const imageUrl = await this.generatePortraitWithModel(
         model,
         prompt,
-        faceImage,
-        {
-          style: 'ghibli_style', // สำหรับ instant-character
-          negativePrompt: 'nsfw, ugly, deformed, blurry, low quality',
-        }
+        faceImage
       )
 
       portraits.push({
@@ -192,45 +203,6 @@ export class ReplicateService {
       })
     } catch (error) {
       console.error(`Failed to generate portrait for level ${level}:`, error)
-
-      // ลองใช้ model อื่น
-      const fallbackModels = replicateModels.filter((m) => m.id !== model!.id)
-
-      for (const fallbackModel of fallbackModels) {
-        try {
-          console.log(`[Replicate] Trying fallback model: ${fallbackModel.id}`)
-
-          const imageUrl = await this.generatePortraitWithModel(
-            fallbackModel,
-            prompt,
-            faceImage
-          )
-
-          portraits.push({
-            id: `portrait_${level}`,
-            url: imageUrl,
-            prompt: prompt,
-            model: fallbackModel.id,
-          })
-
-          break // สำเร็จแล้ว ออกจาก loop
-        } catch (fallbackError) {
-          console.error(
-            `Fallback model ${fallbackModel.id} also failed:`,
-            fallbackError
-          )
-        }
-      }
-
-      // ถ้าทุก model ล้มเหลว ใช้ placeholder
-      if (portraits.length === 0) {
-        portraits.push({
-          id: `portrait_${level}`,
-          url: `https://source.unsplash.com/400x400/?portrait,${jobClass},level${level}`,
-          prompt: 'Failed to generate',
-          model: 'placeholder',
-        })
-      }
     }
 
     return portraits

@@ -1,6 +1,6 @@
 // src/features/quest/service/server.ts
 import { characterService } from '@src/features/character/service/server'
-import { getDevSession, getServerSession } from '@src/lib/auth'
+import { getServerSession } from '@src/lib/auth'
 import { openaiService } from '@src/lib/service/openaiService'
 import { s3UploadService } from '@src/lib/service/s3UploadService'
 import { BaseService } from '@src/lib/service/server/baseService'
@@ -107,7 +107,7 @@ export class QuestService extends BaseService {
 
   // ดึงภารกิจสำหรับ user
   async getQuestsForUser(): Promise<QuestListResponse> {
-    const session = (await getServerSession()) || (await getDevSession())
+    const session = await getServerSession()
     const userId = +session.user.id
 
     try {

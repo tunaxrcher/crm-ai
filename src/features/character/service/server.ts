@@ -1,5 +1,5 @@
 import { userService } from '@src/features/user/service/server'
-import { getDevSession, getServerSession } from '@src/lib/auth'
+import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
 import { s3UploadService } from '@src/lib/service/s3UploadService'
 import { BaseService } from '@src/lib/service/server/baseService'
@@ -49,7 +49,7 @@ export class CharacterService extends BaseService {
    * เพิ่ม XP (แยกการคำนวณออกจากการเลเวลอัพ)
    */
   async addXP(characterId: number, amount: number) {
-    const session = (await getServerSession()) || (await getDevSession())
+    const session = await getServerSession()
     const userId = +session.user.id
 
     console.log(`[Server] addXP To Character with ID: ${userId}`)
@@ -150,7 +150,7 @@ export class CharacterService extends BaseService {
    * เลเวลอัพ (เรียกใช้ processLevelUp)
    */
   async levelUp(characterId: number) {
-    const session = (await getServerSession()) || (await getDevSession())
+    const session = await getServerSession()
     const userId = +session.user.id
 
     console.log(`[Server] levelUp To Character with ID: ${userId}`)
@@ -426,11 +426,6 @@ export class CharacterService extends BaseService {
     const jobClass = await jobClassRepository.findById(jobClassId)
     if (!jobClass) throw new Error('Job class not found')
 
-    const jobLevels = await prisma.jobLevel.findMany({
-      where: { jobClassId },
-      orderBy: { level: 'asc' },
-    })
-
     let portraits: GeneratedPortrait[] = []
     let personaTraits: string = this.generatePersonaTraits(jobClass.name)
 
@@ -441,25 +436,29 @@ export class CharacterService extends BaseService {
       )
       const analysis =
         await openAIVisionService.analyzePersonaTraits(faceImageUrl)
-      personaTraits = analysis.fullDescription
-      console.log('[CharacterService] Persona traits:', personaTraits)
+      if (analysis) {
+        personaTraits = analysis.fullDescription
+        console.log('[CharacterService] Persona traits:', personaTraits)
+      }
     }
 
     if (portraitType === 'generate') {
       // ใช้ AI สร้างภาพ (แค่ level 1)
-      portraits = await replicateService.generatePortraitsForAllLevels(
+      portraits = await replicateService.generatePortraits(
         jobClass.name,
-        jobLevels,
+        jobClass.levels,
         undefined,
-        personaTraits
+        personaTraits,
+        '2'
       )
     } else if (portraitType === 'upload' && faceImageUrl) {
       // ใช้ภาพที่ upload มาเป็น reference
-      portraits = await replicateService.generatePortraitsForAllLevels(
+      portraits = await replicateService.generatePortraits(
         jobClass.name,
-        jobLevels,
+        jobClass.levels,
         faceImageUrl,
-        personaTraits
+        personaTraits,
+        '2'
       )
     }
 
@@ -499,65 +498,40 @@ export class CharacterService extends BaseService {
   async confirmCharacterCreation(
     payload: CharacterConfirmPayload
   ): Promise<CharacterConfirmResponse> {
-    const session = await getServerSession()
+    // const session = await getServerSession()
 
+    const jobClassId = payload.jobClassId
     let userId: number
     let credentials: { username: string; password: string } | undefined
 
-    // ถ้ายังไม่มี user ให้สร้างใหม่
-    if (!session) {
-      // สร้าง user ใหม่
-      const rawPassword = Math.random().toString(36).substring(2, 15) // สร้าง password แบบสุ่ม
-      const hashedPassword = await bcrypt.hash(rawPassword, 10)
-      const username =
-        payload.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now()
+    // สร้าง user ใหม่
+    const rawPassword = Math.random().toString(36).substring(2, 15) // สร้าง password แบบสุ่ม
+    const hashedPassword = await bcrypt.hash(rawPassword, 10)
+    const username =
+      payload.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now()
 
-      const newUser = await prisma.user.create({
-        data: {
-          email: `${username}@example.com`,
-          username,
-          password: hashedPassword,
-          name: payload.name,
-          avatar: payload.portraitUrl,
-          level: 1,
-          xp: 0,
-        },
-      })
-
-      userId = newUser.id
-
-      // เก็บ credentials เพื่อส่งกลับให้ frontend
-      credentials = {
+    const newUser = await prisma.user.create({
+      data: {
+        email: `${username}@test.com`,
         username,
-        password: rawPassword,
-      }
-    } else {
-      userId = parseInt(session.user.id)
-    }
-
-    // เช็คว่ามี character อยู่แล้วหรือไม่
-    const existingCharacter = await prisma.character.findUnique({
-      where: { userId },
-    })
-
-    if (existingCharacter) {
-      throw new Error('User already has a character')
-    }
-
-    // ดึงข้อมูล job class และ first job level
-    const jobClass = await prisma.jobClass.findUnique({
-      where: { id: payload.jobClassId },
-      include: {
-        levels: {
-          where: { level: 1 },
-          take: 1,
-        },
+        password: hashedPassword,
+        name: payload.name,
+        avatar: payload.portraitUrl,
+        level: 1,
+        xp: 0,
       },
     })
+    userId = newUser.id
 
-    if (!jobClass || jobClass.levels.length === 0) {
+    // เก็บ credentials เพื่อส่งกลับให้ frontend
+    credentials = { username, password: rawPassword }
+
+    // ดึงข้อมูล job class และ first job level
+    const jobClass = await jobClassRepository.findById(jobClassId)
+    if (!jobClass) throw new Error('Job class not found')
+
+    if (!jobClass || jobClass.levels.length === 0)
       throw new Error('Invalid job class')
-    }
 
     const firstJobLevel = jobClass.levels[0]
 

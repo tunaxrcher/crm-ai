@@ -23,7 +23,13 @@ import {
 } from '@src/components/ui/tabs'
 import { useGetJobClass } from '@src/features/character/hook/api'
 import { characterService } from '@src/features/character/service/client'
-import { CharacterConfirmPayload, CharacterConfirmResponse, CharacterCreatePayload, GeneratedPortrait, JobClass } from '@src/features/character/types'
+import {
+  CharacterConfirmPayload,
+  CharacterConfirmResponse,
+  CharacterCreatePayload,
+  GeneratedPortrait,
+  JobClass,
+} from '@src/features/character/types'
 import { useMutation } from '@tanstack/react-query'
 import {
   BadgePercent,
@@ -192,14 +198,22 @@ export default function CharacterCreation() {
     jobClasses.find((jc) => jc.id === selectedJobClassId) || null
 
   // Get job class icon
+  // ปรับให้ switch เช็คจาก jobClass.name (string, เช่น "นักการตลาด", "นักบัญชี" ฯลฯ)
   const getJobClassIcon = (jobClass: JobClass) => {
-    switch (jobClass.id) {
-      case 'jobclass-marketing':
+    switch (jobClass.name) {
+      case 'นักการตลาด':
+      case 'Marketing':
         return <BadgePercent className="h-8 w-8" />
-      case 'jobclass-sales':
+      case 'นักขาย':
+      case 'Sales':
         return <LineChart className="h-8 w-8" />
-      case 'jobclass-accounting':
+      case 'นักบัญชี':
+      case 'Accounting':
         return <Receipt className="h-8 w-8" />
+      case 'โปรแกรมเมอร์':
+      case 'Programmer':
+        return <UserCircle2 className="h-8 w-8" />
+      // เพิ่มตามสายอาชีพที่มีในระบบ
       default:
         return <Briefcase className="h-8 w-8" />
     }
@@ -208,10 +222,8 @@ export default function CharacterCreation() {
   return (
     <div className="p-4 max-w-md mx-auto">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold ai-gradient-text">
-          สร้างตัวละครของคุณ
-        </h1>
-        <p className="text-muted-foreground">ผ่านระบบ AI (ทดสอบ)</p>
+        <h1 className="text-2xl font-bold ai-gradient-text">หน้าทดสอบ</h1>
+        <p className="text-muted-foreground">Generate Character ผ่านระบบ AI</p>
       </div>
 
       <div className="flex justify-between items-center mb-8">
@@ -348,9 +360,9 @@ export default function CharacterCreation() {
             <TabsContent value="upload" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>อัปโหลดรูปตัวละครของคุณ</CardTitle>
+                  <CardTitle>อัปโหลดรูปคุณ</CardTitle>
                   <CardDescription>
-                    รูปภาพของคุณจะถูกใช้เป็นแหล่งอ้างอิงสำหรับรูปตัวละคร
+                    รูปภาพของคุณจะถูกใช้เป็นแหล่งอ้างอิง Character
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">

@@ -72,21 +72,21 @@ export const replicateModels: ReplicateModelConfig[] = [
   },
   {
     id: 'instant-character',
-    owner: 'zlnrt',
+    owner: 'tuannha',
     name: 'instant-character',
-    version: 'f8281de30234f6de8eb3a34c0b97ba7b96c3f5284b5f2ad27f5b1e97cfc9b00f',
+    version: 'df5eed34fa9c812acf62d3ca79874daf9b5e78c2bee11f4ada182a55dd5c1712',
     type: 'character-generator',
     supportsFaceImage: true,
     description: 'Instant Character Generator with face reference',
     inputMapper: (params) => ({
-      prompt: params.prompt,
-      subject_image: params.faceImage,
       lora: params.style || 'ghibli_style',
+      seed: params.seed || -1,
       width: params.width || 768,
       height: params.height || 1344,
+      prompt: params.prompt,
+      subject_image: params.faceImage,
       guidance_scale: params.guidanceScale || 3.5,
       num_inference_steps: params.numInferenceSteps || 28,
-      seed: params.seed || -1,
     }),
     outputExtractor: (output) => {
       if (Array.isArray(output)) return output[0]

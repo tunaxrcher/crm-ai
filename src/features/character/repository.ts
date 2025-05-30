@@ -69,6 +69,12 @@ export class JobClassRepository extends BaseRepository<JobClass> {
   async findById(id: number) {
     return this.prisma.jobClass.findUnique({
       where: { id },
+      include: {
+        levels: {
+          orderBy: { level: 'asc' },
+          take: 6,
+        },
+      },
     })
   }
 

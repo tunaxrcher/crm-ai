@@ -1,5 +1,5 @@
 // src/features/user/service/server.ts
-import { getDevSession, getServerSession } from '@src/lib/auth'
+import { getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/service/server/baseService'
 import 'server-only'
 
@@ -32,7 +32,7 @@ export class UserService extends BaseService {
   }
 
   async getUserCharacters() {
-    const session = (await getServerSession()) || (await getDevSession())
+    const session = await getServerSession()
     const userId = +session.user.id
 
     console.log(`[Server] Fetching User Character with ID: ${userId}`)

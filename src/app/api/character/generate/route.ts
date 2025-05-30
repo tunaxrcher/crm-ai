@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
           file,
           'character-portraits'
         )
+        
         faceImageUrl = uploadResult.url
       } catch (error) {
         console.error('Failed to upload face image:', error)
@@ -38,14 +39,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('Error generating character portraits:', error)
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Failed to generate portraits',
-      },
-      { status: 500 }
-    )
   }
 }

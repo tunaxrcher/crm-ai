@@ -6,6 +6,7 @@ declare global {
       name: string
       portraits: GeneratedPortrait[]
       originalFaceImage?: string
+      personaTraits?: string
       createdAt: Date
     }
   }
