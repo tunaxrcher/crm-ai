@@ -24,6 +24,7 @@ import {
   GeneratedPortrait,
   JobLevel,
 } from '../types'
+import { openAIVisionService } from './openaiVisionService'
 import { replicateService } from './replicateService'
 import { StatsAllocationService } from './statsAllocationService'
 
@@ -412,7 +413,7 @@ export class CharacterService extends BaseService {
     }
   }
 
- /**
+  /**
    * Generate character portraits using AI
    */
   async generateCharacterPortraits(
@@ -427,43 +428,60 @@ export class CharacterService extends BaseService {
 
     const jobLevels = await prisma.jobLevel.findMany({
       where: { jobClassId },
-      orderBy: { level: 'asc' }
+      orderBy: { level: 'asc' },
     })
 
     let portraits: GeneratedPortrait[] = []
+    let personaTraits: string = this.generatePersonaTraits(jobClass.name)
+
+    // ถ้ามีการ upload รูป ให้วิเคราะห์ด้วย OpenAI Vision
+    if (portraitType === 'upload' && faceImageUrl) {
+      console.log(
+        '[CharacterService] Analyzing uploaded image with OpenAI Vision...'
+      )
+      const analysis =
+        await openAIVisionService.analyzePersonaTraits(faceImageUrl)
+      personaTraits = analysis.fullDescription
+      console.log('[CharacterService] Persona traits:', personaTraits)
+    }
 
     if (portraitType === 'generate') {
       // ใช้ AI สร้างภาพ (แค่ level 1)
       portraits = await replicateService.generatePortraitsForAllLevels(
         jobClass.name,
-        jobLevels
+        jobLevels,
+        undefined,
+        personaTraits
       )
     } else if (portraitType === 'upload' && faceImageUrl) {
       // ใช้ภาพที่ upload มาเป็น reference
       portraits = await replicateService.generatePortraitsForAllLevels(
         jobClass.name,
         jobLevels,
-        faceImageUrl
+        faceImageUrl,
+        personaTraits
       )
     }
 
     // สร้าง session ID สำหรับเก็บข้อมูลชั่วคราว
     const sessionId = `char_gen_${Date.now()}_${Math.random().toString(36).substring(7)}`
-    
+
     // เก็บข้อมูลใน cache หรือ session storage
     // ในตัวอย่างนี้จะใช้ memory cache ง่ายๆ
-    global.characterGenerationSessions = global.characterGenerationSessions || {}
+    global.characterGenerationSessions =
+      global.characterGenerationSessions || {}
     global.characterGenerationSessions[sessionId] = {
       jobClassId,
       name,
       portraits,
-      originalFaceImage: faceImageUrl, // เก็บ S3 URL
-      createdAt: new Date()
+      originalFaceImage: faceImageUrl,
+      personaTraits, // เก็บ persona traits ที่วิเคราะห์ได้
+      createdAt: new Date(),
     }
 
     // ลบ session เก่าที่หมดอายุ (มากกว่า 1 ชั่วโมง)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-    Object.keys(global.characterGenerationSessions).forEach(key => {
+    Object.keys(global.characterGenerationSessions).forEach((key) => {
       if (global.characterGenerationSessions[key].createdAt < oneHourAgo) {
         delete global.characterGenerationSessions[key]
       }
@@ -471,26 +489,29 @@ export class CharacterService extends BaseService {
 
     return {
       portraits,
-      sessionId
+      sessionId,
     }
   }
 
   /**
    * Confirm and create character
    */
-  async confirmCharacterCreation(payload: CharacterConfirmPayload): Promise<CharacterConfirmResponse> {
+  async confirmCharacterCreation(
+    payload: CharacterConfirmPayload
+  ): Promise<CharacterConfirmResponse> {
     const session = await getServerSession()
-    
+
     let userId: number
     let credentials: { username: string; password: string } | undefined
-    
+
     // ถ้ายังไม่มี user ให้สร้างใหม่
     if (!session) {
       // สร้าง user ใหม่
       const rawPassword = Math.random().toString(36).substring(2, 15) // สร้าง password แบบสุ่ม
       const hashedPassword = await bcrypt.hash(rawPassword, 10)
-      const username = payload.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now()
-      
+      const username =
+        payload.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now()
+
       const newUser = await prisma.user.create({
         data: {
           email: `${username}@example.com`,
@@ -499,16 +520,16 @@ export class CharacterService extends BaseService {
           name: payload.name,
           avatar: payload.portraitUrl,
           level: 1,
-          xp: 0
-        }
+          xp: 0,
+        },
       })
-      
+
       userId = newUser.id
-      
+
       // เก็บ credentials เพื่อส่งกลับให้ frontend
       credentials = {
         username,
-        password: rawPassword
+        password: rawPassword,
       }
     } else {
       userId = parseInt(session.user.id)
@@ -516,7 +537,7 @@ export class CharacterService extends BaseService {
 
     // เช็คว่ามี character อยู่แล้วหรือไม่
     const existingCharacter = await prisma.character.findUnique({
-      where: { userId }
+      where: { userId },
     })
 
     if (existingCharacter) {
@@ -529,9 +550,9 @@ export class CharacterService extends BaseService {
       include: {
         levels: {
           where: { level: 1 },
-          take: 1
-        }
-      }
+          take: 1,
+        },
+      },
     })
 
     if (!jobClass || jobClass.levels.length === 0) {
@@ -543,23 +564,27 @@ export class CharacterService extends BaseService {
     // เตรียม generatedPortraits โดยใช้รูปเดียวกันสำหรับทุก level
     const generatedPortraits: Record<string, string> = {
       '1': payload.portraitUrl,
-      '10': '',  // ว่างไว้ก่อน จะ generate เมื่อถึง level
+      '10': '', // ว่างไว้ก่อน จะ generate เมื่อถึง level
       '35': '',
       '60': '',
       '80': '',
-      '99': ''
+      '99': '',
     }
 
     // ถ้ามี originalFaceImage จาก payload ให้ใช้ ไม่งั้นดึงจาก session
     let originalFaceImage = payload.originalFaceImage
-    if (!originalFaceImage && global.characterGenerationSessions) {
-      // ลองหา originalFaceImage จาก session (ถ้ามี)
+    let personaTraits = this.generatePersonaTraits(jobClass.name) // default traits
+
+    if (global.characterGenerationSessions) {
+      // ลองหา session data
       const sessions = Object.values(global.characterGenerationSessions)
-      const recentSession = sessions.find((s: any) => 
-        s.name === payload.name && s.jobClassId === payload.jobClassId
+      const recentSession = sessions.find(
+        (s: any) =>
+          s.name === payload.name && s.jobClassId === payload.jobClassId
       )
       if (recentSession) {
-        originalFaceImage = recentSession.originalFaceImage
+        originalFaceImage = recentSession.originalFaceImage || originalFaceImage
+        personaTraits = recentSession.personaTraits || personaTraits
       }
     }
 
@@ -581,11 +606,11 @@ export class CharacterService extends BaseService {
         customPortrait: true,
         originalFaceImage: originalFaceImage || null,
         generatedPortraits: generatedPortraits,
-        personaTraits: this.generatePersonaTraits(jobClass.name),
+        personaTraits: personaTraits,
         userId,
         jobClassId: payload.jobClassId,
-        jobLevelId: firstJobLevel.id
-      }
+        jobLevelId: firstJobLevel.id,
+      },
     })
 
     // สร้าง user token
@@ -594,8 +619,8 @@ export class CharacterService extends BaseService {
         userId,
         currentTokens: 100, // เริ่มต้นให้ 100 tokens
         totalEarnedTokens: 100,
-        totalSpentTokens: 0
-      }
+        totalSpentTokens: 0,
+      },
     })
 
     // สร้าง quest streak
@@ -603,8 +628,8 @@ export class CharacterService extends BaseService {
       data: {
         userId,
         currentStreak: 0,
-        longestStreak: 0
-      }
+        longestStreak: 0,
+      },
     })
 
     return {
@@ -612,21 +637,28 @@ export class CharacterService extends BaseService {
       character,
       userId,
       message: 'Character created successfully',
-      credentials // ส่ง credentials กลับถ้ามีการสร้าง user ใหม่
+      credentials, // ส่ง credentials กลับถ้ามีการสร้าง user ใหม่
     }
   }
 
   private generatePersonaTraits(jobClassName: string): string {
     const traits: Record<string, string> = {
-      'นักการตลาด': 'bright confident eyes, styled hair, charismatic smile, and energetic posture',
-      'นักบัญชี': 'focused eyes behind glasses, neat hair, serious expression, and organized appearance',
-      'นักขาย': 'friendly eyes, approachable smile, neat appearance, and persuasive charm',
-      'ดีไซน์เนอร์': 'creative eyes, artistic hairstyle, unique fashion sense, and innovative aura',
-      'โปรแกรมเมอร์': 'intelligent eyes, casual hair, focused expression, and tech-savvy appearance',
-      'ช่าง': 'practical eyes, short hair, determined face, and strong build'
+      นักการตลาด:
+        'bright confident eyes, styled hair, charismatic smile, and energetic posture',
+      นักบัญชี:
+        'focused eyes behind glasses, neat hair, serious expression, and organized appearance',
+      นักขาย:
+        'friendly eyes, approachable smile, neat appearance, and persuasive charm',
+      ดีไซน์เนอร์:
+        'creative eyes, artistic hairstyle, unique fashion sense, and innovative aura',
+      โปรแกรมเมอร์:
+        'intelligent eyes, casual hair, focused expression, and tech-savvy appearance',
+      ช่าง: 'practical eyes, short hair, determined face, and strong build',
     }
 
-    return traits[jobClassName] || 'professional appearance with confident demeanor'
+    return (
+      traits[jobClassName] || 'professional appearance with confident demeanor'
+    )
   }
 }
 export const characterService = CharacterService.getInstance()

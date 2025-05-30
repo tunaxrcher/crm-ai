@@ -1,46 +1,19 @@
 // src/features/character/service/replicateService.ts
 import 'server-only'
 
+import {
+  ModelInputParams,
+  ReplicateModelConfig,
+  getModelById,
+  replicateModels,
+  selectBestModel,
+} from '../config/replicateModels'
+import { openAIVisionService } from './openaiVisionService'
 import { GeneratedPortrait } from '../types'
-
-interface ReplicateModel {
-  name: string
-  version: string
-  prompt: (
-    jobClass: string,
-    level: number,
-    personaDescription: string
-  ) => string
-}
 
 export class ReplicateService {
   private static instance: ReplicateService
   private apiToken: string
-
-  // 3 โมเดลสำหรับสร้างภาพ
-  private models: ReplicateModel[] = [
-    {
-      name: 'stable-diffusion',
-      version:
-        'ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4',
-      prompt: (jobClass: string, level: number, personaDescription: string) =>
-        `anime style portrait of ${jobClass} professional, level ${level}, ${personaDescription}, high quality, detailed, professional lighting`,
-    },
-    {
-      name: 'sdxl',
-      version:
-        'ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4',
-      prompt: (jobClass: string, level: number, personaDescription: string) =>
-        `professional character portrait, ${jobClass}, ${personaDescription}, game character art style, detailed, high resolution`,
-    },
-    {
-      name: 'flux-schnell',
-      version:
-        'ac732df83cea7fff18b8472768c88ad041fa750ff7682a21affe81863cbe77e4',
-      prompt: (jobClass: string, level: number, personaDescription: string) =>
-        `professional ${jobClass} character portrait, ${personaDescription}, rpg game style, detailed character design`,
-    },
-  ]
 
   constructor() {
     this.apiToken = process.env.REPLICATE_API_TOKEN || ''
@@ -57,48 +30,51 @@ export class ReplicateService {
   }
 
   async generatePortraitWithModel(
-    model: ReplicateModel,
-    jobClass: string,
-    level: number,
-    personaDescription: string,
-    faceImage?: string
+    model: ReplicateModelConfig,
+    prompt: string,
+    faceImage?: string,
+    additionalParams?: Partial<ModelInputParams>
   ): Promise<string> {
-    const prompt = model.prompt(jobClass, level, personaDescription)
-
-    const input: any = {
+    // เตรียม input params
+    const inputParams: ModelInputParams = {
       prompt,
-      num_outputs: 1,
-      guidance_scale: 7.5,
-      num_inference_steps: 50,
+      faceImage,
+      width: 768,
+      height: 1344,
+      seed: -1,
+      guidanceScale: model.type === 'character-generator' ? 3.5 : 7.5,
+      numInferenceSteps: model.type === 'text-to-image' ? 30 : 50,
+      ...additionalParams,
     }
 
-    // ถ้ามี face image ให้ใช้เป็น reference
-    if (faceImage) {
-      input.image = faceImage
-      input.prompt = `${prompt}, face reference from image`
-      input.strength = 0.7 // ควบคุมความคล้ายกับภาพต้นฉบับ
-    }
+    // แปลง params ตาม model ที่เลือก
+    const input = model.inputMapper(inputParams)
 
-    const response = await fetch(
-      `https://api.replicate.com/v1/predictions`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          version: model.version,
-          input,
-        }),
-      }
-    )
+    console.log(`[Replicate] Using model: ${model.owner}/${model.name}`)
+    console.log(`[Replicate] Input:`, JSON.stringify(input, null, 2))
+
+    const response = await fetch('https://api.replicate.com/v1/predictions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        version: model.version,
+        input,
+      }),
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to start prediction: ${response.statusText}`)
+      const errorData = await response.json()
+      console.error('Replicate API Error:', errorData)
+      throw new Error(
+        `Failed to start prediction: ${JSON.stringify(errorData)}`
+      )
     }
 
     const prediction = await response.json()
+    console.log(`[Replicate] Prediction started:`, prediction.id)
 
     // รอผลลัพธ์
     const result = await this.waitForPrediction(prediction.id)
@@ -107,11 +83,15 @@ export class ReplicateService {
       throw new Error(`Prediction failed: ${result.error}`)
     }
 
-    return result.output[0]
+    // ดึง output ตาม model
+    const imageUrl = model.outputExtractor(result.output)
+    console.log(`[Replicate] Generated image:`, imageUrl)
+
+    return imageUrl
   }
 
   private async waitForPrediction(predictionId: string): Promise<any> {
-    const maxAttempts = 60 // รอสูงสุด 60 วินาที
+    const maxAttempts = 120 // รอสูงสุด 2 นาที
     let attempts = 0
 
     while (attempts < maxAttempts) {
@@ -135,7 +115,17 @@ export class ReplicateService {
       if (prediction.status === 'succeeded') {
         return prediction
       } else if (prediction.status === 'failed') {
-        throw new Error(`Prediction failed: ${prediction.error}`)
+        console.error('Prediction failed:', prediction)
+        throw new Error(
+          `Prediction failed: ${prediction.error || 'Unknown error'}`
+        )
+      }
+
+      // Log progress
+      if (attempts % 10 === 0) {
+        console.log(
+          `[Replicate] Waiting for prediction... (${prediction.status})`
+        )
       }
 
       attempts++
@@ -148,58 +138,103 @@ export class ReplicateService {
   async generatePortraitsForAllLevels(
     jobClass: string,
     jobLevels: any[],
-    faceImage?: string
+    faceImage?: string,
+    personaTraits?: string,
+    preferredModelId?: string
   ): Promise<GeneratedPortrait[]> {
     const portraits: GeneratedPortrait[] = []
 
     // สร้างภาพเฉพาะ level 1 เท่านั้น
     const level = 1
+    const classLevel = 1
     const jobLevel = jobLevels[0] // ใช้ job level แรก
 
-    // สุ่มเลือกโมเดล
-    const randomModel =
-      this.models[Math.floor(Math.random() * this.models.length)]
+    // เลือก model
+    let model: ReplicateModelConfig | undefined
+
+    if (preferredModelId) {
+      model = getModelById(preferredModelId)
+    }
+
+    if (!model) {
+      // เลือก model อัตโนมัติตามเงื่อนไข
+      model = selectBestModel(!!faceImage)
+    }
+
+    console.log(`[Replicate] Selected model: ${model.id}`)
+
+    // สร้าง dynamic prompt
+    const prompt = openAIVisionService.generateDynamicPrompt(
+      jobClass,
+      level,
+      classLevel,
+      personaTraits || 'professional appearance with confident demeanor',
+      jobLevel.personaDescription ||
+        'Looks weak, torn clothes, mismatched outfit, flip-flops, useless tools'
+    )
 
     try {
       const imageUrl = await this.generatePortraitWithModel(
-        randomModel,
-        jobClass,
-        level,
-        jobLevel.personaDescription || '',
-        faceImage
+        model,
+        prompt,
+        faceImage,
+        {
+          style: 'ghibli_style', // สำหรับ instant-character
+          negativePrompt: 'nsfw, ugly, deformed, blurry, low quality',
+        }
       )
 
       portraits.push({
         id: `portrait_${level}`,
         url: imageUrl,
-        prompt: randomModel.prompt(
-          jobClass,
-          level,
-          jobLevel.personaDescription || ''
-        ),
-        model: randomModel.name,
+        prompt: prompt,
+        model: model.id,
       })
     } catch (error) {
       console.error(`Failed to generate portrait for level ${level}:`, error)
-      // ใช้ placeholder image
-      portraits.push({
-        id: `portrait_${level}`,
-        url: `https://source.unsplash.com/400x400/?portrait,${jobClass},level${level}`,
-        prompt: 'Failed to generate',
-        model: 'placeholder',
-      })
+
+      // ลองใช้ model อื่น
+      const fallbackModels = replicateModels.filter((m) => m.id !== model!.id)
+
+      for (const fallbackModel of fallbackModels) {
+        try {
+          console.log(`[Replicate] Trying fallback model: ${fallbackModel.id}`)
+
+          const imageUrl = await this.generatePortraitWithModel(
+            fallbackModel,
+            prompt,
+            faceImage
+          )
+
+          portraits.push({
+            id: `portrait_${level}`,
+            url: imageUrl,
+            prompt: prompt,
+            model: fallbackModel.id,
+          })
+
+          break // สำเร็จแล้ว ออกจาก loop
+        } catch (fallbackError) {
+          console.error(
+            `Fallback model ${fallbackModel.id} also failed:`,
+            fallbackError
+          )
+        }
+      }
+
+      // ถ้าทุก model ล้มเหลว ใช้ placeholder
+      if (portraits.length === 0) {
+        portraits.push({
+          id: `portrait_${level}`,
+          url: `https://source.unsplash.com/400x400/?portrait,${jobClass},level${level}`,
+          prompt: 'Failed to generate',
+          model: 'placeholder',
+        })
+      }
     }
 
     return portraits
   }
-
-  // สำหรับการ upload และ process face image
-  async uploadImage(base64Image: string): Promise<string> {
-    // Upload ไปยัง storage service (เช่น S3, Cloudinary, etc.)
-    // ตัวอย่างนี้จะ return base64 กลับไปก่อน
-    // ในระบบจริงควร upload ไปยัง cloud storage
-    return base64Image
-  }
 }
-
+// Export instance
 export const replicateService = ReplicateService.getInstance()

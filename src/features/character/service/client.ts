@@ -1,5 +1,7 @@
 import { BaseService } from '@src/lib/service/client/baseService'
 
+import { CharacterConfirmPayload, CharacterCreatePayload } from '../types'
+
 // export class CharacterService extends BaseService {
 //   private static instance: CharacterService
 
