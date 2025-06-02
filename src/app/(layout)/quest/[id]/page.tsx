@@ -1,15 +1,23 @@
+'use client'
+
 import QuestDetail from '@src/features/quest/components/QuestDetail'
+import { useAuth } from '@src/hooks/useAuth'
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }
 
-export default async function Page({ params }: PageProps) {
-  // const { user } = useAuth()
+export default function Page({ params }: PageProps) {
+  const { user } = useAuth()
+  const { id } = params
 
-  const { id } = await params
+  if (!user) return <div></div>
 
-  // if (!user) return <div></div>
-
-  return <QuestDetail questId={id} userId={1} characterId={1} />
+  return (
+    <QuestDetail
+      questId={id}
+      userId={+user.id}
+      characterId={user.characterId}
+    />
+  )
 }

@@ -459,7 +459,7 @@ export default function CharacterCreation() {
                     <img
                       src={generatedPortraits[0].url}
                       alt="Generated character"
-                      className="w-48 h-48 object-cover rounded-full mb-4 border-4 ai-gradient-border"
+                      className="object-cover rounded-full mb-4 border-4 ai-gradient-border"
                     />
                     <p className="text-sm text-muted-foreground mb-2">
                       Model: {generatedPortraits[0].model}

@@ -15,9 +15,7 @@ export const useQuests = (userId?: number) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['quests', userId],
     queryFn: async () => {
-      if (!userId) {
-        throw new Error('User ID is required')
-      }
+      if (!userId) throw new Error('User ID is required')
       return await questService.fetchQuests(userId)
     },
     enabled: !!userId,
@@ -59,9 +57,8 @@ export const useQuestDetail = (questId?: string, userId?: number) => {
   return useQuery({
     queryKey: ['quest', questId, userId],
     queryFn: async () => {
-      if (!questId || !userId) {
-        throw new Error('Quest ID and User ID are required')
-      }
+      if (!questId || !userId) throw new Error('Quest ID and User ID are required')
+            console.log(userId)
       return await questService.fetchQuestById(questId, userId)
     },
     enabled: !!(questId && userId),

@@ -19,4 +19,5 @@ interface BaseUser {
   email?: string | null
   username: string
   avatar?: string | null
+  characterId?: number
 }

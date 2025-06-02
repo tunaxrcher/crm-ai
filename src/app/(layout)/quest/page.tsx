@@ -6,11 +6,9 @@ import QuestPageComponent from '@src/features/quest/components/index'
 import { useAuth } from '@src/hooks/useAuth'
 
 export default function QuestPage() {
-  // const { user } = useAuth()
+  const { user } = useAuth()
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
-
-  // if (!user) return <div></div>
 
   useEffect(() => {
     try {
@@ -20,6 +18,9 @@ export default function QuestPage() {
       setErrorMessage(error instanceof Error ? error.message : 'Unknown error')
     }
   }, [hasError, errorMessage])
+
+    // Always call all hooks BEFORE any return!
+  if (!user) return <div></div>
 
   if (hasError) {
     return (
@@ -39,5 +40,7 @@ export default function QuestPage() {
     )
   }
 
-  return <QuestPageComponent userId={1} />
+  return <>
+  <QuestPageComponent userId={+user.id} />
+  </>
 }

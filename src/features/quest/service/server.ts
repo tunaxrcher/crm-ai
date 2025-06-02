@@ -1,6 +1,7 @@
 // src/features/quest/service/server.ts
 import { characterService } from '@src/features/character/service/server'
 import { getServerSession } from '@src/lib/auth'
+import { prisma } from '@src/lib/db'
 import { openaiService } from '@src/lib/service/openaiService'
 import { s3UploadService } from '@src/lib/service/s3UploadService'
 import { BaseService } from '@src/lib/service/server/baseService'
@@ -113,66 +114,161 @@ export class QuestService extends BaseService {
     try {
       // ดึงข้อมูล character ของ user
       const character = await questRepository.getCharacterByUserId(userId)
-
-      if (!character) {
-        throw new Error('Character not found for this user')
-      }
+      if (!character) throw new Error('Character not found for this user')
 
       // ดึงภารกิจที่ได้รับมอบหมาย (ทั้ง active และ completed)
       const assignedQuests =
         await questRepository.getAssignedQuestsByCharacterId(character.id)
 
-      // ดึงภารกิจที่เสร็จสิ้นแล้ว (สำหรับ tab completed)
-      const completedQuests =
-        await questRepository.getCompletedQuestsByCharacterId(character.id)
+      // ตรวจสอบว่าผู้ใช้มีเควสหรือไม่ ถ้าไม่มีให้สุ่มเควสและมอบหมายให้
+      if (assignedQuests.length === 0) {
+        console.log(
+          'No quests assigned for new user. Assigning initial quests...'
+        )
+        await this.assignInitialQuestsForNewUser(character.id, userId)
 
-      // แปลงข้อมูล assigned quests เป็น Quest objects
-      const activeQuests: Quest[] = assignedQuests
-        .filter((assignedQuest) => {
-          // แสดงภารกิจที่:
-          // 1. อยู่ในช่วงเวลาที่กำหนด (สำหรับ daily/weekly)
-          // 2. หรือเป็นภารกิจทั่วไป (no-deadline)
-          return this.isQuestInTimeRange(
-            assignedQuest.quest.type,
-            assignedQuest.assignedAt
-          )
-        })
-        .map((assignedQuest) => {
-          const quest = assignedQuest.quest
-          const deadline = this.calculateDeadline(
-            assignedQuest.assignedAt,
-            quest.type,
-            assignedQuest.expiresAt
-          )
-
-          return {
-            id: quest.id.toString(),
-            title: quest.title,
-            description: quest.description,
-            type: this.mapQuestType(quest.type),
-            difficulty: this.mapDifficultyLevel(quest.difficultyLevel),
-            rewards: {
-              xp: quest.xpReward,
-              tokens: quest.baseTokenReward,
-            },
-            deadline,
-            completed: assignedQuest.status === 'completed', // *** เปลี่ยนการตรวจสอบ completed ***
-            status: assignedQuest.status as any,
-            imageUrl: quest.imageUrl || undefined,
-            isActive: quest.isActive,
-            createdAt: quest.createdAt,
-            updatedAt: quest.updatedAt,
-          }
-        })
-
-      console.log(activeQuests)
-      return {
-        activeQuests,
-        completedQuests,
+        // ดึงภารกิจที่เพิ่งมอบหมายใหม่อีกครั้ง
+        const updatedAssignedQuests =
+          await questRepository.getAssignedQuestsByCharacterId(character.id)
+        return this.processQuestData(updatedAssignedQuests, character.id)
       }
+
+      return this.processQuestData(assignedQuests, character.id)
     } catch (error) {
       console.error('Error in getQuestsForUser:', error)
       throw new Error('Failed to fetch quests for user')
+    }
+  }
+
+  private async assignInitialQuestsForNewUser(
+    characterId: number,
+    userId: number
+  ): Promise<void> {
+    try {
+      // ดึงเควสรายวัน 3 อัน
+      const dailyQuests = await this.getRandomQuestsByType('daily', 3)
+
+      // ดึงเควสรายสัปดาห์ 3 อัน
+      const weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
+
+      // ดึงเควสทั่วไป 3 อัน
+      const generalQuests = await this.getRandomQuestsByType('special', 3)
+
+      // รวมเควสทั้งหมด
+      const allQuests = [...dailyQuests, ...weeklyQuests, ...generalQuests]
+
+      console.log(
+        `Assigning ${allQuests.length} initial quests for user ${userId}, character ${characterId}`
+      )
+
+      // มอบหมายเควสทั้งหมดให้ character
+      const assignPromises = allQuests.map((quest) => {
+        // กำหนด expiresAt ตามประเภทเควส
+        let expiresAt = null
+        if (quest.type === 'daily') {
+          expiresAt = new Date()
+          expiresAt.setDate(expiresAt.getDate() + 1) // หมดอายุใน 1 วัน
+        } else if (quest.type === 'weekly') {
+          expiresAt = new Date()
+          expiresAt.setDate(expiresAt.getDate() + 7) // หมดอายุใน 7 วัน
+        }
+
+        // บันทึกลงในตาราง AssignedQuest
+        return prisma.assignedQuest.create({
+          data: {
+            questId: quest.id,
+            characterId: characterId,
+            userId: userId,
+            status: 'active',
+            assignedAt: new Date(),
+            expiresAt: expiresAt,
+          },
+        })
+      })
+
+      await Promise.all(assignPromises)
+      console.log('Initial quests assigned successfully')
+    } catch (error) {
+      console.error('Error assigning initial quests:', error)
+      throw new Error('Failed to assign initial quests')
+    }
+  }
+
+  /**
+   * ดึงเควสแบบสุ่มตามประเภทที่กำหนด
+   */
+  private async getRandomQuestsByType(type: string, count: number) {
+    try {
+      // ดึงเควสทั้งหมดตามประเภท
+      const quests = await prisma.quest.findMany({
+        where: {
+          type: type,
+          isActive: true,
+        },
+      })
+
+      // สุ่มเลือกเควสตามจำนวนที่กำหนด
+      const shuffled = [...quests].sort(() => 0.5 - Math.random())
+      return shuffled.slice(0, Math.min(count, quests.length))
+    } catch (error) {
+      console.error(`Error fetching ${type} quests:`, error)
+      return [] // ส่งค่า array ว่างถ้าเกิดข้อผิดพลาด
+    }
+  }
+
+  /**
+   * ประมวลผลข้อมูลเควสเพื่อส่งกลับไปยังผู้ใช้
+   */
+  private async processQuestData(
+    assignedQuests: any[],
+    characterId: number
+  ): Promise<QuestListResponse> {
+    // ดึงภารกิจที่เสร็จสิ้นแล้ว (สำหรับ tab completed)
+    const completedQuests =
+      await questRepository.getCompletedQuestsByCharacterId(characterId)
+
+    // แปลงข้อมูล assigned quests เป็น Quest objects
+    const activeQuests: Quest[] = assignedQuests
+      .filter((assignedQuest) => {
+        // แสดงภารกิจที่:
+        // 1. อยู่ในช่วงเวลาที่กำหนด (สำหรับ daily/weekly)
+        // 2. หรือเป็นภารกิจทั่วไป (no-deadline)
+        return this.isQuestInTimeRange(
+          assignedQuest.quest.type,
+          assignedQuest.assignedAt
+        )
+      })
+      .map((assignedQuest) => {
+        const quest = assignedQuest.quest
+        const deadline = this.calculateDeadline(
+          assignedQuest.assignedAt,
+          quest.type,
+          assignedQuest.expiresAt
+        )
+
+        return {
+          id: quest.id.toString(),
+          title: quest.title,
+          description: quest.description,
+          type: this.mapQuestType(quest.type),
+          difficulty: this.mapDifficultyLevel(quest.difficultyLevel),
+          rewards: {
+            xp: quest.xpReward,
+            tokens: quest.baseTokenReward,
+          },
+          deadline,
+          completed: assignedQuest.status === 'completed',
+          status: assignedQuest.status as any,
+          imageUrl: quest.imageUrl || undefined,
+          isActive: quest.isActive,
+          createdAt: quest.createdAt,
+          updatedAt: quest.updatedAt,
+        }
+      })
+
+    return {
+      activeQuests,
+      completedQuests,
     }
   }
 
@@ -464,3 +560,4 @@ export class QuestSubmissionService extends BaseService {
 }
 
 export const questSubmissionService = new QuestSubmissionService()
+

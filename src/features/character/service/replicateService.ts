@@ -323,67 +323,86 @@ export class ReplicateService {
     throw new Error('Prediction timeout')
   }
 
-  async generatePortraits(
-    jobClassName: string,
-    jobLevel: any,
-    faceImage?: string,
-    personaTraits?: string
-  ): Promise<GeneratedPortrait[]> {
-    const portraits: GeneratedPortrait[] = []
+  // async generatePortraits(
+  //   jobClassName: string,
+  //   jobLevel: any,
+  //   faceImage?: string,
+  //   personaTraits?: string
+  // ): Promise<GeneratedPortrait[]> {
+  //   const portraits: GeneratedPortrait[] = []
 
-    // เลือก model
-    let model: ReplicateModelConfig | undefined
+  //   // เลือก model
+  //   let model: ReplicateModelConfig | undefined
 
-    const preferredModelId = 2
-    if (preferredModelId) model = getModelById(preferredModelId)
-    console.log('Debug preferredModelId', model)
+  //   const preferredModelId = 2
+  //   if (preferredModelId) model = getModelById(preferredModelId)
+  //   console.log('Debug preferredModelId', model)
 
-    if (!model) model = selectBestModel(!!faceImage)
-    console.log('Debug model', model)
+  //   if (!model) model = selectBestModel(!!faceImage)
+  //   console.log('Debug model', model)
 
-    console.log(`[Replicate] Selected model: ${model.id}`)
+  //   console.log(`[Replicate] Selected model: ${model.id}`)
 
-    const style = 'Use a 3D cartoon, semi-realistic, Pixar-style illustration.'
+  //   const style = 'Use a 3D cartoon, semi-realistic, Pixar-style illustration.'
 
-    const prompt = `
-        Create an avatar of a character, profession: ${jobClassName} EVX based on the user's input photo. 
+  //   const prompt = `
+  //       Create an avatar of a character, profession: ${jobClassName} EVX based on the user's input photo. 
 
-        ${style}
-        full-body shot, from head to toe, full length, standing pose, full figure, complete legs and feet, no cropping, centered composition, camera view from distance, see all limbs
+  //       ${style}
+  //       full-body shot, from head to toe, full length, standing pose, full figure, complete legs and feet, no cropping, centered composition, camera view from distance, see all limbs
 
-        The character should be stylized but believable. The final image must show the entire body from head to toe, in full-body composition with warm lighting and clean background.
+  //       The character should be stylized but believable. The final image must show the entire body from head to toe, in full-body composition with warm lighting and clean background.
 
-        Character traits: ${personaTraits}
+  //       Character traits: ${personaTraits}
 
-        ${jobLevel.personaDescription}
+  //       ${jobLevel.personaDescription}
         
-        Keep the same facial structure, image size, character scale, and overall art style across all class evolutions. Only the expression, pose, outfit, and gear may change to reflect progression.
-    `
+  //       Keep the same facial structure, image size, character scale, and overall art style across all class evolutions. Only the expression, pose, outfit, and gear may change to reflect progression.
+  //   `
 
-    console.log(prompt)
+  //   console.log(prompt)
 
-    try {
-      const imageUrl = await this.generatePortraitWithModel(
-        model,
-        prompt,
-        faceImage
-      )
+  //   try {
+  //     const imageUrl = await this.generatePortraitWithModel(
+  //       model,
+  //       prompt,
+  //       faceImage
+  //     )
 
-      portraits.push({
-        id: `portrait_${jobLevel.level}`,
-        url: imageUrl,
-        prompt: prompt,
-        model: model.id,
-      })
-    } catch (error) {
-      console.error(
-        `Failed to generate portrait for level ${jobLevel.level}:`,
-        error
-      )
-    }
+  //     portraits.push({
+  //       id: `portrait_${jobLevel.level}`,
+  //       url: imageUrl,
+  //       prompt: prompt,
+  //       model: model.id,
+  //     })
+  //   } catch (error) {
+  //     console.error(
+  //       `Failed to generate portrait for level ${jobLevel.level}:`,
+  //       error
+  //     )
+  //   }
 
-    return portraits
-  }
+  //   return portraits
+  // }
+
+  async generatePortraits(
+  jobClassName: string,
+  jobLevel: any,
+  faceImage?: string,
+  personaTraits?: string
+): Promise<GeneratedPortrait[]> {
+  
+  const portraits: GeneratedPortrait[] = []
+
+  portraits.push({
+    id: `portrait_${jobLevel.level}`,
+    url: 'https://tawnychatai2.sgp1.digitaloceanspaces.com/1.png',
+    prompt: 'Mocked prompt for testing',
+    model: 'ทดสอบ',
+  })
+
+  return portraits;
+}
 }
 // Export instance
 export const replicateService = ReplicateService.getInstance()

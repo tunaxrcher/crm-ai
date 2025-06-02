@@ -18,9 +18,8 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.username || !credentials?.password) return null
 
         const user = await prisma.user.findFirst({
-          where: {
-            OR: [{ username: credentials.username }],
-          },
+          where: { username: credentials.username },
+          include: { character: true },
         })
 
         if (!user || !user.password) {
@@ -41,6 +40,7 @@ export const authOptions: NextAuthOptions = {
         userData.email = user.email
         userData.username = user.username
         userData.avatar = user.avatar
+        userData.characterId = user.character?.id
 
         return userData
       },
@@ -54,6 +54,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email
         token.username = user.username
         token.avatar = user.avatar
+        token.characterId = user.characterId
       }
 
       return token
@@ -66,6 +67,7 @@ export const authOptions: NextAuthOptions = {
           email: token.email,
           username: token.username,
           avatar: token.avatar,
+          characterId: token.characterId,
         }
       }
 
