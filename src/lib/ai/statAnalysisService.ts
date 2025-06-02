@@ -10,7 +10,7 @@ const statAllocationSchema = z
     DEX: z.number().int().min(0).max(3),
     VIT: z.number().int().min(0).max(3),
     INT: z.number().int().min(0).max(3),
-    reasoning: z.string().min(20).max(500),
+    reasoning: z.string().min(20).max(1000),
   })
   .refine(
     (data) => {

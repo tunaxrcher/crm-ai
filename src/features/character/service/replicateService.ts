@@ -325,17 +325,11 @@ export class ReplicateService {
 
   async generatePortraits(
     jobClassName: string,
-    jobLevels: any[],
+    jobLevel: any,
     faceImage?: string,
     personaTraits?: string
   ): Promise<GeneratedPortrait[]> {
     const portraits: GeneratedPortrait[] = []
-
-    // สร้างภาพเฉพาะ level 1 เท่านั้น
-    const level = 1
-    const classLevel = 1
-
-    const jobLevel = jobLevels[0] // ใช้ job level แรก
 
     // เลือก model
     let model: ReplicateModelConfig | undefined
@@ -352,7 +346,7 @@ export class ReplicateService {
     const style = 'Use a 3D cartoon, semi-realistic, Pixar-style illustration.'
 
     const prompt = `
-        Create an avatar of a character, profession: ${jobClassName}, EVX level ${level} (Class ${classLevel}), based on the user's input photo. 
+        Create an avatar of a character, profession: ${jobClassName} EVX based on the user's input photo. 
 
         ${style}
         full-body shot, from head to toe, full length, standing pose, full figure, complete legs and feet, no cropping, centered composition, camera view from distance, see all limbs
@@ -376,13 +370,16 @@ export class ReplicateService {
       )
 
       portraits.push({
-        id: `portrait_${level}`,
+        id: `portrait_${jobLevel.level}`,
         url: imageUrl,
         prompt: prompt,
         model: model.id,
       })
     } catch (error) {
-      console.error(`Failed to generate portrait for level ${level}:`, error)
+      console.error(
+        `Failed to generate portrait for level ${jobLevel.level}:`,
+        error
+      )
     }
 
     return portraits

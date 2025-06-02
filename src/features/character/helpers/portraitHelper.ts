@@ -1,20 +1,14 @@
+// src/features/character/helpers/portraitHelper.ts
+import { prisma } from '@src/lib/db'
+
+import { replicateService } from '../service/replicateService'
+
 interface GeneratedPortraits {
   [key: string]: string
 }
 
 export class PortraitHelper {
   private static readonly CLASS_LEVELS = [1, 10, 35, 60, 80, 99]
-  private static readonly BUCKET =
-    process.env.DO_SPACES_BUCKET || 'tawnychatai2'
-  private static readonly REGION = process.env.DO_SPACES_REGION || 'sgp1'
-  private static readonly BASE_URL = `https://${this.BUCKET}.${this.REGION}.digitaloceanspaces.com`
-
-  /**
-   * สร้าง URL สำหรับ portrait ของ class level ที่กำหนด
-   */
-  private static generatePortraitUrl(classLevel: number): string {
-    return `${this.BASE_URL}/${classLevel}.png`
-  }
 
   /**
    * ตรวจสอบว่า character level ปัจจุบันควรมี class level ใหม่หรือไม่
@@ -43,12 +37,81 @@ export class PortraitHelper {
   }
 
   /**
+   * Generate portrait สำหรับ class level ใหม่
+   */
+  static async generateNewPortrait(
+    characterId: number,
+    newClassLevel: number,
+    originalFaceImage?: string | null
+  ): Promise<string> {
+    try {
+      // ดึงข้อมูล character และ job levels
+      const character = await prisma.character.findUnique({
+        where: { id: characterId },
+        include: {
+          jobClass: {
+            include: {
+              levels: {
+                orderBy: { level: 'asc' },
+              },
+            },
+          },
+        },
+      })
+
+      if (!character) throw new Error('Character not found')
+
+      // หา job level ที่ตรงกับ class level
+      const jobLevel = character.jobClass.levels.find(
+        (jl) => jl.requiredCharacterLevel === newClassLevel
+      )
+
+      if (!jobLevel) {
+        console.error(
+          `[PortraitHelper] Job level not found for class level ${newClassLevel}`
+        )
+        throw new Error('Job level not found')
+      }
+
+      console.log(
+        `[PortraitHelper] Generating portrait for class level ${newClassLevel}`
+      )
+      console.log(
+        `[PortraitHelper] Using job level: ${jobLevel.level} - ${jobLevel.title}`
+      )
+      console.log(
+        `[PortraitHelper] PersonaDescription: ${jobLevel.personaDescription}`
+      )
+
+      // Generate portrait using ReplicateService
+      const portraits = await replicateService.generatePortraits(
+        character.jobClass.name,
+        [jobLevel], // ส่งเฉพาะ job level ที่ต้องการ
+        originalFaceImage || undefined,
+        character.personaTraits || undefined
+      )
+
+      if (!portraits || portraits.length === 0) {
+        throw new Error('Failed to generate portrait')
+      }
+
+      return portraits[0].url
+    } catch (error) {
+      console.error(`[PortraitHelper] Error generating portrait:`, error)
+      // Return placeholder if generation fails
+      return `https://source.unsplash.com/400x400/?portrait,class${newClassLevel}`
+    }
+  }
+
+  /**
    * อัพเดท generatedPortraits โดยเพิ่ม portrait ใหม่สำหรับ class level ที่ปลดล็อก
    */
-  static updateGeneratedPortraits(
-    currentPortraits: GeneratedPortraits | null,
-    newClassLevel: number
-  ): GeneratedPortraits {
+  static async updateGeneratedPortraits(
+    characterId: number,
+    currentPortraits: any,
+    newClassLevel: number,
+    originalFaceImage?: string | null
+  ): Promise<GeneratedPortraits> {
     if (!currentPortraits) {
       currentPortraits = this.initializeEmptyPortraits()
     }
@@ -57,6 +120,7 @@ export class PortraitHelper {
     if (typeof currentPortraits === 'string') {
       try {
         portraits = JSON.parse(currentPortraits)
+        console.log(portraits)
       } catch {
         portraits = this.initializeEmptyPortraits()
       }
@@ -64,20 +128,29 @@ export class PortraitHelper {
       portraits = { ...currentPortraits }
     }
 
-    portraits[newClassLevel.toString()] =
-      this.generatePortraitUrl(newClassLevel)
+    // Generate new portrait for the unlocked class level
+    const newPortraitUrl = await this.generateNewPortrait(
+      characterId,
+      newClassLevel,
+      originalFaceImage
+    )
+
+    console.log(`[PortraitHelper] Updated portraits:`, portraits)
+
     return portraits
   }
 
   /**
    * สร้าง generatedPortraits เริ่มต้นที่มีแต่ level 1
    */
-  static initializePortraitsForNewCharacter(): GeneratedPortraits {
+  static initializePortraitsForNewCharacter(
+    level1PortraitUrl: string
+  ): GeneratedPortraits {
     const portraits: GeneratedPortraits = {}
 
     this.CLASS_LEVELS.forEach((level) => {
       if (level === 1) {
-        portraits[level.toString()] = this.generatePortraitUrl(level)
+        portraits[level.toString()] = level1PortraitUrl
       } else {
         portraits[level.toString()] = ''
       }
@@ -104,10 +177,10 @@ export class PortraitHelper {
    */
   static getCurrentPortraitUrl(
     characterLevel: number,
-    generatedPortraits: GeneratedPortraits | null
+    generatedPortraits: any
   ): string {
     if (!generatedPortraits) {
-      return this.generatePortraitUrl(1)
+      return ''
     }
 
     let portraits: GeneratedPortraits
@@ -115,7 +188,7 @@ export class PortraitHelper {
       try {
         portraits = JSON.parse(generatedPortraits)
       } catch {
-        return this.generatePortraitUrl(1)
+        return ''
       }
     } else {
       portraits = generatedPortraits
@@ -123,6 +196,7 @@ export class PortraitHelper {
 
     const currentClassLevel = this.getCurrentClassLevel(characterLevel)
 
+    // หาภาพล่าสุดที่มีอยู่
     for (let i = this.CLASS_LEVELS.length - 1; i >= 0; i--) {
       const level = this.CLASS_LEVELS[i]
       if (level <= currentClassLevel && portraits[level.toString()]) {
@@ -130,7 +204,7 @@ export class PortraitHelper {
       }
     }
 
-    return this.generatePortraitUrl(1)
+    return portraits['1'] || ''
   }
 
   /**

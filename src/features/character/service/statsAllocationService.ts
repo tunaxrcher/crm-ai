@@ -1,6 +1,6 @@
 import { StatAnalysisService } from '@src/lib/ai/statAnalysisService'
 
-import { CharacterRepository } from '../repository'
+import { CharacterRepository, characterRepository } from '../repository'
 
 interface StatGains {
   agiGained: number
@@ -28,7 +28,7 @@ export class StatsAllocationService {
 
       // ดึง quest submissions ย้อนหลัง
       const questSubmissions =
-        await CharacterRepository.getQuestSubmissionsBetweenLevels(
+        await characterRepository.getQuestSubmissionsBetweenLevels(
           characterId,
           Math.max(1, currentLevel - 3),
           currentLevel

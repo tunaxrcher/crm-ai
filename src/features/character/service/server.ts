@@ -267,8 +267,9 @@ export class CharacterService extends BaseService {
     newLevel: number,
     shouldUpdateLevel: boolean = true
   ) {
-
-    const character = await characterRepository.findByIdWithJobLevels(characterId)
+    const character =
+      await characterRepository.findByIdWithJobLevels(characterId)
+    console.log(character)
     if (!character) throw new Error('Character not found')
 
     console.log(
@@ -289,21 +290,37 @@ export class CharacterService extends BaseService {
       newLevel,
       oldLevel
     )
+
     let updatedPortraits = character.generatedPortraits
     let newPortraitUrl = character.currentPortraitUrl
 
     if (unlockedClassLevel) {
-      updatedPortraits = PortraitHelper.updateGeneratedPortraits(
-        character.originalFaceImage,
-        unlockedClassLevel
+      console.log(
+        `[ProcessLevelUp] Unlocking new class level: ${unlockedClassLevel}`
       )
 
+      console.log('debug', {
+        characterId: characterId,
+        generatedPortraits: character.generatedPortraits,
+        unlockedClassLevel: unlockedClassLevel,
+        originalFaceImage: character.originalFaceImage,
+      })
+
+      // Generate portrait ใหม่สำหรับ class level ที่ปลดล็อก
+      updatedPortraits = await PortraitHelper.updateGeneratedPortraits(
+        characterId,
+        character.generatedPortraits,
+        unlockedClassLevel,
+        character.originalFaceImage
+      )
+
+      // อัพเดท current portrait URL
       newPortraitUrl = PortraitHelper.getCurrentPortraitUrl(
         newLevel,
         updatedPortraits
       )
 
-      console.log(`[ProcessLevelUp] Unlocked class level ${unlockedClassLevel}`)
+      console.log(`[ProcessLevelUp] New portrait URL: ${newPortraitUrl}`)
     }
 
     // ตรวจสอบการอัพเดท job level
@@ -451,7 +468,7 @@ export class CharacterService extends BaseService {
     })
 
     // เพิ่ม XP (จะเรียกใช้ processLevelUp ถ้ามีการเลเวลอัพ)
-    const xpResult = await this.addXP(characterId, dailyQuest.xpReward)
+    const xpResult = await this.addXP(dailyQuest.xpReward)
 
     // สร้าง Feed Item
     await characterRepository.createFeedItem({
@@ -538,7 +555,7 @@ export class CharacterService extends BaseService {
       // ใช้ AI สร้างภาพ (แค่ level 1)
       portraits = await replicateService.generatePortraits(
         jobClass.name,
-        jobClass.levels,
+        jobClass.levels[0],
         undefined,
         personaTraits
       )
@@ -546,7 +563,7 @@ export class CharacterService extends BaseService {
       // ใช้ภาพที่ upload มาเป็น reference
       portraits = await replicateService.generatePortraits(
         jobClass.name,
-        jobClass.levels,
+        jobClass.levels[0],
         faceImageUrl,
         personaTraits
       )
