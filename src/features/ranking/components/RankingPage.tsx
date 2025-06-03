@@ -181,7 +181,9 @@ function RankingPageComponent() {
   return (
     <div className="p-4 pb-20">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold ai-gradient-text">อันดับผู้เล่น</h1>
+        <h1 className="text-2xl font-bold ai-gradient-text">
+          อันดับผู้เล่น (กำลังพัฒนา...)
+        </h1>
         <p className="text-muted-foreground">
           ดูอันดับของคุณเทียบกับผู้เล่นอื่น
         </p>

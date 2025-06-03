@@ -316,7 +316,7 @@ model AssignedQuest {
   quest       Quest           @relation(fields: [questId], references: [id])
   user        User            @relation(fields: [userId], references: [id])
 
-  @@unique([questId, characterId])
+  // @@unique([questId, characterId])
   @@index([characterId], map: "AssignedQuest_characterId_fkey")
   @@index([partyId], map: "AssignedQuest_partyId_fkey")
   @@index([userId], map: "AssignedQuest_userId_fkey")

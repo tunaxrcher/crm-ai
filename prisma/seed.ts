@@ -970,17 +970,20 @@ function generatePortraits(level: number): {
 
   const milestones = [1, 10, 35, 60, 80, 99]
   const portraits: Record<string, string> = {}
-  let currentUrl = ''
 
   for (const milestone of milestones) {
-    if (level >= milestone) {
-      const url = `${baseUrl}/${milestone}.png`
-      portraits[milestone.toString()] = url
-      currentUrl = url
-    } else {
-      portraits[milestone.toString()] = ''
-    }
+    portraits[milestone.toString()] = `${baseUrl}/${milestone}.png`
   }
+
+  // กำหนด currentUrl เป็นภาพ milestone ล่าสุดที่ level ถึงหรือเกิน
+  const unlockedMilestone = [...milestones]
+    .reverse()
+    .find((milestone) => level >= milestone)
+
+  const currentUrl =
+    unlockedMilestone !== undefined
+      ? portraits[unlockedMilestone.toString()]
+      : portraits['1']
 
   return { portraits, currentUrl }
 }

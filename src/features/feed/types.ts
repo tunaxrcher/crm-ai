@@ -1,4 +1,4 @@
-// src/features/feed/types.ts (เพิ่มเติม)
+// src/features/feed/types.ts
 import {
   Achievement,
   Character,
@@ -89,6 +89,10 @@ export interface FeedItemUI {
     }
     text?: string
   }
+  // เพิ่มฟิลด์ใหม่เพื่อรองรับข้อมูลจาก API
+  post?: string
+  mediaType?: string
+  mediaUrl?: string
 }
 
 export interface CommentUI {
@@ -111,11 +115,12 @@ export interface StoryUI {
     level?: number
   }
   media: {
-    type: 'image' | 'video'
+    type: 'image' | 'video' | 'text'
     url: string
     thumbnail?: string
   }
   questTitle?: string
+  text?: string // เพิ่ม field text
   viewed: boolean
   expiresAt: string | Date
 }

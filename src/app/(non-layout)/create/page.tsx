@@ -118,6 +118,24 @@ export default function CharacterCreation() {
     },
   })
 
+  const confirmCharacter = (portrait: GeneratedPortrait) => {
+    const generatedPortraitsMap: Record<string, string> = {}
+    generatedPortraits.forEach((p) => {
+      const level = p.id.split('_')[1]
+      generatedPortraitsMap[level] = p.url
+    })
+
+    const payload: CharacterConfirmPayload = {
+      jobClassId: parseInt(selectedJobClassId!),
+      name: characterName,
+      portraitUrl: portrait.url,
+      originalFaceImage: undefined,
+      generatedPortraits: generatedPortraitsMap,
+    }
+
+    confirmMutation.mutate(payload)
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -129,6 +147,7 @@ export default function CharacterCreation() {
 
   const handleJobClassSelect = (jobClassId: string) => {
     setSelectedJobClassId(jobClassId)
+    setCurrentStep(2)
   }
 
   const handleNextStep = async () => {
@@ -248,7 +267,7 @@ export default function CharacterCreation() {
           <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-2">
             3
           </div>
-          <span>รูปตัวละคร</span>
+          <span>Character</span>
         </div>
       </div>
 
@@ -296,16 +315,16 @@ export default function CharacterCreation() {
       {/* Step 2: Character Name */}
       {currentStep === 2 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">ตั้งชื่อตัวละครของคุณ</h2>
+          <h2 className="text-xl font-semibold mb-4">ใส่ชื่อของคุณ</h2>
 
           <Card>
             <CardHeader>
-              <CardTitle>ใส่ชื่อ</CardTitle>
+              <CardTitle>ชื่อ</CardTitle>
               <CardDescription></CardDescription>
             </CardHeader>
             <CardContent>
               <Input
-                placeholder="ใส่ชื่อ"
+                placeholder="ชื่อ"
                 value={characterName}
                 onChange={(e) => setCharacterName(e.target.value)}
                 className="mb-4"
@@ -347,14 +366,14 @@ export default function CharacterCreation() {
       {/* Step 3: Character Portrait */}
       {currentStep === 3 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">เลือกรูปตัวละคร</h2>
+          <h2 className="text-xl font-semibold mb-4">สร้าง Character</h2>
 
           <Tabs
             defaultValue="upload"
             onValueChange={(v) => setPortrait(v as 'upload' | 'generate')}>
             <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger value="upload">อัปโหลดรูปภาพ</TabsTrigger>
-              <TabsTrigger value="generate">AI สร้างรูปภาพ</TabsTrigger>
+              <TabsTrigger value="generate">AI Generate</TabsTrigger>
             </TabsList>
 
             <TabsContent value="upload" className="space-y-4">
@@ -362,7 +381,7 @@ export default function CharacterCreation() {
                 <CardHeader>
                   <CardTitle>อัปโหลดรูปคุณ</CardTitle>
                   <CardDescription>
-                    รูปภาพของคุณจะถูกใช้เป็นแหล่งอ้างอิง Character
+                    รูปภาพของคุณจะถูกใช้เป็นแหล่งอ้างอิง Character โดยระบบ AI
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
@@ -382,7 +401,7 @@ export default function CharacterCreation() {
 
                   <label className="flex items-center justify-center gap-2 cursor-pointer bg-secondary hover:bg-secondary/80 transition-colors text-foreground px-4 py-2 rounded-md w-full">
                     <Upload className="h-4 w-4" />
-                    <span>อัปโหลดรูปภาพ</span>
+                    <span>เลือก</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -392,7 +411,7 @@ export default function CharacterCreation() {
                   </label>
 
                   <p className="text-xs text-muted-foreground mt-4 text-center">
-                    รูปภาพของคุณจะถูกใช้เพื่อสร้างรูปตัวละครที่แตกต่างกัน 6
+                    รูปภาพของคุณจะถูกใช้เพื่อสร้างรูป Character ที่แตกต่างกัน 6
                     แบบสำหรับแต่ละระดับความสำเร็จ
                   </p>
                 </CardContent>
@@ -402,9 +421,9 @@ export default function CharacterCreation() {
             <TabsContent value="generate" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>รูปตัวละครที่สร้างโดย AI</CardTitle>
+                  <CardTitle>รูป Characterที่สร้างโดย AI</CardTitle>
                   <CardDescription>
-                    ให้ AI ของเราสร้างรูปตัวละครให้คุณ
+                    ให้ AI ของเราสร้างรูป Characterให้คุณ
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
@@ -414,7 +433,7 @@ export default function CharacterCreation() {
                   </div>
 
                   <p className="text-center text-sm">
-                    ระบบจะสร้างรูปตัวละครที่ไม่ซ้ำกัน 6
+                    ระบบจะสร้างรูป Characterที่ไม่ซ้ำกัน 6
                     รูปสำหรับระดับความสำเร็จของคุณ
                   </p>
                 </CardContent>
@@ -439,7 +458,7 @@ export default function CharacterCreation() {
                   กำลังสร้าง...
                 </>
               ) : (
-                'สร้างตัวละคร'
+                'สร้าง Character'
               )}
             </Button>
           </div>
@@ -449,7 +468,7 @@ export default function CharacterCreation() {
       {/* Step 4: Select Generated Portrait */}
       {currentStep === 4 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">ตัวละครของคุณ</h2>
+          <h2 className="text-xl font-semibold mb-4"> Character ของคุณ</h2>
 
           <Card className="mb-4">
             <CardContent className="p-4">
@@ -459,7 +478,7 @@ export default function CharacterCreation() {
                     <img
                       src={generatedPortraits[0].url}
                       alt="Generated character"
-                      className="object-cover rounded-full mb-4 border-4 ai-gradient-border"
+                      className="object-cover rounded-full mb-4"
                     />
                     <p className="text-sm text-muted-foreground mb-2">
                       Model: {generatedPortraits[0].model}
@@ -492,8 +511,8 @@ export default function CharacterCreation() {
           </Card>
 
           <div className="text-center text-sm text-muted-foreground">
-            <p>ระบบได้สร้างตัวละครให้คุณแล้ว</p>
-            <p>รูปตัวละครจะเปลี่ยนไปตามระดับที่สูงขึ้น</p>
+            <p>ระบบได้สร้าง Character ให้คุณแล้ว</p>
+            <p>รูป Character จะเปลี่ยนไปตามระดับที่สูงขึ้น</p>
           </div>
 
           <div className="flex space-x-3 mt-6">
@@ -507,8 +526,9 @@ export default function CharacterCreation() {
               className="flex-1 ai-gradient-bg"
               onClick={() => {
                 if (generatedPortraits.length > 0) {
-                  setSelectedPortrait(generatedPortraits[0])
-                  handleNextStep()
+                  const portrait = generatedPortraits[0]
+                  setSelectedPortrait(portrait)
+                  confirmCharacter(portrait)
                 }
               }}
               disabled={

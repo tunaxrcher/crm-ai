@@ -1,6 +1,11 @@
 // src/lib/services/s3UploadService.ts
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
-import { UploadResponse } from '@src/features/quest/types/submission'
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+
+export interface UploadResponse {
+  success: boolean
+  url: string
+  key: string
+}
 
 class S3UploadService {
   private s3Client: S3Client
@@ -10,8 +15,8 @@ class S3UploadService {
       endpoint: process.env.DO_SPACES_ENDPOINT,
       region: process.env.DO_SPACES_REGION,
       credentials: {
-        accessKeyId: process.env.DO_SPACES_ACCESS_KEY!,
-        secretAccessKey: process.env.DO_SPACES_SECRET_KEY!,
+        accessKeyId: process.env.DO_SPACES_KEY!,
+        secretAccessKey: process.env.DO_SPACES_SECRET!,
       },
       forcePathStyle: false, // Configures to use subdomain/virtual calling format.
     })

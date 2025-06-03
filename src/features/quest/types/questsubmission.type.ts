@@ -45,12 +45,6 @@ export interface QuestSubmissionResponse {
   data: any
 }
 
-export interface UploadResponse {
-  success: boolean
-  url: string
-  key: string
-}
-
 export interface OpenAIPrompt {
   questTitle: string
   questDescription: string

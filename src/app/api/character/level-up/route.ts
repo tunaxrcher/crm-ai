@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { characterService } from '@src/features/character/service/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export async function POST(_request: NextRequest) {
-  try {
+export const POST = withErrorHandling(async (_request: NextRequest) => {
+  console.log(`[API] Level Up`)
 
-    const result = await characterService.levelUp()
+  const result = await characterService.levelUp()
 
-    return NextResponse.json({
-      success: true,
-      data: result,
-      message: 'Level up successful!',
-    })
-  } catch (error) {
-    console.error('Error leveling up:', error)
-    return NextResponse.json({ error: 'Failed to level up' }, { status: 500 })
-  }
-}
+  return NextResponse.json({
+    success: true,
+    data: result,
+    message: 'Level up successful!',
+  })
+})

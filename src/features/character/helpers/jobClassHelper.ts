@@ -6,9 +6,9 @@ export class JobClassHelper {
     jobLevels: any[],
     characterLevel: number
   ): any {
-    if (!jobLevels || jobLevels.length === 0) {
-      return null
-    }
+    if (!jobLevels || jobLevels.length === 0) return null
+    console.log('debug jobLevels :', jobLevels)
+    console.log('debug characterLevel :', characterLevel)
 
     const sortedLevels = [...jobLevels].sort(
       (a, b) => a.requiredCharacterLevel - b.requiredCharacterLevel
@@ -26,21 +26,54 @@ export class JobClassHelper {
   /**
    * ตรวจสอบว่าควรอัพเดท job level หรือไม่
    */
+  // static shouldUpdateJobLevel(
+  //   currentJobLevel: any,
+  //   jobLevels: any[],
+  //   newCharacterLevel: number
+  // ): { shouldUpdate: boolean; newJobLevel: any | null } {
+
+  //   const newJobLevel = this.getJobLevelForCharacter(
+  //     jobLevels,
+  //     newCharacterLevel
+  //   )
+
+  //   if (!newJobLevel || !currentJobLevel) return { shouldUpdate: !!newJobLevel, newJobLevel }
+
+  //   const shouldUpdate = newJobLevel.level > currentJobLevel.level
+
+  //   return {
+  //     shouldUpdate,
+  //     newJobLevel: shouldUpdate ? newJobLevel : null,
+  //   }
+  // }
   static shouldUpdateJobLevel(
     currentJobLevel: any,
     jobLevels: any[],
     newCharacterLevel: number
   ): { shouldUpdate: boolean; newJobLevel: any | null } {
+    // หา job level ที่เหมาะสมสำหรับ character level ใหม่
     const newJobLevel = this.getJobLevelForCharacter(
       jobLevels,
       newCharacterLevel
     )
 
-    if (!newJobLevel || !currentJobLevel) {
+    if (!newJobLevel || !currentJobLevel)
       return { shouldUpdate: !!newJobLevel, newJobLevel }
-    }
 
-    const shouldUpdate = newJobLevel.level > currentJobLevel.level
+    // เปลี่ยนลอจิกการเปรียบเทียบ: ใช้ ID แทนการเปรียบเทียบ level
+    const shouldUpdate = newJobLevel.id !== currentJobLevel.id
+
+    // เพิ่ม logging เพื่อการ debug
+    console.log('Debug shouldUpdateJobLevel:', {
+      currentJobLevelId: currentJobLevel.id,
+      currentJobLevelTitle: currentJobLevel.title,
+      currentJobLevelRequired: currentJobLevel.requiredCharacterLevel,
+      newJobLevelId: newJobLevel.id,
+      newJobLevelTitle: newJobLevel.title,
+      newJobLevelRequired: newJobLevel.requiredCharacterLevel,
+      characterLevel: newCharacterLevel,
+      shouldUpdate,
+    })
 
     return {
       shouldUpdate,

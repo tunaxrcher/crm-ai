@@ -1,3 +1,4 @@
+// src/features/feed/hook/api.ts
 import { useCallback, useEffect, useState } from 'react'
 
 import { feedService } from '../service/client'
@@ -77,6 +78,10 @@ export function useFeed() {
         level: apiItem.user.level,
         title: apiItem.user.bio,
       },
+      // คัดลอกฟิลด์ post, mediaType และ mediaUrl จาก API
+      post: apiItem.post,
+      mediaType: apiItem.mediaType,
+      mediaUrl: apiItem.mediaUrl,
     }
 
     // Map API type to UI type
@@ -147,11 +152,12 @@ export function useFeed() {
         level: apiStory.user.level,
       },
       media: {
-        type: apiStory.type as 'image' | 'video',
+        type: apiStory.type as 'image' | 'video' | 'text',
         url: apiStory.mediaUrl || '',
         thumbnail: apiStory.type === 'video' ? apiStory.mediaUrl : undefined,
       },
       questTitle: apiStory.content,
+      text: apiStory.text, // เพิ่ม field text
       viewed: apiStory.hasViewed || false,
       expiresAt: apiStory.expiresAt,
     }

@@ -745,7 +745,17 @@ export const JobTitleNotification: React.FC<{
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/90">
-      <div className="text-center bg-card p-8 rounded-xl shadow-lg border border-primary/20 max-w-md">
+      <div className="text-center">
+        <div className="mb-4">
+          <Image
+            src="/auto-import-evx-logo.png"
+            alt="Auto Import EVX Logo"
+            width={120}
+            height={40}
+            className="mx-auto"
+          />
+        </div>
+
         <div className="mb-4 w-20 h-20 mx-auto rounded-full bg-purple-500/20 flex items-center justify-center">
           <span className="text-4xl">👑</span>
         </div>

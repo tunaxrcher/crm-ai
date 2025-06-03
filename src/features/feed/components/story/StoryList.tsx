@@ -1,6 +1,7 @@
+// src/features/feed/components/story/StoryList.tsx
 'use client'
 
-import { RefObject } from 'react'
+import { RefObject, useEffect, useRef } from 'react'
 
 import { ImageWithFallback } from '@src/components/shared'
 import { useError } from '@src/components/shared/ErrorProvider'
@@ -17,7 +18,7 @@ import {
 interface StoryListProps {
   stories: StoryUI[]
   isClient: boolean
-  scrollPosition: number
+  scrollPosition: number // นี่เป็นตัวแปรที่เก็บค่าตำแหน่งการเลื่อน ไม่ใช่ฟังก์ชัน
   storiesRef: RefObject<HTMLDivElement | null>
   handleScrollLeft: () => void
   handleScrollRight: () => void
@@ -42,6 +43,7 @@ export default function StoryList({
   nextStory,
 }: StoryListProps) {
   const { showError } = useError()
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   // กรณีที่ไม่มีข้อมูลสตอรี่หรือ currentStoryIndex ไม่ถูกต้อง
   const handleStoryError = () => {
@@ -63,10 +65,75 @@ export default function StoryList({
   // ตรวจสอบ currentStory ให้ปลอดภัย
   const currentStory = isValidCurrentStory ? stories[currentStoryIndex] : null
 
+  // Auto-play video when story opens
+  useEffect(() => {
+    if (isClient && currentStory && currentStory.media.type === 'video' && videoRef.current) {
+      try {
+        videoRef.current.play().catch(err => {
+          console.error('Failed to autoplay video:', err)
+        })
+      } catch (error) {
+        console.error('Error playing video:', error)
+      }
+    }
+  }, [currentStoryIndex, isClient, currentStory])
+
+  // Render story content based on media type
+  const renderStoryContent = () => {
+    if (!currentStory) return null
+
+    switch (currentStory.media.type) {
+      case 'image':
+        return (
+          <div className="w-full max-h-full flex items-center justify-center">
+            <ImageWithFallback
+              src={currentStory.media.url}
+              alt="Story"
+              width={600}
+              height={800}
+              fallbackSrc="/placeholder-image.png"
+              className="max-w-full max-h-full object-contain"
+              onError={() => {
+                console.error('Failed to load story image')
+                handleStoryError()
+              }}
+            />
+          </div>
+        )
+        
+      case 'video':
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            <video
+              ref={videoRef}
+              src={currentStory.media.url}
+              controls
+              className="max-w-full max-h-full"
+              onError={() => {
+                console.error('Failed to load story video')
+                handleStoryError()
+              }}
+            />
+          </div>
+        )
+        
+      case 'text':
+      default:
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-primary/20 to-secondary/20 p-6 overflow-y-auto">
+            <div className="max-w-md mx-auto bg-card/95 backdrop-blur-sm p-6 rounded-lg shadow-lg">
+              <p className="text-lg font-medium mb-2">{currentStory.questTitle}</p>
+              <p className="text-md whitespace-pre-wrap">{currentStory.media.url || currentStory.text}</p>
+            </div>
+          </div>
+        )
+    }
+  }
+
   return (
     <div className="mb-6 relative">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium"></h2>
+        <h2 className="text-sm font-medium">Stories</h2>
         <button className="text-xs text-muted-foreground">ดูทั้งหมด</button>
       </div>
 
@@ -82,13 +149,7 @@ export default function StoryList({
         <div
           ref={storiesRef}
           className="flex overflow-x-auto pb-2 space-x-3 no-scrollbar"
-          style={{ scrollBehavior: 'smooth' }}
-          onScroll={(e) => {
-            const target = e.currentTarget
-            if (target && isClient) {
-              // จะไม่ใช้ setScrollPosition ที่นี่เพราะ prop นี้ควรถูกควบคุมจาก parent
-            }
-          }}>
+          style={{ scrollBehavior: 'smooth' }}>
           {stories.map((story, index) => (
             <div
               key={story.id}
@@ -125,10 +186,8 @@ export default function StoryList({
         </div>
 
         {isClient &&
-          scrollPosition <
-            (storiesRef.current?.scrollWidth || 0) -
-              (storiesRef.current?.clientWidth || 0) -
-              10 && (
+          storiesRef.current &&
+          scrollPosition < storiesRef.current.scrollWidth - storiesRef.current.clientWidth - 10 && (
             <button
               className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-background/80 rounded-full p-1"
               onClick={handleScrollRight}>
@@ -173,41 +232,9 @@ export default function StoryList({
               </div>
             </div>
 
-            {/* Story content */}
+            {/* Story content - ใช้ฟังก์ชัน renderStoryContent แทนโค้ดเดิม */}
             <div className="flex-1 flex items-center justify-center">
-              {currentStory.media.type === 'image' ? (
-                <div className="w-full max-h-full flex items-center justify-center">
-                  <ImageWithFallback
-                    src={currentStory.media.url}
-                    alt="Story"
-                    width={600}
-                    height={800}
-                    fallbackSrc="/placeholder-image.png"
-                    className="max-w-full max-h-full object-contain"
-                    onError={() => {
-                      console.error('Failed to load story image')
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="relative w-full max-h-full">
-                    <ImageWithFallback
-                      src={
-                        currentStory.media.thumbnail || '/placeholder-image.png'
-                      }
-                      alt="Video thumbnail"
-                      width={600}
-                      height={800}
-                      fallbackSrc="/placeholder-image.png"
-                      className="w-full h-full object-contain"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <Play className="h-16 w-16 text-white" />
-                    </div>
-                  </div>
-                </div>
-              )}
+              {renderStoryContent()}
             </div>
 
             {/* Navigation buttons */}

@@ -5,7 +5,7 @@ CREATE TABLE `User` (
     `username` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NULL,
     `name` VARCHAR(191) NOT NULL,
-    `avatar` VARCHAR(191) NULL,
+    `avatar` TEXT NULL,
     `bio` TEXT NULL,
     `level` INTEGER NOT NULL DEFAULT 1,
     `xp` INTEGER NOT NULL DEFAULT 0,
@@ -37,6 +37,7 @@ CREATE TABLE `JobLevel` (
     `title` VARCHAR(191) NOT NULL,
     `description` TEXT NULL,
     `imageUrl` VARCHAR(191) NULL,
+    `personaDescription` TEXT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `jobClassId` INTEGER NOT NULL,
@@ -64,15 +65,18 @@ CREATE TABLE `Character` (
     `originalFaceImage` VARCHAR(191) NULL,
     `generatedPortraits` JSON NULL,
     `levelHistory` JSON NULL,
+    `personaTraits` TEXT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` INTEGER NOT NULL,
     `jobClassId` INTEGER NOT NULL,
     `jobLevelId` INTEGER NOT NULL,
-    `activeTokenBoost` DOUBLE NOT NULL DEFAULT 1.0,
+    `activeTokenBoost` DOUBLE NOT NULL DEFAULT 1,
     `tokenBoostExpiry` DATETIME(3) NULL,
 
     UNIQUE INDEX `Character_userId_key`(`userId`),
+    INDEX `Character_jobClassId_fkey`(`jobClassId`),
+    INDEX `Character_jobLevelId_fkey`(`jobLevelId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -90,6 +94,7 @@ CREATE TABLE `LevelHistory` (
     `reasoning` TEXT NULL,
     `recordedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    INDEX `LevelHistory_characterId_fkey`(`characterId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -101,6 +106,8 @@ CREATE TABLE `CharacterAchievement` (
     `achievementId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `CharacterAchievement_achievementId_fkey`(`achievementId`),
+    INDEX `CharacterAchievement_userId_fkey`(`userId`),
     UNIQUE INDEX `CharacterAchievement_characterId_achievementId_key`(`characterId`, `achievementId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -134,6 +141,7 @@ CREATE TABLE `FeedItem` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `content` TEXT NOT NULL,
     `type` VARCHAR(191) NOT NULL,
+    `post` TEXT NULL,
     `mediaType` ENUM('text', 'image', 'video') NOT NULL DEFAULT 'text',
     `mediaUrl` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -143,6 +151,10 @@ CREATE TABLE `FeedItem` (
     `achievementId` INTEGER NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `FeedItem_achievementId_fkey`(`achievementId`),
+    INDEX `FeedItem_levelHistoryId_fkey`(`levelHistoryId`),
+    INDEX `FeedItem_questSubmissionId_fkey`(`questSubmissionId`),
+    INDEX `FeedItem_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -158,6 +170,7 @@ CREATE TABLE `Story` (
     `updatedAt` DATETIME(3) NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `Story_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -168,6 +181,7 @@ CREATE TABLE `StoryView` (
     `storyId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `StoryView_userId_fkey`(`userId`),
     UNIQUE INDEX `StoryView_storyId_userId_key`(`storyId`, `userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -179,6 +193,7 @@ CREATE TABLE `Like` (
     `feedItemId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `Like_userId_fkey`(`userId`),
     UNIQUE INDEX `Like_feedItemId_userId_key`(`feedItemId`, `userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -192,6 +207,8 @@ CREATE TABLE `Comment` (
     `feedItemId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `Comment_feedItemId_fkey`(`feedItemId`),
+    INDEX `Comment_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -204,6 +221,8 @@ CREATE TABLE `ReplyComment` (
     `commentId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `ReplyComment_commentId_fkey`(`commentId`),
+    INDEX `ReplyComment_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -229,6 +248,7 @@ CREATE TABLE `PartyMember` (
     `partyId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `PartyMember_userId_fkey`(`userId`),
     UNIQUE INDEX `PartyMember_partyId_userId_key`(`partyId`, `userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -247,7 +267,7 @@ CREATE TABLE `Quest` (
     `updatedAt` DATETIME(3) NOT NULL,
     `baseTokenReward` INTEGER NOT NULL DEFAULT 10,
     `maxTokenReward` INTEGER NULL,
-    `tokenMultiplier` DOUBLE NOT NULL DEFAULT 1.0,
+    `tokenMultiplier` DOUBLE NOT NULL DEFAULT 1,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -263,7 +283,9 @@ CREATE TABLE `AssignedQuest` (
     `userId` INTEGER NOT NULL,
     `partyId` INTEGER NULL,
 
-    UNIQUE INDEX `AssignedQuest_questId_characterId_key`(`questId`, `characterId`),
+    INDEX `AssignedQuest_characterId_fkey`(`characterId`),
+    INDEX `AssignedQuest_partyId_fkey`(`partyId`),
+    INDEX `AssignedQuest_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -280,10 +302,17 @@ CREATE TABLE `QuestSubmission` (
     `ratingVIT` INTEGER NULL,
     `ratingINT` INTEGER NULL,
     `xpEarned` INTEGER NOT NULL,
+    `feedback` TEXT NULL,
+    `score` INTEGER NULL,
     `submittedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `mediaTranscript` TEXT NULL,
+    `mediaRevisedTranscript` TEXT NULL,
+    `mediaAnalysis` TEXT NULL,
     `characterId` INTEGER NOT NULL,
     `questId` INTEGER NOT NULL,
 
+    INDEX `QuestSubmission_characterId_fkey`(`characterId`),
+    INDEX `QuestSubmission_questId_fkey`(`questId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -296,6 +325,7 @@ CREATE TABLE `PartyQuest` (
     `partyId` INTEGER NOT NULL,
     `questId` INTEGER NOT NULL,
 
+    INDEX `PartyQuest_questId_fkey`(`questId`),
     UNIQUE INDEX `PartyQuest_partyId_questId_key`(`partyId`, `questId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -310,6 +340,9 @@ CREATE TABLE `Ranking` (
     `userId` INTEGER NULL,
     `characterId` INTEGER NULL,
 
+    INDEX `Ranking_characterId_fkey`(`characterId`),
+    INDEX `Ranking_jobClassId_fkey`(`jobClassId`),
+    INDEX `Ranking_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -323,6 +356,7 @@ CREATE TABLE `Notification` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `userId` INTEGER NOT NULL,
 
+    INDEX `Notification_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -348,11 +382,13 @@ CREATE TABLE `QuestToken` (
     `characterId` INTEGER NOT NULL,
     `tokensEarned` INTEGER NOT NULL,
     `bonusTokens` INTEGER NOT NULL DEFAULT 0,
-    `multiplier` DOUBLE NOT NULL DEFAULT 1.0,
+    `multiplier` DOUBLE NOT NULL DEFAULT 1,
     `completedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `QuestToken_completedAt_idx`(`completedAt`),
     INDEX `QuestToken_userId_questId_idx`(`userId`, `questId`),
+    INDEX `QuestToken_characterId_fkey`(`characterId`),
+    INDEX `QuestToken_questId_fkey`(`questId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -369,6 +405,7 @@ CREATE TABLE `TokenTransaction` (
     `balanceAfter` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    INDEX `TokenTransaction_userId_userToken_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -407,6 +444,9 @@ CREATE TABLE `TokenPurchase` (
     `purchasedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `characterId` INTEGER NOT NULL,
 
+    INDEX `TokenPurchase_characterId_fkey`(`characterId`),
+    INDEX `TokenPurchase_shopItemId_fkey`(`shopItemId`),
+    INDEX `TokenPurchase_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -446,37 +486,37 @@ CREATE TABLE `TokenMultiplierEvent` (
 ALTER TABLE `JobLevel` ADD CONSTRAINT `JobLevel_jobClassId_fkey` FOREIGN KEY (`jobClassId`) REFERENCES `JobClass`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Character` ADD CONSTRAINT `Character_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE `Character` ADD CONSTRAINT `Character_jobClassId_fkey` FOREIGN KEY (`jobClassId`) REFERENCES `JobClass`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Character` ADD CONSTRAINT `Character_jobLevelId_fkey` FOREIGN KEY (`jobLevelId`) REFERENCES `JobLevel`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `LevelHistory` ADD CONSTRAINT `LevelHistory_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Character` ADD CONSTRAINT `Character_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CharacterAchievement` ADD CONSTRAINT `CharacterAchievement_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `LevelHistory` ADD CONSTRAINT `LevelHistory_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `CharacterAchievement` ADD CONSTRAINT `CharacterAchievement_achievementId_fkey` FOREIGN KEY (`achievementId`) REFERENCES `Achievement`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `CharacterAchievement` ADD CONSTRAINT `CharacterAchievement_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `CharacterAchievement` ADD CONSTRAINT `CharacterAchievement_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `FeedItem` ADD CONSTRAINT `FeedItem_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `FeedItem` ADD CONSTRAINT `FeedItem_questSubmissionId_fkey` FOREIGN KEY (`questSubmissionId`) REFERENCES `QuestSubmission`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `FeedItem` ADD CONSTRAINT `FeedItem_achievementId_fkey` FOREIGN KEY (`achievementId`) REFERENCES `CharacterAchievement`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `FeedItem` ADD CONSTRAINT `FeedItem_levelHistoryId_fkey` FOREIGN KEY (`levelHistoryId`) REFERENCES `LevelHistory`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `FeedItem` ADD CONSTRAINT `FeedItem_achievementId_fkey` FOREIGN KEY (`achievementId`) REFERENCES `CharacterAchievement`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `FeedItem` ADD CONSTRAINT `FeedItem_questSubmissionId_fkey` FOREIGN KEY (`questSubmissionId`) REFERENCES `QuestSubmission`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `FeedItem` ADD CONSTRAINT `FeedItem_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Story` ADD CONSTRAINT `Story_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -512,16 +552,16 @@ ALTER TABLE `PartyMember` ADD CONSTRAINT `PartyMember_partyId_fkey` FOREIGN KEY 
 ALTER TABLE `PartyMember` ADD CONSTRAINT `PartyMember_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `AssignedQuest` ADD CONSTRAINT `AssignedQuest_questId_fkey` FOREIGN KEY (`questId`) REFERENCES `Quest`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE `AssignedQuest` ADD CONSTRAINT `AssignedQuest_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `AssignedQuest` ADD CONSTRAINT `AssignedQuest_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `AssignedQuest` ADD CONSTRAINT `AssignedQuest_partyId_fkey` FOREIGN KEY (`partyId`) REFERENCES `Party`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `AssignedQuest` ADD CONSTRAINT `AssignedQuest_partyId_fkey` FOREIGN KEY (`partyId`) REFERENCES `Party`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `AssignedQuest` ADD CONSTRAINT `AssignedQuest_questId_fkey` FOREIGN KEY (`questId`) REFERENCES `Quest`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `AssignedQuest` ADD CONSTRAINT `AssignedQuest_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `QuestSubmission` ADD CONSTRAINT `QuestSubmission_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -536,13 +576,13 @@ ALTER TABLE `PartyQuest` ADD CONSTRAINT `PartyQuest_partyId_fkey` FOREIGN KEY (`
 ALTER TABLE `PartyQuest` ADD CONSTRAINT `PartyQuest_questId_fkey` FOREIGN KEY (`questId`) REFERENCES `Quest`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Ranking` ADD CONSTRAINT `Ranking_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `Ranking` ADD CONSTRAINT `Ranking_jobClassId_fkey` FOREIGN KEY (`jobClassId`) REFERENCES `JobClass`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Ranking` ADD CONSTRAINT `Ranking_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Ranking` ADD CONSTRAINT `Ranking_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Notification` ADD CONSTRAINT `Notification_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -551,31 +591,31 @@ ALTER TABLE `Notification` ADD CONSTRAINT `Notification_userId_fkey` FOREIGN KEY
 ALTER TABLE `UserToken` ADD CONSTRAINT `UserToken_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `QuestToken` ADD CONSTRAINT `QuestToken_userId_user_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `QuestToken` ADD CONSTRAINT `QuestToken_userId_userToken_fkey` FOREIGN KEY (`userId`) REFERENCES `UserToken`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `QuestToken` ADD CONSTRAINT `QuestToken_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `QuestToken` ADD CONSTRAINT `QuestToken_questId_fkey` FOREIGN KEY (`questId`) REFERENCES `Quest`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `QuestToken` ADD CONSTRAINT `QuestToken_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `QuestToken` ADD CONSTRAINT `QuestToken_userId_userToken_fkey` FOREIGN KEY (`userId`) REFERENCES `UserToken`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `TokenTransaction` ADD CONSTRAINT `TokenTransaction_userId_user_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `QuestToken` ADD CONSTRAINT `QuestToken_userId_user_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `TokenTransaction` ADD CONSTRAINT `TokenTransaction_userId_userToken_fkey` FOREIGN KEY (`userId`) REFERENCES `UserToken`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `TokenPurchase` ADD CONSTRAINT `TokenPurchase_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `TokenTransaction` ADD CONSTRAINT `TokenTransaction_userId_user_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `TokenPurchase` ADD CONSTRAINT `TokenPurchase_characterId_fkey` FOREIGN KEY (`characterId`) REFERENCES `Character`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `TokenPurchase` ADD CONSTRAINT `TokenPurchase_shopItemId_fkey` FOREIGN KEY (`shopItemId`) REFERENCES `TokenShopItem`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `TokenPurchase` ADD CONSTRAINT `TokenPurchase_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `QuestStreak` ADD CONSTRAINT `QuestStreak_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

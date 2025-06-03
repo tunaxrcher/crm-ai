@@ -1,13 +1,16 @@
+// src/features/feed/components/post/PostList.tsx
 'use client'
 
 import { Dispatch, SetStateAction, useCallback } from 'react'
 
-import { FeedItemUI } from '@src/features/feed/types'
+import { FeedItemWithRelations } from '@src/features/feed/types'
 
 import { PostCard } from './PostCard'
 
+// src/features/feed/components/post/PostList.tsx
+
 interface PostListProps {
-  feedItems: FeedItemUI[]
+  feedItems: FeedItemWithRelations[]
   formatTimeDiff: (date: Date | string | number) => string
   toggleLike: (feedItemId: string) => void
   commentInputs: Record<string, string>
@@ -52,17 +55,17 @@ export default function PostList({
 
   return (
     <>
-      {feedItems.map((item, index) => (
+      {feedItems.map((item) => (
         <PostCard
-          key={index}
+          key={item.id}
           item={item}
           formatTimeDiff={formatTimeDiff}
           toggleLike={toggleLike}
-          commentInput={commentInputs[item.id] || ''}
+          commentInput={commentInputs[item.id.toString()] || ''}
           onCommentInputChange={(value) =>
-            handleCommentInputChange(item.id, value)
+            handleCommentInputChange(item.id.toString(), value)
           }
-          handleAddComment={createCommentHandler(item.id)}
+          handleAddComment={createCommentHandler(item.id.toString())}
         />
       ))}
     </>

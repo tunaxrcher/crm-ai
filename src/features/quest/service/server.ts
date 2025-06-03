@@ -1,12 +1,11 @@
 // src/features/quest/service/server.ts
 import { characterService } from '@src/features/character/service/server'
+import { storyService } from '@src/features/feed/service/server'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
 import { openaiService } from '@src/lib/service/openaiService'
 import { s3UploadService } from '@src/lib/service/s3UploadService'
 import { BaseService } from '@src/lib/service/server/baseService'
-
-// เพิ่มบรรทัดนี้
 
 import {
   QuestRepository,
@@ -78,17 +77,22 @@ export class QuestService extends BaseService {
   }
 
   // ตรวจสอบว่า quest อยู่ในช่วงเวลาที่กำหนดหรือไม่
-  private isQuestInTimeRange(questType: string, assignedAt: Date): boolean {
+  private isQuestInTimeRange(
+    questType: string,
+    assignedAt: Date,
+    expiresAt: Date | null
+  ): boolean {
     const now = new Date()
     const assignedDate = new Date(assignedAt)
 
-    console.log(now)
+    // ถ้ามีการกำหนด expiresAt และเลยเวลาหมดอายุแล้ว ให้ถือว่าไม่อยู่ในช่วงเวลาที่กำหนด
+    if (expiresAt && now > new Date(expiresAt)) {
+      return false
+    }
 
     switch (questType.toLowerCase()) {
       case 'daily':
         // ตรวจสอบว่าอยู่ในวันเดียวกันหรือไม่
-        console.log(now.toDateString())
-        console.log(assignedDate.toDateString())
         return assignedDate.toDateString() === now.toDateString()
       case 'weekly':
         // ตรวจสอบว่าอยู่ในสัปดาห์เดียวกันหรือไม่
@@ -120,23 +124,196 @@ export class QuestService extends BaseService {
       const assignedQuests =
         await questRepository.getAssignedQuestsByCharacterId(character.id)
 
+      // ตรวจสอบเควสที่หมดอายุและจัดการตามประเภท
+      await this.handleExpiredQuests(character.id, userId, assignedQuests)
+
+      // ดึงข้อมูลภารกิจที่ได้รับมอบหมายอีกครั้งหลังจากอัปเดต
+      const updatedAssignedQuests =
+        await questRepository.getAssignedQuestsByCharacterId(character.id)
+
       // ตรวจสอบว่าผู้ใช้มีเควสหรือไม่ ถ้าไม่มีให้สุ่มเควสและมอบหมายให้
-      if (assignedQuests.length === 0) {
+      if (updatedAssignedQuests.length === 0) {
         console.log(
           'No quests assigned for new user. Assigning initial quests...'
         )
         await this.assignInitialQuestsForNewUser(character.id, userId)
 
         // ดึงภารกิจที่เพิ่งมอบหมายใหม่อีกครั้ง
-        const updatedAssignedQuests =
+        const newAssignedQuests =
           await questRepository.getAssignedQuestsByCharacterId(character.id)
-        return this.processQuestData(updatedAssignedQuests, character.id)
+        return this.processQuestData(newAssignedQuests, character.id)
       }
 
-      return this.processQuestData(assignedQuests, character.id)
+      // ตรวจสอบว่ามีเควสรายวันอยู่ในวันนี้หรือไม่
+      const hasDailyQuestToday = this.hasDailyQuestForToday(
+        updatedAssignedQuests
+      )
+
+      // ถ้าไม่มีเควสรายวันในวันนี้ ให้มอบหมายเควสรายวันใหม่
+      if (!hasDailyQuestToday) {
+        console.log('No daily quests for today. Assigning new daily quests...')
+        await this.assignNewDailyQuests(character.id, userId)
+
+        // ดึงภารกิจอีกครั้งหลังมอบหมายเควสรายวันใหม่
+        const finalAssignedQuests =
+          await questRepository.getAssignedQuestsByCharacterId(character.id)
+        return this.processQuestData(finalAssignedQuests, character.id)
+      }
+
+      return this.processQuestData(updatedAssignedQuests, character.id)
     } catch (error) {
       console.error('Error in getQuestsForUser:', error)
       throw new Error('Failed to fetch quests for user')
+    }
+  }
+
+  // ตรวจสอบว่ามีเควสรายวันสำหรับวันนี้หรือไม่
+  private hasDailyQuestForToday(assignedQuests: any[]): boolean {
+    const today = new Date().toDateString()
+
+    // กรองเควสที่เป็นรายวัน และยังไม่หมดอายุ
+    const activeDailyQuests = assignedQuests.filter((aq) => {
+      return (
+        aq.quest.type === 'daily' &&
+        aq.status === 'active' &&
+        new Date(aq.assignedAt).toDateString() === today
+      )
+    })
+
+    return activeDailyQuests.length > 0
+  }
+
+  // จัดการกับเควสที่หมดอายุ
+  private async handleExpiredQuests(
+    characterId: number,
+    userId: number,
+    assignedQuests: any[]
+  ): Promise<void> {
+    const now = new Date()
+    const expiredQuests = assignedQuests.filter((aq) => {
+      return (
+        aq.status === 'active' && aq.expiresAt && new Date(aq.expiresAt) < now
+      )
+    })
+
+    if (expiredQuests.length === 0) return
+
+    console.log(
+      `Found ${expiredQuests.length} expired quests for user ${userId}`
+    )
+
+    // อัปเดตสถานะเควสที่หมดอายุเป็น 'expired'
+    const updatePromises = expiredQuests.map((aq) => {
+      return prisma.assignedQuest.update({
+        where: { id: aq.id },
+        data: { status: 'expired' },
+      })
+    })
+
+    await Promise.all(updatePromises)
+    console.log(`Updated ${expiredQuests.length} quests to expired status`)
+  }
+
+  // มอบหมายเควสรายวันใหม่
+  private async assignNewDailyQuests(
+    characterId: number,
+    userId: number
+  ): Promise<void> {
+    try {
+      // ดึงเควสรายวันใหม่ 3 อัน
+      const dailyQuests = await this.getRandomQuestsByType('daily', 3)
+
+      if (dailyQuests.length === 0) {
+        console.log('No daily quests available')
+        return
+      }
+
+      console.log(
+        `Assigning ${dailyQuests.length} new daily quests for user ${userId}`
+      )
+
+      // มอบหมายเควสรายวันใหม่
+      const assignPromises = dailyQuests.map((quest) => {
+        // กำหนด expiresAt (หมดอายุเวลา 23:59:59 ของวันนี้)
+        const expiresAt = new Date()
+        expiresAt.setHours(23, 59, 59, 999)
+
+        return prisma.assignedQuest.create({
+          data: {
+            questId: quest.id,
+            characterId: characterId,
+            userId: userId,
+            status: 'active',
+            assignedAt: new Date(),
+            expiresAt: expiresAt,
+          },
+        })
+      })
+
+      await Promise.all(assignPromises)
+      console.log('New daily quests assigned successfully')
+    } catch (error) {
+      console.error('Error assigning new daily quests:', error)
+      throw new Error('Failed to assign new daily quests')
+    }
+  }
+
+  // ตรวจสอบว่าเควสรายสัปดาห์สำหรับสัปดาห์นี้มีหรือไม่ และสร้างใหม่ถ้าไม่มี
+  private async checkAndAssignWeeklyQuests(
+    characterId: number,
+    userId: number,
+    assignedQuests: any[]
+  ): Promise<void> {
+    // ดึงเควสที่เป็นรายสัปดาห์และยังไม่หมดอายุ
+    const activeWeeklyQuests = assignedQuests.filter((aq) => {
+      return (
+        aq.quest.type === 'weekly' &&
+        aq.status === 'active' &&
+        aq.expiresAt &&
+        new Date(aq.expiresAt) > new Date()
+      )
+    })
+
+    // ถ้ามีเควสรายสัปดาห์อยู่แล้ว ไม่ต้องทำอะไร
+    if (activeWeeklyQuests.length > 0) return
+
+    // ถ้าไม่มีเควสรายสัปดาห์ ให้มอบหมายเควสรายสัปดาห์ใหม่
+    try {
+      const weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
+
+      if (weeklyQuests.length === 0) {
+        console.log('No weekly quests available')
+        return
+      }
+
+      console.log(
+        `Assigning ${weeklyQuests.length} new weekly quests for user ${userId}`
+      )
+
+      // มอบหมายเควสรายสัปดาห์ใหม่
+      const assignPromises = weeklyQuests.map((quest) => {
+        // กำหนด expiresAt (หมดอายุ 7 วันนับจากวันนี้)
+        const expiresAt = new Date()
+        expiresAt.setDate(expiresAt.getDate() + 7)
+        expiresAt.setHours(23, 59, 59, 999)
+
+        return prisma.assignedQuest.create({
+          data: {
+            questId: quest.id,
+            characterId: characterId,
+            userId: userId,
+            status: 'active',
+            assignedAt: new Date(),
+            expiresAt: expiresAt,
+          },
+        })
+      })
+
+      await Promise.all(assignPromises)
+      console.log('New weekly quests assigned successfully')
+    } catch (error) {
+      console.error('Error assigning new weekly quests:', error)
+      throw new Error('Failed to assign new weekly quests')
     }
   }
 
@@ -167,10 +344,11 @@ export class QuestService extends BaseService {
         let expiresAt = null
         if (quest.type === 'daily') {
           expiresAt = new Date()
-          expiresAt.setDate(expiresAt.getDate() + 1) // หมดอายุใน 1 วัน
+          expiresAt.setHours(23, 59, 59, 999) // หมดอายุในวันนี้เวลา 23:59:59
         } else if (quest.type === 'weekly') {
           expiresAt = new Date()
           expiresAt.setDate(expiresAt.getDate() + 7) // หมดอายุใน 7 วัน
+          expiresAt.setHours(23, 59, 59, 999)
         }
 
         // บันทึกลงในตาราง AssignedQuest
@@ -231,11 +409,15 @@ export class QuestService extends BaseService {
     const activeQuests: Quest[] = assignedQuests
       .filter((assignedQuest) => {
         // แสดงภารกิจที่:
-        // 1. อยู่ในช่วงเวลาที่กำหนด (สำหรับ daily/weekly)
-        // 2. หรือเป็นภารกิจทั่วไป (no-deadline)
-        return this.isQuestInTimeRange(
-          assignedQuest.quest.type,
-          assignedQuest.assignedAt
+        // 1. มีสถานะเป็น active
+        // 2. อยู่ในช่วงเวลาที่กำหนด (สำหรับ daily/weekly)
+        return (
+          assignedQuest.status === 'active' &&
+          this.isQuestInTimeRange(
+            assignedQuest.quest.type,
+            assignedQuest.assignedAt,
+            assignedQuest.expiresAt
+          )
         )
       })
       .map((assignedQuest) => {
@@ -389,6 +571,7 @@ export class QuestSubmissionService extends BaseService {
 
       // 2. อัพโหลดไฟล์ไป S3 (ถ้ามี)
       let mediaUrl: string | undefined
+      let mediaType: 'image' | 'video' | 'text' = 'text'
 
       if (mediaFile) {
         const uploadResult = await s3UploadService.uploadFile(mediaFile)
@@ -397,14 +580,13 @@ export class QuestSubmissionService extends BaseService {
           throw new Error('Failed to upload media file')
 
         mediaUrl = uploadResult.url
+        mediaType = this.getMediaType(mediaFile)
       }
 
       // 3. วิเคราะห์สื่อ (วิดีโอหรือรูปภาพ)
       let mediaAnalysis: any = undefined
 
       if (mediaFile && mediaUrl) {
-        const mediaType = this.getMediaType(mediaFile)
-
         if (mediaType === 'video') {
           console.log('Analyzing video content...')
           try {
@@ -461,23 +643,33 @@ export class QuestSubmissionService extends BaseService {
           characterId
         )
 
-        // 8. อัพเดท character XP (เพิ่มบรรทัดนี้)
+        // 8. อัพเดท character XP
         const characterUpdateResult = await characterService.addXP(
-          characterId,
           quest.xpReward
         )
 
         // 9. สร้าง feed item
-        await questSubmissionRepository.createQuestCompletionFeedItem(
-          character.userId,
-          'quest_completion',
-          submission.mediaRevisedTranscript,
-          mediaType,
-          quest.title,
-          quest.xpReward,
-          submission.id,
-          mediaUrl
-        )
+        const feedItem =
+          await questSubmissionRepository.createQuestCompletionFeedItem(
+            character.userId,
+            'quest_completion',
+            submission.mediaRevisedTranscript,
+            mediaType,
+            quest.title,
+            quest.xpReward,
+            submission.id,
+            mediaUrl
+          )
+
+        // 10. สร้าง story (เพิ่มขั้นตอนนี้)
+        const story = await storyService.createStory({
+          userId: character.userId,
+          content: `ทำเควส "${quest.title}" สำเร็จ`,
+          type: mediaType,
+          mediaUrl,
+          text: submission.mediaRevisedTranscript || description,
+          expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
+        })
 
         let successMessage = 'Quest completed successfully!'
 
@@ -486,7 +678,6 @@ export class QuestSubmissionService extends BaseService {
         }
 
         if (mediaAnalysis) {
-          const mediaType = mediaFile ? this.getMediaType(mediaFile) : 'unknown'
           if (mediaType === 'video') {
             successMessage +=
               ' Video content was analyzed and included in evaluation.'
@@ -502,7 +693,9 @@ export class QuestSubmissionService extends BaseService {
           aiAnalysis,
           submission,
           mediaType,
-          characterUpdate: characterUpdateResult, // เพิ่มข้อมูลการอัพเดท character
+          characterUpdate: characterUpdateResult,
+          feedItem,
+          story, // เพิ่ม story ในข้อมูลที่ส่งกลับ
         }
       }
     } catch (error) {
@@ -536,15 +729,30 @@ export class QuestSubmissionService extends BaseService {
           newSummary
         )
 
-      if (!updatedSubmission) {
-        throw new Error('Submission not found')
-      }
+      if (!updatedSubmission) throw new Error('Submission not found')
 
       // 2. อัปเดต feed item ที่เกี่ยวข้อง
       await questSubmissionRepository.updateRelatedFeedItem(
         submissionId,
         newSummary
       )
+
+      // 3. สร้าง story ใหม่หรืออัปเดต story ที่มีอยู่
+      // ตรวจสอบว่ามี story เกี่ยวกับ quest submission นี้อยู่แล้วหรือไม่
+      // (เราต้องกำหนดวิธีการติดตาม story ที่เกี่ยวข้องกับ quest submission)
+      // ในตัวอย่างนี้ จะสร้าง story ใหม่ทุกครั้งที่มีการอัปเดต
+
+      if (updatedSubmission.character && updatedSubmission.character.user) {
+        // สร้าง story ใหม่จากข้อมูลที่อัปเดต
+        await storyService.createStory({
+          userId: updatedSubmission.character.user.id,
+          content: `อัปเดตเควส "${updatedSubmission.quest.title}"`,
+          type: updatedSubmission.mediaType as 'text' | 'image' | 'video',
+          mediaUrl: updatedSubmission.mediaUrl || undefined,
+          text: newSummary,
+          expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
+        })
+      }
 
       return {
         success: true,
@@ -560,4 +768,3 @@ export class QuestSubmissionService extends BaseService {
 }
 
 export const questSubmissionService = new QuestSubmissionService()
-

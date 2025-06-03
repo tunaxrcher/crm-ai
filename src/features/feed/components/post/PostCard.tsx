@@ -1,3 +1,4 @@
+// src/features/feed/components/post/PostCard.tsx
 import React, { memo } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
@@ -32,6 +33,45 @@ export const PostCard = function PostCard({
 }: PostCardProps) {
   const { type, user, content } = item
 
+  // ฟังก์ชันสำหรับแสดง media ตามประเภท
+  const renderMedia = () => {
+    let mediaUrl = null
+
+    // กำหนด media URL ตามประเภทของ content
+    if (type === 'quest_complete' && content.image) {
+      mediaUrl = content.image
+    } else if (type === 'post' && content.image) {
+      mediaUrl = content.image
+    }
+
+    if (!mediaUrl) return null
+
+    // ตรวจสอบประเภทของ media (video หรือ image)
+    const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('/video')
+
+    if (isVideo) {
+      return (
+        <div className="mb-3 rounded-lg overflow-hidden h-80 bg-secondary/20">
+          <video
+            src={mediaUrl}
+            controls
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )
+    } else {
+      return (
+        <div className="mb-3 rounded-lg overflow-hidden max-h-96 bg-secondary/20">
+          <img
+            src={mediaUrl}
+            alt="Content media"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )
+    }
+  }
+
   return (
     <>
       <Card className="mb-6">
@@ -64,20 +104,19 @@ export const PostCard = function PostCard({
             <div>
               <div className="mb-2">
                 <span className="font-medium ai-gradient-text">
-                  Completed a quest:
+                  ทำเควสสำเร็จ:
                 </span>{' '}
                 {content.quest.title}
               </div>
 
-              {content.image && (
-                <div className="mb-3 rounded-lg overflow-hidden h-40 bg-secondary/20">
-                  <img
-                    src={content.image}
-                    alt="Quest evidence"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+              {/* แสดง Caption จาก field post */}
+              {/* แสดงข้อมูลจาก transformApiToFeedItem - ดึงจาก post */}
+              {(item as any).post && (
+                <div className="mb-3 text-sm">{(item as any).post}</div>
               )}
+
+              {/* แสดงรูป/วิดีโอจาก mediaUrl */}
+              {renderMedia()}
 
               <div className="flex items-center space-x-3 mb-2">
                 <div className="flex items-center">
@@ -143,15 +182,7 @@ export const PostCard = function PostCard({
                 <div className="mb-3 whitespace-pre-wrap">{content.text}</div>
               )}
 
-              {content.image && (
-                <div className="mb-3 rounded-lg overflow-hidden">
-                  <img
-                    src={content.image}
-                    alt="Post image"
-                    className="w-full h-auto max-h-96 object-cover"
-                  />
-                </div>
-              )}
+              {renderMedia()}
             </div>
           )}
 

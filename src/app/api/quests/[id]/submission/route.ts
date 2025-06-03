@@ -9,9 +9,8 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<any> }
 ) {
-
   console.log(`[API] GET Quest Submission`)
-  
+
   try {
     const { id: questId } = await context.params
     const { searchParams } = new URL(request.url)
@@ -50,7 +49,6 @@ export async function PUT(
   request: NextRequest,
   context: { params: Promise<any> }
 ) {
-
   console.log(`[API] UPDATE Quest Submission`)
 
   try {

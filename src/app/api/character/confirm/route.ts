@@ -2,22 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { characterService } from '@src/features/character/service/server'
 import { CharacterConfirmPayload } from '@src/features/character/types'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export async function POST(request: NextRequest) {
-  try {
-    const payload: CharacterConfirmPayload = await request.json()
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log(`[API] Confirm Create Character`)
 
-    const result = await characterService.confirmCharacterCreation(payload)
+  const payload: CharacterConfirmPayload = await request.json()
 
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error('Error confirming character:', error)
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : 'Failed to create character',
-      },
-      { status: 500 }
-    )
-  }
-}
+  const result = await characterService.confirmCharacterCreation(payload)
+
+  return NextResponse.json(result)
+})

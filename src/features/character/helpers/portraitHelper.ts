@@ -106,6 +106,40 @@ export class PortraitHelper {
   /**
    * อัพเดท generatedPortraits โดยเพิ่ม portrait ใหม่สำหรับ class level ที่ปลดล็อก
    */
+  // static async updateGeneratedPortraits(
+  //   characterId: number,
+  //   currentPortraits: any,
+  //   newClassLevel: number,
+  //   originalFaceImage?: string | null
+  // ): Promise<GeneratedPortraits> {
+  //   if (!currentPortraits) {
+  //     currentPortraits = this.initializeEmptyPortraits()
+  //   }
+
+  //   let portraits: GeneratedPortraits
+  //   if (typeof currentPortraits === 'string') {
+  //     try {
+  //       portraits = JSON.parse(currentPortraits)
+  //       console.log(portraits)
+  //     } catch {
+  //       portraits = this.initializeEmptyPortraits()
+  //     }
+  //   } else {
+  //     portraits = { ...currentPortraits }
+  //   }
+
+  //   // Generate new portrait for the unlocked class level
+  //   const newPortraitUrl = await this.generateNewPortrait(
+  //     characterId,
+  //     newClassLevel,
+  //     originalFaceImage
+  //   )
+
+  //   console.log(`[PortraitHelper] Updated portraits:`, portraits)
+
+  //   return portraits
+  // }
+
   static async updateGeneratedPortraits(
     characterId: number,
     currentPortraits: any,
@@ -120,7 +154,7 @@ export class PortraitHelper {
     if (typeof currentPortraits === 'string') {
       try {
         portraits = JSON.parse(currentPortraits)
-        console.log(portraits)
+        console.log('[PortraitHelper] Parsed portraits:', portraits)
       } catch {
         portraits = this.initializeEmptyPortraits()
       }
@@ -128,16 +162,103 @@ export class PortraitHelper {
       portraits = { ...currentPortraits }
     }
 
-    // Generate new portrait for the unlocked class level
-    const newPortraitUrl = await this.generateNewPortrait(
+    // ดึงภาพสำหรับ class level ที่ปลดล็อกจากฐานข้อมูล
+    const portraitUrl = await this.getPortraitForClassLevel(
       characterId,
-      newClassLevel,
-      originalFaceImage
+      newClassLevel
     )
+
+    // อัพเดทข้อมูล portraits
+    portraits[newClassLevel.toString()] = portraitUrl
 
     console.log(`[PortraitHelper] Updated portraits:`, portraits)
 
     return portraits
+  }
+
+  /**
+   * ดึงภาพ portrait สำหรับ class level จากฐานข้อมูล
+   * แทนการเจนภาพใหม่ด้วย replicateService
+   */
+  static async getPortraitForClassLevel(
+    characterId: number,
+    classLevel: number
+  ): Promise<string> {
+    try {
+      // ดึงข้อมูล character และ generatedPortraits
+      const character = await prisma.character.findUnique({
+        where: { id: characterId },
+        select: {
+          generatedPortraits: true,
+          jobClassId: true,
+        },
+      })
+
+      if (!character) {
+        throw new Error('Character not found')
+      }
+
+      let portraits: GeneratedPortraits = {}
+
+      // แปลงค่า generatedPortraits เป็น object
+      if (typeof character.generatedPortraits === 'string') {
+        try {
+          portraits = JSON.parse(character.generatedPortraits)
+        } catch {
+          console.error('[PortraitHelper] Failed to parse generatedPortraits')
+          portraits = {}
+        }
+      } else if (character.generatedPortraits) {
+        portraits = character.generatedPortraits as GeneratedPortraits
+      }
+
+      // ตรวจสอบว่ามีภาพสำหรับ classLevel ที่ต้องการหรือไม่
+      const portraitUrl = portraits[classLevel.toString()]
+
+      if (portraitUrl) {
+        console.log(
+          `[PortraitHelper] Found portrait for class level ${classLevel}: ${portraitUrl}`
+        )
+        return portraitUrl
+      }
+
+      // ถ้าไม่มีภาพสำหรับ classLevel ที่ต้องการ ให้ใช้ภาพจากฐานข้อมูลกลาง
+      console.log(
+        `[PortraitHelper] Portrait for class level ${classLevel} not found in character data, using default`
+      )
+
+      // ดึงภาพ default จากฐานข้อมูลตาม jobClassId และ level
+      const defaultPortrait = await this.getDefaultPortraitByJobClassAndLevel(
+        character.jobClassId,
+        classLevel
+      )
+
+      return (
+        defaultPortrait ||
+        `https://tawnychatai2.sgp1.digitaloceanspaces.com/${classLevel}.png`
+      )
+    } catch (error) {
+      console.error(`[PortraitHelper] Error getting portrait:`, error)
+      // Return default placeholder if retrieval fails
+      return `https://tawnychatai2.sgp1.digitaloceanspaces.com/${classLevel}.png`
+    }
+  }
+
+  /**
+   * ดึงภาพ default จากฐานข้อมูลตาม jobClassId และ level
+   */
+  private static async getDefaultPortraitByJobClassAndLevel(
+    jobClassId: number,
+    classLevel: number
+  ): Promise<string | null> {
+    // ตรวจสอบว่ามีภาพ default ในฐานข้อมูลหรือไม่
+    // คุณอาจต้องปรับปรุงโค้ดส่วนนี้ตามโครงสร้างฐานข้อมูลของคุณ
+    try {
+      return `https://tawnychatai2.sgp1.digitaloceanspaces.com/${classLevel}.png`
+    } catch (error) {
+      console.error(`[PortraitHelper] Error getting default portrait:`, error)
+      return null
+    }
   }
 
   /**
