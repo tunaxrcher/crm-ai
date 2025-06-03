@@ -5,8 +5,6 @@ import { BaseService } from '@src/lib/service/server/baseService'
 import bcrypt from 'bcrypt'
 import 'server-only'
 
-import { JobClassHelper } from '../helpers/jobClassHelper'
-import { PortraitHelper } from '../helpers/portraitHelper'
 import {
   CharacterRepository,
   JobClassRepository,
@@ -21,8 +19,8 @@ import {
   CharacterGenerateResponse,
   GeneratedPortrait,
 } from '../types'
+import { CharacterLevelService } from './CharacterLevelService'
 import { openAIVisionService } from './openaiVisionService'
-import { replicateService } from './replicateService'
 import { StatsAllocationService } from './statsAllocationService'
 
 export class CharacterService extends BaseService {
@@ -247,11 +245,14 @@ export class CharacterService extends BaseService {
     const newLevel = character.level + 1
 
     // เรียกใช้ฟังก์ชัน processLevelUp พร้อมอัพเดท level
-    const result = await this.processLevelUp(
+    const levelService = new CharacterLevelService()
+
+    // เรียกใช้ processLevelUp
+    const result = await levelService.processLevelUp(
       characterId,
       oldLevel,
       newLevel,
-      true
+      true // shouldUpdateLevel
     )
 
     return {
@@ -421,182 +422,182 @@ export class CharacterService extends BaseService {
   //     aiReasoning: statGains.reasoning,
   //   }
   // }
-  private async processLevelUp(
-    characterId: number,
-    oldLevel: number,
-    newLevel: number,
-    shouldUpdateLevel: boolean = true
-  ) {
-    const character =
-      await characterRepository.findByIdWithJobLevels(characterId)
-    if (!character) throw new Error('Character not found')
+  // private async processLevelUp(
+  //   characterId: number,
+  //   oldLevel: number,
+  //   newLevel: number,
+  //   shouldUpdateLevel: boolean = true
+  // ) {
+  //   const character =
+  //     await characterRepository.findByIdWithJobLevels(characterId)
+  //   if (!character) throw new Error('Character not found')
 
-    console.log(
-      `[ProcessLevelUp] Processing level up: ${oldLevel} → ${newLevel}`
-    )
+  //   console.log(
+  //     `[ProcessLevelUp] Processing level up: ${oldLevel} → ${newLevel}`
+  //   )
 
-    // ใช้ AI คำนวณ stats
-    const statGains = await StatsAllocationService.calculateStatGains(
-      characterId,
-      oldLevel,
-      newLevel,
-      character.jobClass.name
-    )
-    console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
+  //   // ใช้ AI คำนวณ stats
+  //   const statGains = await StatsAllocationService.calculateStatGains(
+  //     characterId,
+  //     oldLevel,
+  //     newLevel,
+  //     character.jobClass.name
+  //   )
+  //   console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
 
-    // ตรวจสอบการปลดล็อก class ใหม่
-    const unlockedClassLevel = PortraitHelper.shouldUnlockNewClass(
-      newLevel,
-      oldLevel
-    )
+  //   // ตรวจสอบการปลดล็อก class ใหม่
+  //   const unlockedClassLevel = PortraitHelper.shouldUnlockNewClass(
+  //     newLevel,
+  //     oldLevel
+  //   )
 
-    let updatedPortraits = character.generatedPortraits
-    let newPortraitUrl = character.currentPortraitUrl
+  //   let updatedPortraits = character.generatedPortraits
+  //   let newPortraitUrl = character.currentPortraitUrl
 
-    if (unlockedClassLevel) {
-      console.log(
-        `[ProcessLevelUp] Unlocking new class level: ${unlockedClassLevel}`
-      )
+  //   if (unlockedClassLevel) {
+  //     console.log(
+  //       `[ProcessLevelUp] Unlocking new class level: ${unlockedClassLevel}`
+  //     )
 
-      console.log('debug', {
-        characterId: characterId,
-        generatedPortraits: character.generatedPortraits,
-        unlockedClassLevel: unlockedClassLevel,
-        originalFaceImage: character.originalFaceImage,
-      })
+  //     console.log('debug', {
+  //       characterId: characterId,
+  //       generatedPortraits: character.generatedPortraits,
+  //       unlockedClassLevel: unlockedClassLevel,
+  //       originalFaceImage: character.originalFaceImage,
+  //     })
 
-      // Generate portrait ใหม่สำหรับ class level ที่ปลดล็อก
-      updatedPortraits = await PortraitHelper.updateGeneratedPortraits(
-        characterId,
-        character.generatedPortraits,
-        unlockedClassLevel,
-        character.originalFaceImage
-      )
+  //     // Generate portrait ใหม่สำหรับ class level ที่ปลดล็อก
+  //     updatedPortraits = await PortraitHelper.updateGeneratedPortraits(
+  //       characterId,
+  //       character.generatedPortraits,
+  //       unlockedClassLevel,
+  //       character.originalFaceImage
+  //     )
 
-      // อัพเดท current portrait URL
-      newPortraitUrl = PortraitHelper.getCurrentPortraitUrl(
-        newLevel,
-        updatedPortraits
-      )
+  //     // อัพเดท current portrait URL
+  //     newPortraitUrl = PortraitHelper.getCurrentPortraitUrl(
+  //       newLevel,
+  //       updatedPortraits
+  //     )
 
-      console.log(`[ProcessLevelUp] New portrait URL: ${newPortraitUrl}`)
-    }
+  //     console.log(`[ProcessLevelUp] New portrait URL: ${newPortraitUrl}`)
+  //   }
 
-    // ตรวจสอบการอัพเดท job level
-    let jobLevelUpdate = JobClassHelper.shouldUpdateJobLevel(
-      character.currentJobLevel,
-      character.jobClass.levels,
-      newLevel
-    )
-    // ตรวจสอบว่าเป็น threshold สำคัญหรือไม่
-    const importantThresholds = [10, 35, 60, 80, 99]
-    if (importantThresholds.includes(newLevel) && oldLevel < newLevel) {
-      // หา job level ที่ตรงกับ threshold นี้
-      const targetJobLevel = character.jobClass.levels.find(
-        (jl) => jl.requiredCharacterLevel === newLevel
-      )
+  //   // ตรวจสอบการอัพเดท job level
+  //   let jobLevelUpdate = JobClassHelper.shouldUpdateJobLevel(
+  //     character.currentJobLevel,
+  //     character.jobClass.levels,
+  //     newLevel
+  //   )
+  //   // ตรวจสอบว่าเป็น threshold สำคัญหรือไม่
+  //   const importantThresholds = [10, 35, 60, 80, 99]
+  //   if (importantThresholds.includes(newLevel) && oldLevel < newLevel) {
+  //     // หา job level ที่ตรงกับ threshold นี้
+  //     const targetJobLevel = character.jobClass.levels.find(
+  //       (jl) => jl.requiredCharacterLevel === newLevel
+  //     )
 
-      if (targetJobLevel) {
-        console.log(
-          `[ProcessLevelUp] Force updating job level at threshold ${newLevel} from level ${oldLevel}`
-        )
-        console.log(
-          `[ProcessLevelUp] Current job level: ${character.currentJobLevel.title}, Target job level: ${targetJobLevel.title}`
-        )
+  //     if (targetJobLevel) {
+  //       console.log(
+  //         `[ProcessLevelUp] Force updating job level at threshold ${newLevel} from level ${oldLevel}`
+  //       )
+  //       console.log(
+  //         `[ProcessLevelUp] Current job level: ${character.currentJobLevel.title}, Target job level: ${targetJobLevel.title}`
+  //       )
 
-        // บังคับให้อัพเดท job level โดยไม่สนใจผลจาก shouldUpdateJobLevel
-        jobLevelUpdate = {
-          shouldUpdate: true,
-          newJobLevel: targetJobLevel,
-        }
-      }
-    }
+  //       // บังคับให้อัพเดท job level โดยไม่สนใจผลจาก shouldUpdateJobLevel
+  //       jobLevelUpdate = {
+  //         shouldUpdate: true,
+  //         newJobLevel: targetJobLevel,
+  //       }
+  //     }
+  //   }
 
-    // สร้าง Level History
-    const levelHistory = await characterRepository.createLevelHistory({
-      characterId,
-      levelFrom: oldLevel,
-      levelTo: newLevel,
-      agiGained: statGains.agiGained,
-      strGained: statGains.strGained,
-      dexGained: statGains.dexGained,
-      vitGained: statGains.vitGained,
-      intGained: statGains.intGained,
-      reasoning: `AI Analysis: ${statGains.reasoning}${unlockedClassLevel ? ` | Unlocked class level ${unlockedClassLevel}` : ''}`,
-    })
+  //   // สร้าง Level History
+  //   const levelHistory = await characterRepository.createLevelHistory({
+  //     characterId,
+  //     levelFrom: oldLevel,
+  //     levelTo: newLevel,
+  //     agiGained: statGains.agiGained,
+  //     strGained: statGains.strGained,
+  //     dexGained: statGains.dexGained,
+  //     vitGained: statGains.vitGained,
+  //     intGained: statGains.intGained,
+  //     reasoning: `AI Analysis: ${statGains.reasoning}${unlockedClassLevel ? ` | Unlocked class level ${unlockedClassLevel}` : ''}`,
+  //   })
 
-    // เตรียมข้อมูลสำหรับอัพเดท character
-    const updateData: any = {
-      statAGI: character.statAGI + statGains.agiGained,
-      statSTR: character.statSTR + statGains.strGained,
-      statDEX: character.statDEX + statGains.dexGained,
-      statVIT: character.statVIT + statGains.vitGained,
-      statINT: character.statINT + statGains.intGained,
-      statPoints: character.statPoints + 5,
-    }
+  //   // เตรียมข้อมูลสำหรับอัพเดท character
+  //   const updateData: any = {
+  //     statAGI: character.statAGI + statGains.agiGained,
+  //     statSTR: character.statSTR + statGains.strGained,
+  //     statDEX: character.statDEX + statGains.dexGained,
+  //     statVIT: character.statVIT + statGains.vitGained,
+  //     statINT: character.statINT + statGains.intGained,
+  //     statPoints: character.statPoints + 5,
+  //   }
 
-    // อัพเดท level ถ้าจำเป็น (สำหรับการเรียกจาก levelUp โดยตรง)
-    if (shouldUpdateLevel) {
-      updateData.level = newLevel
-      updateData.currentXP = 0
-      updateData.nextLevelXP = JobClassHelper.calculateNextLevelXP(newLevel)
-    }
+  //   // อัพเดท level ถ้าจำเป็น (สำหรับการเรียกจาก levelUp โดยตรง)
+  //   if (shouldUpdateLevel) {
+  //     updateData.level = newLevel
+  //     updateData.currentXP = 0
+  //     updateData.nextLevelXP = JobClassHelper.calculateNextLevelXP(newLevel)
+  //   }
 
-    // เพิ่มข้อมูล portrait และ job level ถ้ามีการเปลี่ยนแปลง
-    if (unlockedClassLevel) {
-      updateData.generatedPortraits = updatedPortraits
-      updateData.currentPortraitUrl = newPortraitUrl
-    }
+  //   // เพิ่มข้อมูล portrait และ job level ถ้ามีการเปลี่ยนแปลง
+  //   if (unlockedClassLevel) {
+  //     updateData.generatedPortraits = updatedPortraits
+  //     updateData.currentPortraitUrl = newPortraitUrl
+  //   }
 
-    if (jobLevelUpdate.shouldUpdate && jobLevelUpdate.newJobLevel) {
-      updateData.jobLevelId = jobLevelUpdate.newJobLevel.id
-    }
+  //   if (jobLevelUpdate.shouldUpdate && jobLevelUpdate.newJobLevel) {
+  //     updateData.jobLevelId = jobLevelUpdate.newJobLevel.id
+  //   }
 
-    // อัพเดท Character
-    const updatedCharacter =
-      await characterRepository.updateCharacterWithPortraitAndJob(
-        characterId,
-        updateData
-      )
+  //   // อัพเดท Character
+  //   const updatedCharacter =
+  //     await characterRepository.updateCharacterWithPortraitAndJob(
+  //       characterId,
+  //       updateData
+  //     )
 
-    // สร้าง Feed Item
-    let feedContent = `🎉 ${updatedCharacter.user.name} (${updatedCharacter.jobClass.name}) ได้เลเวลอัพจาก Lv.${levelHistory.levelFrom} เป็น Lv.${levelHistory.levelTo}!`
+  //   // สร้าง Feed Item
+  //   let feedContent = `🎉 ${updatedCharacter.user.name} (${updatedCharacter.jobClass.name}) ได้เลเวลอัพจาก Lv.${levelHistory.levelFrom} เป็น Lv.${levelHistory.levelTo}!`
 
-    if (unlockedClassLevel)
-      feedContent += ` 🌟 ปลดล็อกคลาสใหม่ Level ${unlockedClassLevel}!`
+  //   if (unlockedClassLevel)
+  //     feedContent += ` 🌟 ปลดล็อกคลาสใหม่ Level ${unlockedClassLevel}!`
 
-    if (jobLevelUpdate.shouldUpdate && jobLevelUpdate.newJobLevel)
-      feedContent += ` 👑 เลื่อนตำแหน่งเป็น "${jobLevelUpdate.newJobLevel.title}"!`
+  //   if (jobLevelUpdate.shouldUpdate && jobLevelUpdate.newJobLevel)
+  //     feedContent += ` 👑 เลื่อนตำแหน่งเป็น "${jobLevelUpdate.newJobLevel.title}"!`
 
-    feedContent += ` 💪 STR +${statGains.strGained} 🧠 INT +${statGains.intGained} 🏃 AGI +${statGains.agiGained} 🎯 DEX +${statGains.dexGained} ❤️ VIT +${statGains.vitGained}`
+  //   feedContent += ` 💪 STR +${statGains.strGained} 🧠 INT +${statGains.intGained} 🏃 AGI +${statGains.agiGained} 🎯 DEX +${statGains.dexGained} ❤️ VIT +${statGains.vitGained}`
 
-    // แสดง AI reasoning แบบสั้น ๆ ใน feed
-    const shortReasoning =
-      statGains.reasoning.length > 100
-        ? statGains.reasoning.substring(0, 100) + '...'
-        : statGains.reasoning
-    feedContent += ` | 🤖 ${shortReasoning}`
+  //   // แสดง AI reasoning แบบสั้น ๆ ใน feed
+  //   const shortReasoning =
+  //     statGains.reasoning.length > 100
+  //       ? statGains.reasoning.substring(0, 100) + '...'
+  //       : statGains.reasoning
+  //   feedContent += ` | 🤖 ${shortReasoning}`
 
-    await characterRepository.createFeedItem({
-      content: feedContent,
-      type: 'level_up',
-      mediaType: 'text',
-      userId: updatedCharacter.userId,
-      levelHistoryId: levelHistory.id,
-    })
+  //   await characterRepository.createFeedItem({
+  //     content: feedContent,
+  //     type: 'level_up',
+  //     mediaType: 'text',
+  //     userId: updatedCharacter.userId,
+  //     levelHistoryId: levelHistory.id,
+  //   })
 
-    const getUserCharacters = await userService.getUserCharacters()
+  //   const getUserCharacters = await userService.getUserCharacters()
 
-    return {
-      character: getUserCharacters.character,
-      levelHistory,
-      statGains,
-      unlockedClassLevel,
-      newJobLevel: jobLevelUpdate.newJobLevel,
-      portraitUpdated: !!unlockedClassLevel,
-      aiReasoning: statGains.reasoning,
-    }
-  }
+  //   return {
+  //     character: getUserCharacters.character,
+  //     levelHistory,
+  //     statGains,
+  //     unlockedClassLevel,
+  //     newJobLevel: jobLevelUpdate.newJobLevel,
+  //     portraitUpdated: !!unlockedClassLevel,
+  //     aiReasoning: statGains.reasoning,
+  //   }
+  // }
 
   /**
    * ส่งเควสประจำวัน (ไม่เปลี่ยน)
@@ -705,78 +706,78 @@ export class CharacterService extends BaseService {
   /**
    * Generate character portraits using AI
    */
-  async generateCharacterPortraits(
-    jobClassId: number,
-    name: string,
-    portraitType: 'upload' | 'generate',
-    faceImageUrl?: string
-  ): Promise<CharacterGenerateResponse> {
-    // ดึงข้อมูล job class และ levels
-    const jobClass = await jobClassRepository.findById(jobClassId)
-    if (!jobClass) throw new Error('Job class not found')
+  // async generateCharacterPortraits(
+  //   jobClassId: number,
+  //   name: string,
+  //   portraitType: 'upload' | 'generate',
+  //   faceImageUrl?: string
+  // ): Promise<CharacterGenerateResponse> {
+  //   // ดึงข้อมูล job class และ levels
+  //   const jobClass = await jobClassRepository.findById(jobClassId)
+  //   if (!jobClass) throw new Error('Job class not found')
 
-    let portraits: GeneratedPortrait[] = []
-    let personaTraits: string = this.generatePersonaTraits(jobClass.name)
+  //   let portraits: GeneratedPortrait[] = []
+  //   let personaTraits: string = this.generatePersonaTraits(jobClass.name)
 
-    // ถ้ามีการ upload รูป ให้วิเคราะห์ด้วย OpenAI Vision
-    if (portraitType === 'upload' && faceImageUrl) {
-      console.log(
-        '[CharacterService] Analyzing uploaded image with OpenAI Vision...'
-      )
-      const analysis =
-        await openAIVisionService.analyzePersonaTraits(faceImageUrl)
-      if (analysis) {
-        personaTraits = analysis.fullDescription
-        console.log('[CharacterService] Persona traits:', personaTraits)
-      }
-    }
+  //   // ถ้ามีการ upload รูป ให้วิเคราะห์ด้วย OpenAI Vision
+  //   if (portraitType === 'upload' && faceImageUrl) {
+  //     console.log(
+  //       '[CharacterService] Analyzing uploaded image with OpenAI Vision...'
+  //     )
+  //     const analysis =
+  //       await openAIVisionService.analyzePersonaTraits(faceImageUrl)
+  //     if (analysis) {
+  //       personaTraits = analysis.fullDescription
+  //       console.log('[CharacterService] Persona traits:', personaTraits)
+  //     }
+  //   }
 
-    if (portraitType === 'generate') {
-      // ใช้ AI สร้างภาพ (แค่ level 1)
-      portraits = await replicateService.generatePortraits(
-        jobClass.name,
-        jobClass.levels[0],
-        undefined,
-        personaTraits
-      )
-    } else if (portraitType === 'upload' && faceImageUrl) {
-      // ใช้ภาพที่ upload มาเป็น reference
-      portraits = await replicateService.generatePortraits(
-        jobClass.name,
-        jobClass.levels[0],
-        faceImageUrl,
-        personaTraits
-      )
-    }
+  //   if (portraitType === 'generate') {
+  //     // ใช้ AI สร้างภาพ (แค่ level 1)
+  //     portraits = await replicateService.generatePortraits(
+  //       jobClass.name,
+  //       jobClass.levels[0],
+  //       undefined,
+  //       personaTraits
+  //     )
+  //   } else if (portraitType === 'upload' && faceImageUrl) {
+  //     // ใช้ภาพที่ upload มาเป็น reference
+  //     portraits = await replicateService.generatePortraits(
+  //       jobClass.name,
+  //       jobClass.levels[0],
+  //       faceImageUrl,
+  //       personaTraits
+  //     )
+  //   }
 
-    // สร้าง session ID สำหรับเก็บข้อมูลชั่วคราว
-    const sessionId = `char_gen_${Date.now()}_${Math.random().toString(36).substring(7)}`
+  //   // สร้าง session ID สำหรับเก็บข้อมูลชั่วคราว
+  //   const sessionId = `char_gen_${Date.now()}_${Math.random().toString(36).substring(7)}`
 
-    // เก็บข้อมูลใน cache หรือ session storage
-    global.characterGenerationSessions =
-      global.characterGenerationSessions || {}
-    global.characterGenerationSessions[sessionId] = {
-      jobClassId,
-      name,
-      portraits,
-      originalFaceImage: faceImageUrl,
-      personaTraits,
-      createdAt: new Date(),
-    }
+  //   // เก็บข้อมูลใน cache หรือ session storage
+  //   global.characterGenerationSessions =
+  //     global.characterGenerationSessions || {}
+  //   global.characterGenerationSessions[sessionId] = {
+  //     jobClassId,
+  //     name,
+  //     portraits,
+  //     originalFaceImage: faceImageUrl,
+  //     personaTraits,
+  //     createdAt: new Date(),
+  //   }
 
-    // ลบ session เก่าที่หมดอายุ (มากกว่า 1 ชั่วโมง)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-    Object.keys(global.characterGenerationSessions).forEach((key) => {
-      if (global.characterGenerationSessions[key].createdAt < oneHourAgo) {
-        delete global.characterGenerationSessions[key]
-      }
-    })
+  //   // ลบ session เก่าที่หมดอายุ (มากกว่า 1 ชั่วโมง)
+  //   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+  //   Object.keys(global.characterGenerationSessions).forEach((key) => {
+  //     if (global.characterGenerationSessions[key].createdAt < oneHourAgo) {
+  //       delete global.characterGenerationSessions[key]
+  //     }
+  //   })
 
-    return {
-      portraits,
-      sessionId,
-    }
-  }
+  //   return {
+  //     portraits,
+  //     sessionId,
+  //   }
+  // }
 
   /**
    * Confirm and create character

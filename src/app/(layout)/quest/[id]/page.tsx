@@ -1,15 +1,13 @@
 'use client'
 
+import { useParams } from 'next/navigation'
+
 import QuestDetail from '@src/features/quest/components/QuestDetail'
 import { useAuth } from '@src/hooks/useAuth'
 
-interface PageProps {
-  params: { id: string }
-}
-
-export default function Page({ params }: PageProps) {
+export default function Page() {
   const { user } = useAuth()
-  const { id } = params
+  const { id } = useParams<{ id: string }>()
 
   if (!user) return <div></div>
 
