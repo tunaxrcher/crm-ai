@@ -41,3 +41,4 @@ npx prisma migrate dev --name init
 
 # รันเซิร์ฟเวอร์แบบ dev
 pnpm dev
+```

@@ -19,7 +19,7 @@ export default function QuestPage() {
     }
   }, [hasError, errorMessage])
 
-    // Always call all hooks BEFORE any return!
+  // Always call all hooks BEFORE any return!
   if (!user) return <div></div>
 
   if (hasError) {
@@ -40,7 +40,9 @@ export default function QuestPage() {
     )
   }
 
-  return <>
-  <QuestPageComponent userId={+user.id} />
-  </>
+  return (
+    <>
+      <QuestPageComponent userId={+user.id} />
+    </>
+  )
 }

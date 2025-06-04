@@ -15,6 +15,8 @@ import {
   X,
 } from 'lucide-react'
 
+// src/features/feed/components/story/StoryList.tsx
+
 interface StoryListProps {
   stories: StoryUI[]
   isClient: boolean
@@ -67,9 +69,14 @@ export default function StoryList({
 
   // Auto-play video when story opens
   useEffect(() => {
-    if (isClient && currentStory && currentStory.media.type === 'video' && videoRef.current) {
+    if (
+      isClient &&
+      currentStory &&
+      currentStory.media.type === 'video' &&
+      videoRef.current
+    ) {
       try {
-        videoRef.current.play().catch(err => {
+        videoRef.current.play().catch((err) => {
           console.error('Failed to autoplay video:', err)
         })
       } catch (error) {
@@ -100,7 +107,7 @@ export default function StoryList({
             />
           </div>
         )
-        
+
       case 'video':
         return (
           <div className="w-full h-full flex items-center justify-center">
@@ -116,14 +123,18 @@ export default function StoryList({
             />
           </div>
         )
-        
+
       case 'text':
       default:
         return (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-primary/20 to-secondary/20 p-6 overflow-y-auto">
             <div className="max-w-md mx-auto bg-card/95 backdrop-blur-sm p-6 rounded-lg shadow-lg">
-              <p className="text-lg font-medium mb-2">{currentStory.questTitle}</p>
-              <p className="text-md whitespace-pre-wrap">{currentStory.media.url || currentStory.text}</p>
+              <p className="text-lg font-medium mb-2">
+                {currentStory.questTitle}
+              </p>
+              <p className="text-md whitespace-pre-wrap">
+                {currentStory.media.url || currentStory.text}
+              </p>
             </div>
           </div>
         )
@@ -187,7 +198,10 @@ export default function StoryList({
 
         {isClient &&
           storiesRef.current &&
-          scrollPosition < storiesRef.current.scrollWidth - storiesRef.current.clientWidth - 10 && (
+          scrollPosition <
+            storiesRef.current.scrollWidth -
+              storiesRef.current.clientWidth -
+              10 && (
             <button
               className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-background/80 rounded-full p-1"
               onClick={handleScrollRight}>

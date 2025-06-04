@@ -78,29 +78,29 @@ export class OpenAIVisionService {
     }
   }
 
-//   generateDynamicPrompt(
-//     profession: string,
-//     level: number,
-//     classLevel: number,
-//     personaTraits: string,
-//     classDescription: string
-//   ): string {
-//     const style = `Use a 3D cartoon, semi-realistic, Pixar-style illustration.`
+  //   generateDynamicPrompt(
+  //     profession: string,
+  //     level: number,
+  //     classLevel: number,
+  //     personaTraits: string,
+  //     classDescription: string
+  //   ): string {
+  //     const style = `Use a 3D cartoon, semi-realistic, Pixar-style illustration.`
 
-//     return `
-//         Create an avatar of a character, profession: ${profession}, EVX level ${level} (Class ${classLevel}), based on the user's input photo. 
+  //     return `
+  //         Create an avatar of a character, profession: ${profession}, EVX level ${level} (Class ${classLevel}), based on the user's input photo.
 
-//         ${style}
+  //         ${style}
 
-//         The character should be stylized but believable. The final image must show the entire body from head to toe, in full-body composition with warm lighting and clean background.
+  //         The character should be stylized but believable. The final image must show the entire body from head to toe, in full-body composition with warm lighting and clean background.
 
-//         Character traits: ${personaTraits}
+  //         Character traits: ${personaTraits}
 
-//         ${classDescription}
+  //         ${classDescription}
 
-//         Keep the same facial structure, image size, character scale, and overall art style across all class evolutions. Only the expression, pose, outfit, and gear may change to reflect progression.
-//     `
-//   }
+  //         Keep the same facial structure, image size, character scale, and overall art style across all class evolutions. Only the expression, pose, outfit, and gear may change to reflect progression.
+  //     `
+  //   }
 }
 
 // Export instance

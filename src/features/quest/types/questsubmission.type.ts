@@ -35,7 +35,7 @@ export interface QuestSubmissionResponse {
   message: number
   mediaType: string
   aiAnalysis: AIAnalysisResult
-  submission: any,
+  submission: any
   characterUpdate?: any
 }
 

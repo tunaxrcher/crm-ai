@@ -5,12 +5,10 @@ import { questService } from '@src/features/quest/service/server'
 
 export async function GET(request: NextRequest) {
   try {
-
     // ดึงข้อมูลภารกิจ
     const questData = await questService.getQuestsForUser()
 
     return NextResponse.json(questData)
-
   } catch (error) {
     console.error('Quest API Error:', error)
 

@@ -39,7 +39,6 @@ export const POST = withErrorHandling(
 // PUT สำหรับอัพเดท summary
 export const PUT = withErrorHandling(
   async (request: NextRequest, context: { params: Promise<any> }) => {
-
     console.log(`[API] Update Quest`)
 
     const { id: questId } = await context.params
@@ -65,4 +64,3 @@ export const PUT = withErrorHandling(
     })
   }
 )
-

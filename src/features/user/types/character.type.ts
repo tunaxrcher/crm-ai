@@ -16,7 +16,6 @@ export type JobLevel = JobClass['levels'][number]
 
 export type CharacterAchievement = Character['achievements'][number]
 
-
 // ===== Frontend Specific Types =====
 export type CharacterStats = {
   AGI: number

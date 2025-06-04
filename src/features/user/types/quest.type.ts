@@ -1,4 +1,4 @@
-import { userRepository } from "../repository";
+import { userRepository } from '../repository'
 
 // export interface QuestStats {
 //   totalCompleted: number
@@ -10,7 +10,6 @@ import { userRepository } from "../repository";
 export type QuestStats = Awaited<
   ReturnType<typeof userRepository.getCharacterQuestStats>
 >
-
 
 export interface QuestStatsProps {
   stats: QuestStats

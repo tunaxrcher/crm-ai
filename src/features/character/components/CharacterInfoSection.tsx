@@ -10,7 +10,6 @@ export default function CharacterInfoSection({
   character,
   xpPercentage,
 }: CharacterInfoSectionProps) {
-
   return (
     <div className="flex justify-center">
       <div className="mb-6 w-full max-w-md">
@@ -24,7 +23,9 @@ export default function CharacterInfoSection({
         </h2>
 
         <div className="mt-4 flex items-center w-full max-w-xs mx-auto">
-          <span className="text-xs text-muted-foreground mr-2">Level {character.level}</span>
+          <span className="text-xs text-muted-foreground mr-2">
+            Level {character.level}
+          </span>
           <Progress value={xpPercentage} className="h-2 flex-1" />
           <span className="text-xs text-muted-foreground ml-2">
             Level {character.level + 1}

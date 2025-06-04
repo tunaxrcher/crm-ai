@@ -57,8 +57,9 @@ export const useQuestDetail = (questId?: string, userId?: number) => {
   return useQuery({
     queryKey: ['quest', questId, userId],
     queryFn: async () => {
-      if (!questId || !userId) throw new Error('Quest ID and User ID are required')
-            console.log(userId)
+      if (!questId || !userId)
+        throw new Error('Quest ID and User ID are required')
+      console.log(userId)
       return await questService.fetchQuestById(questId, userId)
     },
     enabled: !!(questId && userId),
@@ -97,9 +98,11 @@ export const useQuestSubmission = () => {
       characterId: number
       mediaFile?: File
       description?: string
-    }): Promise<QuestSubmissionResponse & { 
-      characterUpdate?: any 
-    }> => {
+    }): Promise<
+      QuestSubmissionResponse & {
+        characterUpdate?: any
+      }
+    > => {
       return await questSubmissionService.submitQuest(
         questId,
         characterId,
