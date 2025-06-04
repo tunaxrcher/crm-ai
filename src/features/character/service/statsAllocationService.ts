@@ -20,7 +20,7 @@ export class StatsAllocationService {
     currentLevel: number,
     newLevel: number,
     jobClassName: string
-  ): Promise<StatGains> {
+  ) {
     try {
       console.log(
         `[StatAllocation] Starting AI analysis for character ${characterId}`
@@ -34,7 +34,9 @@ export class StatsAllocationService {
           currentLevel
         )
 
-      console.log(`[StatAllocation] Found ${questSubmissions.length} quest submissions`)
+      console.log(
+        `[StatAllocation] Found ${questSubmissions.length} quest submissions`
+      )
 
       // แปลงข้อมูลให้เหมาะสำหรับ AI
       const questData = questSubmissions.map((submission) => ({
@@ -57,6 +59,8 @@ export class StatsAllocationService {
         newLevel
       )
 
+      if (!statAllocation) return new Error('FailedstatAllocatione')
+
       console.log(`[StatAllocation] AI allocation result:`, statAllocation)
 
       return {
@@ -69,145 +73,6 @@ export class StatsAllocationService {
       }
     } catch (error) {
       console.error('[StatAllocation] Error calculating stat gains:', error)
-      return this.getBasicStatGains(jobClassName)
-    }
-  }
-
-  /**
-   * Fallback การจ่าย stats แบบพื้นฐาน
-   */
-  private static getBasicStatGains(jobClassName: string): StatGains {
-    const basicAllocations: Record<string, StatGains> = {
-      นักการตลาด: {
-        agiGained: 2,
-        strGained: 0,
-        dexGained: 0,
-        vitGained: 0,
-        intGained: 1,
-        reasoning:
-          'Basic allocation for marketers: Agility for quick thinking and intelligence for analysis.',
-      },
-      นักบัญชี: {
-        agiGained: 0,
-        strGained: 0,
-        dexGained: 1,
-        vitGained: 0,
-        intGained: 2,
-        reasoning:
-          'Basic allocation for accountants: Intelligence for calculations and dexterity for precision.',
-      },
-      นักขาย: {
-        agiGained: 2,
-        strGained: 1,
-        dexGained: 0,
-        vitGained: 0,
-        intGained: 0,
-        reasoning:
-          'Basic allocation for sales: Agility for quick responses and strength for persistence.',
-      },
-      ดีไซน์เนอร์: {
-        agiGained: 0,
-        strGained: 0,
-        dexGained: 2,
-        vitGained: 0,
-        intGained: 1,
-        reasoning:
-          'Basic allocation for designers: Dexterity for creativity and intelligence for innovation.',
-      },
-      โปรแกรมเมอร์: {
-        agiGained: 0,
-        strGained: 0,
-        dexGained: 1,
-        vitGained: 0,
-        intGained: 2,
-        reasoning:
-          'Basic allocation for programmers: Intelligence for problem-solving and dexterity for coding.',
-      },
-      ช่าง: {
-        agiGained: 0,
-        strGained: 2,
-        dexGained: 1,
-        vitGained: 0,
-        intGained: 0,
-        reasoning:
-          'Basic allocation for mechanics: Strength for physical work and dexterity for precision.',
-      },
-    }
-
-    const result = basicAllocations[jobClassName] || {
-      agiGained: 1,
-      strGained: 1,
-      dexGained: 0,
-      vitGained: 0,
-      intGained: 1,
-      reasoning: 'Balanced basic allocation for unknown job class.',
-    }
-
-    console.log(
-      `[StatAllocation] Using fallback allocation for ${jobClassName}:`,
-      result
-    )
-    return result
-  }
-
-  /**
-   * ทดสอบระบบ AI Stat Allocation
-   */
-  static async testStatAllocation(
-    jobClassName: string = 'โปรแกรมเมอร์'
-  ): Promise<StatGains> {
-    console.log('[StatAllocation] Testing AI stat allocation...')
-
-    try {
-      const mockQuestData = [
-        {
-          questTitle: 'พัฒนา API ใหม่',
-          questType: 'weekly',
-          description:
-            'สร้าง REST API สำหรับระบบจัดการผู้ใช้ พร้อม authentication และ authorization',
-          ratingAGI: 3,
-          ratingSTR: 2,
-          ratingDEX: 4,
-          ratingVIT: 3,
-          ratingINT: 5,
-          submittedAt: new Date(
-            Date.now() - 2 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-        },
-        {
-          questTitle: 'แก้บั๊กระบบ',
-          questType: 'daily',
-          description:
-            'แก้ไขปัญหาการโหลดช้าในหน้า dashboard และ optimize database queries',
-          ratingAGI: 4,
-          ratingSTR: 2,
-          ratingDEX: 3,
-          ratingVIT: 2,
-          ratingINT: 4,
-          submittedAt: new Date(
-            Date.now() - 1 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-        },
-      ]
-
-      const result = await StatAnalysisService.analyzeStatsAllocation(
-        mockQuestData,
-        jobClassName,
-        9,
-        10
-      )
-
-      return {
-        agiGained: result.AGI,
-        strGained: result.STR,
-        dexGained: result.DEX,
-        vitGained: result.VIT,
-        intGained: result.INT,
-        reasoning: result.reasoning,
-      }
-    } catch (error) {
-      console.error('[StatAllocation] Test failed:', error)
-      return this.getBasicStatGains(jobClassName)
     }
   }
 }

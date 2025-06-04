@@ -214,7 +214,7 @@ export default function CharacterCreation() {
 
   // Get selected job class details
   const selectedJobClass =
-    jobClasses.find((jc) => jc.id === selectedJobClassId) || null
+    jobClasses.find((jc: any) => jc.id === selectedJobClassId) || null
 
   // Get job class icon
   // ปรับให้ switch เช็คจาก jobClass.name (string, เช่น "นักการตลาด", "นักบัญชี" ฯลฯ)
@@ -276,7 +276,7 @@ export default function CharacterCreation() {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold mb-4">เลือกอาชีพของคุณ</h2>
 
-          {jobClasses.map((jobClass) => (
+          {jobClasses.map((jobClass: any) => (
             <Card
               key={jobClass.id}
               className={`cursor-pointer hover:ai-gradient-border transition-all ${selectedJobClassId === jobClass.id ? 'ai-gradient-border' : ''}`}

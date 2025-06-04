@@ -1,19 +1,10 @@
-// src/app/api/quests/[id]/submit/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 import { questSubmissionService } from '@src/features/quest/service/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
-export async function POST(
-  request: NextRequest,
-  context: { params: Promise<any> }
-) {
-  try {
+export const POST = withErrorHandling(
+  async (request: NextRequest, context: { params: Promise<any> }) => {
     console.log(`[API] Submit Quest`)
 
     const { id: questId } = await context.params
@@ -42,25 +33,16 @@ export async function POST(
     )
 
     return NextResponse.json(result)
-  } catch (error) {
-    console.error('Quest submission API error:', error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        message:
-          error instanceof Error ? error.message : 'Unknown error occurred',
-      },
-      { status: 500 }
-    )
   }
-}
+)
 
 // PUT สำหรับอัพเดท summary
-export async function PUT(request: NextRequest, { params }: RouteParams) {
-  try {
-    const questId = params.id
+export const PUT = withErrorHandling(
+  async (request: NextRequest, context: { params: Promise<any> }) => {
+
+    console.log(`[API] Update Quest`)
+
+    const { id: questId } = await context.params
     const body = await request.json()
 
     const { submissionId, summary } = body
@@ -81,17 +63,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       success: true,
       submission: updated,
     })
-  } catch (error) {
-    console.error('Update submission API error:', error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        message:
-          error instanceof Error ? error.message : 'Unknown error occurred',
-      },
-      { status: 500 }
-    )
   }
-}
+)
+

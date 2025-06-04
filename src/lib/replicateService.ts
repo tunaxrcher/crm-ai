@@ -1,8 +1,6 @@
 // src/features/character/service/replicateService.ts
+import { GeneratedPortrait } from '@src/features/character/types'
 import 'server-only'
-
-import { GeneratedPortrait } from '../types'
-import { openAIVisionService } from './openaiVisionService'
 
 export interface ReplicateModelConfig {
   id: string
@@ -346,7 +344,7 @@ export class ReplicateService {
   //   const style = 'Use a 3D cartoon, semi-realistic, Pixar-style illustration.'
 
   //   const prompt = `
-  //       Create an avatar of a character, profession: ${jobClassName} EVX based on the user's input photo. 
+  //       Create an avatar of a character, profession: ${jobClassName} EVX based on the user's input photo.
 
   //       ${style}
   //       full-body shot, from head to toe, full length, standing pose, full figure, complete legs and feet, no cropping, centered composition, camera view from distance, see all limbs
@@ -356,7 +354,7 @@ export class ReplicateService {
   //       Character traits: ${personaTraits}
 
   //       ${jobLevel.personaDescription}
-        
+
   //       Keep the same facial structure, image size, character scale, and overall art style across all class evolutions. Only the expression, pose, outfit, and gear may change to reflect progression.
   //   `
 
@@ -386,23 +384,22 @@ export class ReplicateService {
   // }
 
   async generatePortraits(
-  jobClassName: string,
-  jobLevel: any,
-  faceImage?: string,
-  personaTraits?: string
-): Promise<GeneratedPortrait[]> {
-  
-  const portraits: GeneratedPortrait[] = []
+    jobClassName: string,
+    jobLevel: any,
+    faceImage?: string,
+    personaTraits?: string
+  ): Promise<GeneratedPortrait[]> {
+    const portraits: GeneratedPortrait[] = []
 
-  portraits.push({
-    id: `portrait_${jobLevel.level}`,
-    url: 'https://tawnychatai2.sgp1.digitaloceanspaces.com/1.png',
-    prompt: 'Mocked prompt for testing',
-    model: 'ทดสอบ',
-  })
+    portraits.push({
+      id: `portrait_${jobLevel.level}`,
+      url: 'https://tawnychatai2.sgp1.digitaloceanspaces.com/1.png',
+      prompt: 'Mocked prompt for testing',
+      model: 'ทดสอบ',
+    })
 
-  return portraits;
-}
+    return portraits
+  }
 }
 // Export instance
 export const replicateService = ReplicateService.getInstance()

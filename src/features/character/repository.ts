@@ -1,4 +1,4 @@
-import { Character, JobClass, JobLevel } from '@prisma/client'
+import { Character, EnumQuestStatus, JobClass, JobLevel } from '@prisma/client'
 import { BaseRepository } from '@src/lib/repository/baseRepository'
 
 export class CharacterRepository extends BaseRepository<Character> {
@@ -211,7 +211,7 @@ export class CharacterRepository extends BaseRepository<Character> {
   async findAssignedQuest(
     characterId: number,
     questId: number,
-    status: string
+    status: EnumQuestStatus
   ) {
     return await this.prisma.assignedQuest.findFirst({
       where: {

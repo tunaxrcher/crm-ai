@@ -470,7 +470,7 @@ export class CharacterLevelService {
     oldLevel: number,
     newLevel: number,
     shouldUpdateLevel: boolean = true
-  ): Promise<LevelUpResult> {
+  ) {
     // 1. Fetch character data
     const character = await this.fetchCharacterData(characterId)
 
@@ -568,6 +568,9 @@ export class CharacterLevelService {
       character.jobClass.name
     )
 
+    if (!statGains || statGains instanceof Error) {
+      throw new Error('Failed to calculate stat gains')
+    }
     console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
     return statGains
   }

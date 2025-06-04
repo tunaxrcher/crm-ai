@@ -3,14 +3,14 @@
 
 import { Dispatch, SetStateAction, useCallback } from 'react'
 
-import { FeedItemWithRelations } from '@src/features/feed/types'
+import { FeedItemUI, FeedItemWithRelations } from '@src/features/feed/types'
 
 import { PostCard } from './PostCard'
 
 // src/features/feed/components/post/PostList.tsx
 
 interface PostListProps {
-  feedItems: FeedItemWithRelations[]
+  feedItems: FeedItemUI[]
   formatTimeDiff: (date: Date | string | number) => string
   toggleLike: (feedItemId: string) => void
   commentInputs: Record<string, string>
