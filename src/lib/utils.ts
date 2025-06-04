@@ -18,3 +18,10 @@ export function handleImageError(
     img.src = fallbackSrc
   }
 }
+
+export function getStoragePublicUrl(): string {
+  const bucket = process.env.DO_SPACES_BUCKET || ''
+  const region = process.env.DO_SPACES_REGION || 'sgp1'
+
+  return `https://${bucket}.${region}.digitaloceanspaces.com`
+}

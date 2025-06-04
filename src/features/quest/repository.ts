@@ -77,7 +77,6 @@ export class QuestRepository extends BaseRepository<Quest> {
           quest: {
             isActive: true,
           },
-          // *** เอา filter status ออก เพื่อให้ดึงทั้ง active และ completed ***
         },
         include: {
           quest: true,

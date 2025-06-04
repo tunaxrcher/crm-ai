@@ -160,6 +160,8 @@ export class QuestService extends BaseService {
         return this.processQuestData(finalAssignedQuests, character.id)
       }
 
+      const test = this.processQuestData(updatedAssignedQuests, character.id)
+
       return this.processQuestData(updatedAssignedQuests, character.id)
     } catch (error) {
       console.error('Error in getQuestsForUser:', error)
@@ -412,7 +414,8 @@ export class QuestService extends BaseService {
         // 1. มีสถานะเป็น active
         // 2. อยู่ในช่วงเวลาที่กำหนด (สำหรับ daily/weekly)
         return (
-          assignedQuest.status === 'active' &&
+          (assignedQuest.status === 'active' ||
+            assignedQuest.status === 'completed') &&
           this.isQuestInTimeRange(
             assignedQuest.quest.type,
             assignedQuest.assignedAt,

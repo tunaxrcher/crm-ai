@@ -2,6 +2,7 @@
 import { userService } from '@src/features/user/service/server'
 import { prisma } from '@src/lib/db'
 import { replicateService } from '@src/lib/replicateService'
+import { getStoragePublicUrl } from '@src/lib/utils'
 
 import { characterRepository } from '../repository'
 import { StatsAllocationService } from './statsAllocationService'
@@ -267,14 +268,11 @@ export class PortraitHelper {
         classLevel
       )
 
-      return (
-        defaultPortrait ||
-        `https://tawnychatai2.sgp1.digitaloceanspaces.com/${classLevel}.png`
-      )
+      return defaultPortrait || `${getStoragePublicUrl()}/${classLevel}.png`
     } catch (error) {
       console.error(`[PortraitHelper] Error getting portrait:`, error)
       // Return default placeholder if retrieval fails
-      return `https://tawnychatai2.sgp1.digitaloceanspaces.com/${classLevel}.png`
+      return `${getStoragePublicUrl()}/${classLevel}.png`
     }
   }
 

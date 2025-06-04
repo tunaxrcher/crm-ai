@@ -11,6 +11,10 @@ import { PostCard } from './PostCard'
 
 // src/features/feed/components/post/PostList.tsx
 
+// src/features/feed/components/post/PostList.tsx
+
+// src/features/feed/components/post/PostList.tsx
+
 interface PostListProps {
   feedItems: FeedItemUI[]
   formatTimeDiff: (date: Date | string | number) => string

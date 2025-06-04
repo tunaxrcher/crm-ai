@@ -1,5 +1,6 @@
 // src/features/character/service/replicateService.ts
 import { GeneratedPortrait } from '@src/features/character/types'
+import { getStoragePublicUrl } from '@src/lib/utils'
 import 'server-only'
 
 export interface ReplicateModelConfig {
@@ -393,7 +394,7 @@ export class ReplicateService {
 
     portraits.push({
       id: `portrait_${jobLevel.level}`,
-      url: 'https://tawnychatai2.sgp1.digitaloceanspaces.com/1.png',
+      url: `${getStoragePublicUrl()}/1.png`,
       prompt: 'Mocked prompt for testing',
       model: 'ทดสอบ',
     })

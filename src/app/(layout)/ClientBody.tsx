@@ -24,6 +24,10 @@ import { Activity, Gift, ScrollText, Trophy, User } from 'lucide-react'
 
 // src/app/ClientBody.tsx
 
+// src/app/ClientBody.tsx
+
+// src/app/ClientBody.tsx
+
 // Client body wrapper without notification provider
 export default function ClientBody({
   children,
