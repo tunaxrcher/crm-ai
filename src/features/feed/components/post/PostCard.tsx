@@ -1,5 +1,5 @@
 // src/features/feed/components/post/PostCard.tsx
-import React, { memo, useEffect } from 'react'
+import React, { memo, useEffect, useState } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Badge } from '@src/components/ui/badge'
@@ -45,6 +45,7 @@ export const PostCard = function PostCard({
   const { type, user, content } = item
   // สร้าง ref สำหรับวิดีโอโดยใช้ custom hook
   const videoRef = useAutoplayVideo()
+  const [showComments, setShowComments] = useState(false)
 
   // ฟังก์ชันสำหรับแสดง media ตามประเภท
   const renderMedia = () => {
@@ -80,7 +81,7 @@ export const PostCard = function PostCard({
       return (
         <div className="mb-3 overflow-hidden bg-secondary/20">
           <img
-            src={mediaUrl}
+            src={mediaUrl || '/placeholder.svg'}
             alt="Content media"
             className="w-full h-full object-cover"
           />
@@ -226,7 +227,7 @@ export const PostCard = function PostCard({
           </div>
         </div>
 
-        <CardFooter className="flex flex-col pt-0 px-4">
+        <CardFooter className="flex flex-col pt-0 px-4 pb-0">
           <div className="flex items-center justify-between w-full py-2">
             <Button
               variant="ghost"
@@ -244,7 +245,8 @@ export const PostCard = function PostCard({
             <Button
               variant="ghost"
               size="sm"
-              className="flex-1 text-muted-foreground hover:bg-muted">
+              className="flex-1 text-muted-foreground hover:bg-muted"
+              onClick={() => setShowComments(!showComments)}>
               <MessageCircle className="h-5 w-5 mr-2" />
               Comment
             </Button>
@@ -258,79 +260,84 @@ export const PostCard = function PostCard({
             </Button>
           </div>
 
-          {/* Comments section */}
-          {content.engagement.comments.length > 0 && (
+          {/* Comments section - Only show when showComments is true */}
+          {showComments && (
             <div className="w-full pt-3 space-y-3">
-              {content.engagement.comments.map((comment: any) => (
-                <div key={comment.id} className="flex items-start">
-                  <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage
-                      src={comment.user.avatar || '/placeholder.svg'}
-                      alt={comment.user.name}
-                    />
-                    <AvatarFallback>
-                      {comment.user.name.slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
+              {/* Existing comments */}
+              {content.engagement.comments.length > 0 && (
+                <div className="space-y-3">
+                  {content.engagement.comments.map((comment: any) => (
+                    <div key={comment.id} className="flex items-start">
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarImage
+                          src={comment.user.avatar || '/placeholder.svg'}
+                          alt={comment.user.name}
+                        />
+                        <AvatarFallback>
+                          {comment.user.name.slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
 
-                  <div className="flex-1">
-                    <div className="bg-muted p-2 rounded-lg">
-                      <div className="font-medium text-xs text-foreground">
-                        {comment.user.name}
-                      </div>
-                      <div className="text-sm text-foreground">
-                        {comment.text}
+                      <div className="flex-1">
+                        <div className="bg-muted p-2 rounded-lg">
+                          <div className="font-medium text-xs text-foreground">
+                            {comment.user.name}
+                          </div>
+                          <div className="text-sm text-foreground">
+                            {comment.text}
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center space-x-2">
+                          <span>{formatTimeDiff(comment.timestamp)}</span>
+                          <button className="hover:text-primary font-medium">
+                            Like
+                          </button>
+                          <button className="hover:text-primary font-medium">
+                            Reply
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1 flex items-center space-x-2">
-                      <span>{formatTimeDiff(comment.timestamp)}</span>
-                      <button className="hover:text-primary font-medium">
-                        Like
-                      </button>
-                      <button className="hover:text-primary font-medium">
-                        Reply
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Comment input - Always show when comments section is open */}
+              <div className="flex items-center w-full pb-4">
+                <Avatar className="h-8 w-8 mr-2">
+                  <AvatarImage
+                    src={character.portrait || '/placeholder.svg'}
+                    alt={character.name}
+                  />
+                  <AvatarFallback>{character.name.slice(0, 2)}</AvatarFallback>
+                </Avatar>
+
+                <div className="flex-1 flex items-center bg-muted rounded-full overflow-hidden pl-3">
+                  <Input
+                    type="text"
+                    placeholder="Write a comment..."
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground"
+                    value={commentInput}
+                    onChange={(e) => onCommentInputChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddComment()
+                      }
+                    }}
+                  />
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-8 w-8 text-primary"
+                    onClick={handleAddComment}
+                    disabled={!commentInput || commentInput.trim() === ''}>
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Comment input */}
-          <div className="flex items-center mt-3 w-full">
-            <Avatar className="h-8 w-8 mr-2">
-              <AvatarImage
-                src={character.portrait || '/placeholder.svg'}
-                alt={character.name}
-              />
-              <AvatarFallback>{character.name.slice(0, 2)}</AvatarFallback>
-            </Avatar>
-
-            <div className="flex-1 flex items-center bg-muted rounded-full overflow-hidden pl-3">
-              <Input
-                type="text"
-                placeholder="Write a comment..."
-                className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground"
-                value={commentInput}
-                onChange={(e) => onCommentInputChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleAddComment()
-                  }
-                }}
-              />
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full h-8 w-8 text-primary"
-                onClick={handleAddComment}
-                disabled={!commentInput || commentInput.trim() === ''}>
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
         </CardFooter>
       </Card>
     </>

@@ -1,19 +1,13 @@
 // src/features/feed/components/story/StoryList.tsx
 'use client'
 
-import { RefObject, useEffect, useRef } from 'react'
+import { type RefObject, useEffect, useRef } from 'react'
 
 import { ImageWithFallback } from '@src/components/shared'
 import { useError } from '@src/components/shared/ErrorProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
-import { StoryUI } from '@src/features/feed/types'
-import {
-  ChevronLeft,
-  ChevronRight,
-  Image as ImageIcon,
-  Play,
-  X,
-} from 'lucide-react'
+import type { StoryUI } from '@src/features/feed/types'
+import { ChevronLeft, ChevronRight, ImageIcon, Play, X } from 'lucide-react'
 
 // src/features/feed/components/story/StoryList.tsx
 
@@ -98,7 +92,7 @@ export default function StoryList({
         return (
           <div className="w-full max-h-full flex items-center justify-center">
             <ImageWithFallback
-              src={currentStory.media.url}
+              src={currentStory.media.url || '/placeholder.svg'}
               alt="Story"
               width={600}
               height={800}
@@ -147,59 +141,123 @@ export default function StoryList({
 
   return (
     <div className="mb-6 relative">
+      {/* Header - Facebook style */}
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium">Stories</h2>
+        <h2 className="text-sm font-medium"></h2>
         <button className="text-xs text-muted-foreground">ดูทั้งหมด</button>
       </div>
 
       <div className="relative">
+        {/* Left scroll button - Enhanced styling */}
         {isClient && scrollPosition > 0 && (
           <button
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-background/80 rounded-full p-1"
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors"
             onClick={handleScrollLeft}>
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5 text-gray-600" />
           </button>
         )}
 
+        {/* Stories container - Facebook style */}
         <div
           ref={storiesRef}
-          className="flex overflow-x-auto pb-2 space-x-3 no-scrollbar"
+          className="flex overflow-x-auto pb-2 px-4 pl-0 space-x-2 no-scrollbar"
           style={{ scrollBehavior: 'smooth' }}>
+          {/* Add Story Button (First item) */}
+          {/* <div className="flex-shrink-0 w-24 cursor-pointer group">
+            <div className="relative w-24 h-36 rounded-xl overflow-hidden bg-gradient-to-b from-gray-100 to-gray-200 border border-gray-200 hover:shadow-md transition-shadow">
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mb-2">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <span className="text-xs font-medium text-gray-700">Create Story</span>
+              </div>
+            </div>
+          </div> */}
+
+          {/* Story items - Facebook rectangular style */}
           {stories.map((story, index) => (
             <div
               key={story.id}
-              className="flex-shrink-0 w-20 cursor-pointer"
+              className="flex-shrink-0 w-24 cursor-pointer group"
               onClick={() => openStory(index)}>
-              <div
-                className={`relative w-20 h-20 rounded-full mb-1 ${
-                  story.viewed
-                    ? 'border-2 border-gray-500'
-                    : 'border-2 ai-gradient-border'
-                }`}>
-                <Avatar className="w-full h-full">
-                  <AvatarImage src={story.user.avatar} alt={story.user.name} />
-                  <AvatarFallback>{story.user.name.slice(0, 2)}</AvatarFallback>
-                </Avatar>
+              <div className="relative w-24 h-36 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                {/* Background image or gradient */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-b from-blue-400 to-purple-600"
+                  style={{
+                    backgroundImage: story.user.avatar
+                      ? `url(${story.user.avatar})`
+                      : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}>
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/20" />
+                </div>
 
+                {/* Story border indicator */}
+                <div
+                  className={`absolute inset-0 rounded-xl ${
+                    story.viewed
+                      ? 'ring-2 ring-gray-400'
+                      : 'ring-3 ring-blue-500'
+                  }`}
+                />
+
+                {/* User avatar */}
+                <div className="absolute top-2 left-2">
+                  <div
+                    className={`p-0.5 rounded-full ${story.viewed ? 'bg-gray-400' : 'bg-blue-500'}`}>
+                    <Avatar className="w-8 h-8 ring-2 ring-white">
+                      <AvatarImage
+                        src={story.user.avatar || '/placeholder.svg'}
+                        alt={story.user.name}
+                      />
+                      <AvatarFallback className="text-xs bg-gray-300">
+                        {story.user.name.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+
+                {/* Media type indicators */}
                 {story.media.type === 'video' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full">
-                    <Play className="h-6 w-6 text-white" />
+                  <div className="absolute top-2 right-2">
+                    <div className="bg-black/50 rounded-full p-1">
+                      <Play className="h-3 w-3 text-white" />
+                    </div>
                   </div>
                 )}
 
                 {story.media.type === 'image' && (
-                  <div className="absolute bottom-0 right-0 bg-secondary rounded-full p-1">
-                    <ImageIcon className="h-3 w-3" />
+                  <div className="absolute top-2 right-2">
+                    <div className="bg-black/50 rounded-full p-1">
+                      <ImageIcon className="h-3 w-3 text-white" />
+                    </div>
                   </div>
                 )}
-              </div>
-              <div className="text-xs text-center truncate">
-                {story.user.name.split(' ')[0]}
+
+                {/* User name */}
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white text-xs font-medium truncate drop-shadow-sm">
+                    {story.user.name.split(' ')[0]}
+                  </p>
+                </div>
+
+                {/* Hover effect */}
+                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
               </div>
             </div>
           ))}
         </div>
 
+        {/* Right scroll button - Enhanced styling */}
         {isClient &&
           storiesRef.current &&
           scrollPosition <
@@ -207,19 +265,19 @@ export default function StoryList({
               storiesRef.current.clientWidth -
               10 && (
             <button
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-background/80 rounded-full p-1"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white shadow-lg rounded-full p-2 hover:bg-gray-50 transition-colors"
               onClick={handleScrollRight}>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5 text-gray-600" />
             </button>
           )}
       </div>
 
-      {/* Story Viewer Modal */}
+      {/* Story Viewer Modal - Keep existing functionality */}
       {isClient && isValidCurrentStory && currentStory && (
         <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
           {/* Close button */}
           <button
-            className="absolute top-4 right-4 z-10 text-white bg-black/20 p-2 rounded-full"
+            className="absolute top-4 right-4 z-10 text-white bg-black/20 p-2 rounded-full hover:bg-black/40 transition-colors"
             onClick={closeStory}>
             <X className="h-6 w-6" />
           </button>
@@ -231,7 +289,7 @@ export default function StoryList({
               <div className="flex items-center">
                 <Avatar className="h-10 w-10 mr-3">
                   <AvatarImage
-                    src={currentStory.user.avatar}
+                    src={currentStory.user.avatar || '/placeholder.svg'}
                     alt={currentStory.user.name}
                   />
                   <AvatarFallback>
@@ -255,16 +313,16 @@ export default function StoryList({
               {renderStoryContent()}
             </div>
 
-            {/* Navigation buttons */}
+            {/* Navigation buttons - Enhanced styling */}
             <button
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/20 p-2 rounded-full"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/20 p-2 rounded-full hover:bg-black/40 transition-colors disabled:opacity-50"
               onClick={prevStory}
               disabled={currentStoryIndex === 0}>
               <ChevronLeft className="h-6 w-6 text-white" />
             </button>
 
             <button
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/20 p-2 rounded-full"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/20 p-2 rounded-full hover:bg-black/40 transition-colors"
               onClick={nextStory}>
               <ChevronRight className="h-6 w-6 text-white" />
             </button>
