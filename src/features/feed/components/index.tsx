@@ -14,6 +14,8 @@ import { useFeed } from '../hook/api'
 import { useIntersectionObserver } from '../hook/useIntersectionObserver'
 import PostList from './post/PostList'
 import StoryList from './story/StoryList'
+import { useAuth } from '@src/hooks/useAuth'
+import { useCharacter } from '@src/contexts/CharacterContext'
 
 export default function FeedPageComponent() {
   // Wrap the component with GlobalErrorBoundary
@@ -25,6 +27,9 @@ export default function FeedPageComponent() {
 }
 
 function FeedPageContent() {
+
+  const { character } = useCharacter()
+  
   const {
     feedItems,
     stories,
@@ -226,6 +231,7 @@ function FeedPageContent() {
       />
 
       <PostList
+        character={character}
         feedItems={feedItems || []}
         formatTimeDiff={formatTimeDiff}
         toggleLike={handleToggleLike}

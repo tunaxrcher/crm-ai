@@ -1,5 +1,6 @@
 // src/features/feed/service/server.ts
 import { Prisma } from '@prisma/client'
+import { getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/service/server/baseService'
 import 'server-only'
 
@@ -25,8 +26,13 @@ export class FeedService extends BaseService {
     return FeedService.instance
   }
 
-  async getFeedItems(params: { page: number; limit: number; userId?: number }) {
-    const { page, limit, userId } = params
+  async getFeedItems(params: { page: number; limit: number }) {
+    const session = await getServerSession()
+    const userId = +session.user.id
+
+    console.log(`[Server] Feeds: ${userId}`)
+
+    const { page, limit } = params
     const skip = (page - 1) * limit
 
     const includeRelations = {
@@ -225,6 +231,7 @@ export class FeedService extends BaseService {
     return feedRepository.delete(id)
   }
 }
+export const feedService = FeedService.getInstance()
 
 // Story Service
 export class StoryService extends BaseService {
@@ -305,6 +312,7 @@ export class StoryService extends BaseService {
     return storyRepository.createStoryView(data)
   }
 }
+export const storyService = StoryService.getInstance()
 
 // Like Service
 export class LikeService extends BaseService {
@@ -321,10 +329,15 @@ export class LikeService extends BaseService {
     return LikeService.instance
   }
 
-  async toggleLike(data: { feedItemId: number; userId: number }) {
+  async toggleLike(feedItemId: number) {
+    const session = await getServerSession()
+    const userId = +session.user.id
+
+    console.log(`[Server] Like Feed: ${feedItemId}`)
+
     const existingLike = await likeRepository.findByUserAndFeedItem(
-      data.userId,
-      data.feedItemId
+      userId,
+      feedItemId
     )
 
     if (existingLike) {
@@ -332,7 +345,11 @@ export class LikeService extends BaseService {
       return { liked: false }
     }
 
-    await likeRepository.create(data)
+    await likeRepository.create({
+      userId,
+      feedItemId,
+    })
+
     return { liked: true }
   }
 
@@ -342,6 +359,7 @@ export class LikeService extends BaseService {
     })
   }
 }
+export const likeService = LikeService.getInstance()
 
 // Comment Service
 export class CommentService extends BaseService {
@@ -371,12 +389,17 @@ export class CommentService extends BaseService {
     })
   }
 
-  async createComment(data: {
-    feedItemId: number
-    userId: number
-    content: string
-  }) {
-    return commentRepository.create(data)
+  async createComment(feedItemId: number, content: string) {
+    const session = await getServerSession()
+    const userId = +session.user.id
+
+    console.log(`[Server] createComment: ${feedItemId}`)
+
+    return commentRepository.create({
+      feedItemId,
+      userId,
+      content,
+    })
   }
 
   async createReplyComment(data: {
@@ -391,9 +414,4 @@ export class CommentService extends BaseService {
     return commentRepository.delete(id)
   }
 }
-
-// Export instances
-export const feedService = FeedService.getInstance()
-export const storyService = StoryService.getInstance()
-export const likeService = LikeService.getInstance()
 export const commentService = CommentService.getInstance()

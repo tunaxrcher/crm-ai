@@ -24,7 +24,6 @@ export function useFeed() {
       const feedResponse = await feedService.getFeedItems({
         page: page + 1,
         limit: 10,
-        userId: 1, // TODO: Get from auth
       })
 
       const transformedFeed = feedResponse.items.map(transformApiToFeedItem)
@@ -178,7 +177,6 @@ export function useFeed() {
           feedService.getFeedItems({
             page: isRefresh ? 1 : page,
             limit: 10,
-            userId: 1, // TODO: Get from auth
           }),
           feedService.getStories(1), // TODO: Get from auth
         ])

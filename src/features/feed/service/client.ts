@@ -19,12 +19,10 @@ export class FeedService extends BaseService {
   async getFeedItems(params: {
     page?: number
     limit?: number
-    userId?: number
   }) {
     const searchParams = new URLSearchParams()
     if (params.page) searchParams.append('page', params.page.toString())
     if (params.limit) searchParams.append('limit', params.limit.toString())
-    if (params.userId) searchParams.append('userId', params.userId.toString())
 
     const response = await fetch(`/api/feed?${searchParams}`)
     if (!response.ok) throw new Error('Failed to fetch feed')
@@ -40,7 +38,6 @@ export class FeedService extends BaseService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: 1, // TODO: Get from auth
         type: 'post',
         ...data,
       }),
@@ -74,9 +71,6 @@ export class FeedService extends BaseService {
     const response = await fetch(`/api/feed/${feedItemId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: 1, // TODO: Get from auth
-      }),
     })
     if (!response.ok) throw new Error('Failed to toggle like')
     return response.json()
@@ -88,7 +82,6 @@ export class FeedService extends BaseService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: 1, // TODO: Get from auth
         content,
       }),
     })
@@ -101,7 +94,6 @@ export class FeedService extends BaseService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: 1, // TODO: Get from auth
         content,
       }),
     })

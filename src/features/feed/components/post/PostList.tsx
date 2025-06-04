@@ -1,21 +1,13 @@
-// src/features/feed/components/post/PostList.tsx
 'use client'
 
 import { Dispatch, SetStateAction, useCallback } from 'react'
 
-import { FeedItemUI, FeedItemWithRelations } from '@src/features/feed/types'
+import { FeedItemUI } from '@src/features/feed/types'
 
 import { PostCard } from './PostCard'
 
-// src/features/feed/components/post/PostList.tsx
-
-// src/features/feed/components/post/PostList.tsx
-
-// src/features/feed/components/post/PostList.tsx
-
-// src/features/feed/components/post/PostList.tsx
-
 interface PostListProps {
+  character: any
   feedItems: FeedItemUI[]
   formatTimeDiff: (date: Date | string | number) => string
   toggleLike: (feedItemId: string) => void
@@ -25,6 +17,7 @@ interface PostListProps {
 }
 
 export default function PostList({
+  character,
   feedItems,
   formatTimeDiff,
   toggleLike,
@@ -64,6 +57,7 @@ export default function PostList({
       {feedItems.map((item) => (
         <PostCard
           key={item.id}
+          character={character}
           item={item}
           formatTimeDiff={formatTimeDiff}
           toggleLike={toggleLike}

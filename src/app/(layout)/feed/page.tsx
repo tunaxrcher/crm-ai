@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import FeedPageComponent from '@src/features/feed/components/index'
 
 export default function FeedPage() {
+  
   // Simple error boundary
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>('')
