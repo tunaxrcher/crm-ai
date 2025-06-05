@@ -16,10 +16,7 @@ export class FeedService extends BaseService {
   }
 
   // Feed methods
-  async getFeedItems(params: {
-    page?: number
-    limit?: number
-  }) {
+  async getFeedItems(params: { page?: number; limit?: number }) {
     const searchParams = new URLSearchParams()
     if (params.page) searchParams.append('page', params.page.toString())
     if (params.limit) searchParams.append('limit', params.limit.toString())
@@ -98,6 +95,51 @@ export class FeedService extends BaseService {
       }),
     })
     if (!response.ok) throw new Error('Failed to create reply')
+    return response.json()
+  }
+
+  async createStoryWithThumbnail(data: {
+    type: 'text' | 'image' | 'video'
+    content?: string
+    text?: string
+    mediaFile?: File
+    thumbnailFile?: File // Thumbnail ที่จะใช้กับวิดีโอ
+    expiresInHours?: number
+  }) {
+    // สร้าง FormData สำหรับอัปโหลด
+    const formData = new FormData()
+    formData.append('type', data.type)
+
+    if (data.content) {
+      formData.append('content', data.content)
+    }
+
+    if (data.text) {
+      formData.append('text', data.text)
+    }
+
+    if (data.expiresInHours) {
+      formData.append('expiresInHours', data.expiresInHours.toString())
+    }
+
+    if (data.mediaFile) {
+      formData.append('media', data.mediaFile)
+    }
+
+    if (data.thumbnailFile) {
+      formData.append('thumbnail', data.thumbnailFile)
+    }
+
+    // เรียก API เพื่ออัปโหลด story
+    const response = await fetch('/api/stories/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to create story')
+    }
+
     return response.json()
   }
 }

@@ -117,10 +117,10 @@ export interface StoryUI {
   media: {
     type: 'image' | 'video' | 'text'
     url: string
-    thumbnail?: string
+    thumbnail?: string // field สำหรับ thumbnail URL
   }
   questTitle?: string
-  text?: string // เพิ่ม field text
+  text?: string
   viewed: boolean
   expiresAt: string | Date
 }

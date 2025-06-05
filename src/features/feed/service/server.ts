@@ -276,11 +276,33 @@ export class StoryService extends BaseService {
     }))
   }
 
+  // async createStory(data: {
+  //   userId: number
+  //   content?: string
+  //   type: 'text' | 'image' | 'video'
+  //   mediaUrl?: string
+  //   text?: string
+  //   expiresInHours?: number
+  // }) {
+  //   const expiresAt = new Date()
+  //   expiresAt.setHours(expiresAt.getHours() + (data.expiresInHours || 24))
+
+  //   const { userId, expiresInHours, ...storyData } = data
+
+  //   return storyRepository.create({
+  //     ...storyData,
+  //     expiresAt,
+  //     user: {
+  //       connect: { id: userId },
+  //     },
+  //   })
+  // }
   async createStory(data: {
     userId: number
     content?: string
     type: 'text' | 'image' | 'video'
     mediaUrl?: string
+    thumbnailUrl?: string // เพิ่มพารามิเตอร์นี้
     text?: string
     expiresInHours?: number
   }) {

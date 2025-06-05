@@ -191,6 +191,7 @@ model Story {
   content   String?       @db.Text
   type      EnumMediaType @default(text)
   mediaUrl  String?
+  thumbnailUrl String?
   text      String?       @db.Text
   expiresAt DateTime
   createdAt DateTime      @default(now())

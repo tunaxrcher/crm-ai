@@ -153,10 +153,13 @@ export function useFeed() {
       media: {
         type: apiStory.type as 'image' | 'video' | 'text',
         url: apiStory.mediaUrl || '',
-        thumbnail: apiStory.type === 'video' ? apiStory.mediaUrl : undefined,
+        // ใช้ thumbnailUrl ถ้ามี หรือใช้ mediaUrl ถ้าเป็นรูปภาพ
+        thumbnail:
+          apiStory.thumbnailUrl ||
+          (apiStory.type === 'image' ? apiStory.mediaUrl : undefined),
       },
       questTitle: apiStory.content,
-      text: apiStory.text, // เพิ่ม field text
+      text: apiStory.text,
       viewed: apiStory.hasViewed || false,
       expiresAt: apiStory.expiresAt,
     }

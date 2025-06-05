@@ -1,7 +1,6 @@
-// src/features/feed/components/story/StoryList.tsx
 'use client'
 
-import { type RefObject, useEffect, useRef } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 
 import { ImageWithFallback } from '@src/components/shared'
 import { useError } from '@src/components/shared/ErrorProvider'
@@ -9,16 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import type { StoryUI } from '@src/features/feed/types'
 import { ChevronLeft, ChevronRight, ImageIcon, Play, X } from 'lucide-react'
 
-// src/features/feed/components/story/StoryList.tsx
-
-// src/features/feed/components/story/StoryList.tsx
-
-// src/features/feed/components/story/StoryList.tsx
-
 interface StoryListProps {
   stories: StoryUI[]
   isClient: boolean
-  scrollPosition: number // นี่เป็นตัวแปรที่เก็บค่าตำแหน่งการเลื่อน ไม่ใช่ฟังก์ชัน
+  scrollPosition: number
   storiesRef: RefObject<HTMLDivElement | null>
   handleScrollLeft: () => void
   handleScrollRight: () => void
@@ -44,6 +37,7 @@ export default function StoryList({
 }: StoryListProps) {
   const { showError } = useError()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [isVideoLoading, setIsVideoLoading] = useState(false)
 
   // กรณีที่ไม่มีข้อมูลสตอรี่หรือ currentStoryIndex ไม่ถูกต้อง
   const handleStoryError = () => {
@@ -74,14 +68,33 @@ export default function StoryList({
       videoRef.current
     ) {
       try {
+        setIsVideoLoading(true)
         videoRef.current.play().catch((err) => {
           console.error('Failed to autoplay video:', err)
+          setIsVideoLoading(false)
         })
       } catch (error) {
         console.error('Error playing video:', error)
+        setIsVideoLoading(false)
       }
     }
   }, [currentStoryIndex, isClient, currentStory])
+
+  // ฟังก์ชันจัดการเมื่อวิดีโอโหลดเสร็จ
+  const handleVideoLoaded = () => {
+    setIsVideoLoading(false)
+  }
+
+  // ฟังก์ชันจัดการเมื่อวิดีโอเกิดข้อผิดพลาด
+  const handleVideoError = () => {
+    setIsVideoLoading(false)
+    console.error('Failed to load story video')
+    showError('ไม่สามารถโหลดวิดีโอได้', {
+      severity: 'warning',
+      message: 'ไม่สามารถเล่นวิดีโอนี้ได้ โปรดลองใหม่อีกครั้ง',
+      autoHideAfter: 3000,
+    })
+  }
 
   // Render story content based on media type
   const renderStoryContent = () => {
@@ -108,16 +121,34 @@ export default function StoryList({
 
       case 'video':
         return (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center relative">
+            {/* Thumbnail as placeholder while video is loading */}
+            {isVideoLoading && currentStory.media.thumbnail && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <ImageWithFallback
+                  src={currentStory.media.thumbnail}
+                  alt="Video thumbnail"
+                  width={600}
+                  height={800}
+                  fallbackSrc="/placeholder-video.png"
+                  className="max-w-full max-h-full object-contain"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-pulse bg-black/30 rounded-full p-4">
+                    <Play className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <video
               ref={videoRef}
               src={currentStory.media.url}
+              poster={currentStory.media.thumbnail} // ใช้ thumbnail เป็น poster
               controls
               className="max-w-full max-h-full"
-              onError={() => {
-                console.error('Failed to load story video')
-                handleStoryError()
-              }}
+              onLoadedData={handleVideoLoaded}
+              onError={handleVideoError}
             />
           </div>
         )
@@ -131,7 +162,7 @@ export default function StoryList({
                 {currentStory.questTitle}
               </p>
               <p className="text-md whitespace-pre-wrap">
-                {currentStory.media.url || currentStory.text}
+                {currentStory.text || currentStory.media.url}
               </p>
             </div>
           </div>
@@ -143,7 +174,7 @@ export default function StoryList({
     <div className="mb-6 relative">
       {/* Header - Facebook style */}
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-medium"></h2>
+        <h2 className="text-sm font-medium">Stories</h2>
         <button className="text-xs text-muted-foreground">ดูทั้งหมด</button>
       </div>
 
@@ -162,24 +193,6 @@ export default function StoryList({
           ref={storiesRef}
           className="flex overflow-x-auto pb-2 px-4 pl-0 space-x-2 no-scrollbar"
           style={{ scrollBehavior: 'smooth' }}>
-          {/* Add Story Button (First item) */}
-          {/* <div className="flex-shrink-0 w-24 cursor-pointer group">
-            <div className="relative w-24 h-36 rounded-xl overflow-hidden bg-gradient-to-b from-gray-100 to-gray-200 border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mb-2">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 011-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <span className="text-xs font-medium text-gray-700">Create Story</span>
-              </div>
-            </div>
-          </div> */}
-
           {/* Story items - Facebook rectangular style */}
           {stories.map((story, index) => (
             <div
@@ -187,13 +200,18 @@ export default function StoryList({
               className="flex-shrink-0 w-24 cursor-pointer group"
               onClick={() => openStory(index)}>
               <div className="relative w-24 h-36 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
-                {/* Background image or gradient */}
+                {/* Background image or gradient - ปรับให้ใช้ thumbnail สำหรับวิดีโอ */}
                 <div
                   className="absolute inset-0 bg-gradient-to-b from-blue-400 to-purple-600"
                   style={{
-                    backgroundImage: story.user.avatar
-                      ? `url(${story.user.avatar})`
-                      : undefined,
+                    backgroundImage:
+                      story.media.type === 'video' && story.media.thumbnail
+                        ? `url(${story.media.thumbnail})`
+                        : story.media.type === 'image'
+                          ? `url(${story.media.url})`
+                          : story.user.avatar
+                            ? `url(${story.user.avatar})`
+                            : undefined,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                   }}>

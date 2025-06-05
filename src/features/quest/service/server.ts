@@ -6,6 +6,7 @@ import { prisma } from '@src/lib/db'
 import { openaiService } from '@src/lib/service/openaiService'
 import { s3UploadService } from '@src/lib/service/s3UploadService'
 import { BaseService } from '@src/lib/service/server/baseService'
+import { videoThumbnailService } from '@src/lib/service/videoThumbnailService'
 
 import {
   QuestRepository,
@@ -557,6 +558,157 @@ export class QuestSubmissionService extends BaseService {
     return 'text'
   }
 
+  // async submitQuest(
+  //   questId: number,
+  //   characterId: number,
+  //   mediaFile?: File,
+  //   description?: string
+  // ) {
+  //   try {
+  //     // 1. ดึงข้อมูล quest และ character
+  //     const { quest, character } =
+  //       await questSubmissionRepository.getQuestAndCharacter(
+  //         questId,
+  //         characterId
+  //       )
+  //     if (!quest || !character) throw new Error('Quest or character not found')
+
+  //     // 2. อัพโหลดไฟล์ไป S3 (ถ้ามี)
+  //     let mediaUrl: string | undefined
+  //     let mediaType: 'image' | 'video' | 'text' = 'text'
+
+  //     if (mediaFile) {
+  //       const uploadResult = await s3UploadService.uploadFile(mediaFile)
+
+  //       if (!uploadResult.success)
+  //         throw new Error('Failed to upload media file')
+
+  //       mediaUrl = uploadResult.url
+  //       mediaType = this.getMediaType(mediaFile)
+  //     }
+
+  //     // 3. วิเคราะห์สื่อ (วิดีโอหรือรูปภาพ)
+  //     let mediaAnalysis: any = undefined
+
+  //     if (mediaFile && mediaUrl) {
+  //       if (mediaType === 'video') {
+  //         console.log('Analyzing video content...')
+  //         try {
+  //           mediaAnalysis = await openaiService.analyzeVideo(mediaUrl)
+  //           console.log('Video analysis completed:', mediaAnalysis)
+  //         } catch (videoError) {
+  //           console.error('Video analysis failed:', videoError)
+  //           // ไม่ให้ video analysis ล้มเหลวส่งผลต่อการ submit ทั้งหมด
+  //         }
+  //       } else if (mediaType === 'image') {
+  //         console.log('Analyzing image content...')
+  //         try {
+  //           mediaAnalysis = await openaiService.analyzeImage(mediaUrl)
+  //           console.log('Image analysis completed:', mediaAnalysis)
+  //         } catch (imageError) {
+  //           console.error('Image analysis failed:', imageError)
+  //           // ไม่ให้ image analysis ล้มเหลวส่งผลต่อการ submit ทั้งหมด
+  //         }
+  //       } else {
+  //         console.log('Unknown media type, skipping analysis')
+  //       }
+
+  //       // 4. เตรียมข้อมูลสำหรับ AI analysis
+  //       const aiPrompt: OpenAIPrompt = {
+  //         questTitle: quest.title,
+  //         questDescription: quest.description,
+  //         questRequirements: [], // ในอนาคตอาจเพิ่ม requirements ใน quest schema
+  //         mediaUrl,
+  //         userDescription: description,
+  //       }
+
+  //       // 5. ส่งข้อมูลให้ AI วิเคราะห์ (รวมกับข้อมูลวิดีโอ)
+  //       const aiAnalysis = await openaiService.analyzeQuestSubmission(
+  //         aiPrompt,
+  //         mediaAnalysis
+  //       )
+
+  //       // 6. บันทึก quest submission (รวม media analysis)
+  //       const submission =
+  //         await questSubmissionRepository.createQuestSubmission({
+  //           questId,
+  //           questXpEarned: quest.xpReward,
+  //           characterId,
+  //           mediaType,
+  //           mediaUrl,
+  //           description,
+  //           aiAnalysis,
+  //           mediaAnalysis,
+  //         })
+
+  //       // 7. อัพเดทสถานะ assigned quest
+  //       await questSubmissionRepository.updateAssignedQuestStatus(
+  //         questId,
+  //         characterId
+  //       )
+
+  //       // 8. อัพเดท character XP
+  //       const characterUpdateResult = await characterService.addXP(
+  //         quest.xpReward
+  //       )
+
+  //       // 9. สร้าง feed item
+  //       const feedItem =
+  //         await questSubmissionRepository.createQuestCompletionFeedItem(
+  //           character.userId,
+  //           'quest_completion',
+  //           submission.mediaRevisedTranscript,
+  //           mediaType,
+  //           quest.title,
+  //           quest.xpReward,
+  //           submission.id,
+  //           mediaUrl
+  //         )
+
+  //       // 10. สร้าง story (เพิ่มขั้นตอนนี้)
+  //       const story = await storyService.createStory({
+  //         userId: character.userId,
+  //         content: `ทำเควส "${quest.title}" สำเร็จ`,
+  //         type: mediaType,
+  //         mediaUrl,
+  //         text: submission.mediaRevisedTranscript || description,
+  //         expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
+  //       })
+
+  //       let successMessage = 'Quest completed successfully!'
+
+  //       if (characterUpdateResult.leveledUp) {
+  //         successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s)!`
+  //       }
+
+  //       if (mediaAnalysis) {
+  //         if (mediaType === 'video') {
+  //           successMessage +=
+  //             ' Video content was analyzed and included in evaluation.'
+  //         } else if (mediaType === 'image') {
+  //           successMessage +=
+  //             ' Image content was analyzed and included in evaluation.'
+  //         }
+  //       }
+
+  //       return {
+  //         success: true,
+  //         message: successMessage,
+  //         aiAnalysis,
+  //         submission,
+  //         mediaType,
+  //         characterUpdate: characterUpdateResult,
+  //         feedItem,
+  //         story, // เพิ่ม story ในข้อมูลที่ส่งกลับ
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Quest submission error:', error)
+  //     throw new Error(
+  //       error instanceof Error ? error.message : 'Failed to submit quest'
+  //     )
+  //   }
+  // }
   async submitQuest(
     questId: number,
     characterId: number,
@@ -575,6 +727,7 @@ export class QuestSubmissionService extends BaseService {
       // 2. อัพโหลดไฟล์ไป S3 (ถ้ามี)
       let mediaUrl: string | undefined
       let mediaType: 'image' | 'video' | 'text' = 'text'
+      let thumbnailUrl: string | undefined
 
       if (mediaFile) {
         const uploadResult = await s3UploadService.uploadFile(mediaFile)
@@ -584,6 +737,19 @@ export class QuestSubmissionService extends BaseService {
 
         mediaUrl = uploadResult.url
         mediaType = this.getMediaType(mediaFile)
+
+        // ถ้าเป็นวิดีโอ ให้สร้าง thumbnail
+        if (mediaType === 'video') {
+          try {
+            // สร้างและอัปโหลด thumbnail
+            thumbnailUrl =
+              await videoThumbnailService.generateAndUploadThumbnail(mediaFile)
+            console.log('Generated video thumbnail:', thumbnailUrl)
+          } catch (thumbnailError) {
+            console.error('Failed to generate thumbnail:', thumbnailError)
+            // ไม่ให้การสร้าง thumbnail ล้มเหลวส่งผลต่อการส่ง quest
+          }
+        }
       }
 
       // 3. วิเคราะห์สื่อ (วิดีโอหรือรูปภาพ)
@@ -664,12 +830,13 @@ export class QuestSubmissionService extends BaseService {
             mediaUrl
           )
 
-        // 10. สร้าง story (เพิ่มขั้นตอนนี้)
+        // 10. สร้าง story (เพิ่ม thumbnailUrl)
         const story = await storyService.createStory({
           userId: character.userId,
           content: `ทำเควส "${quest.title}" สำเร็จ`,
           type: mediaType,
           mediaUrl,
+          thumbnailUrl, // เพิ่ม thumbnailUrl
           text: submission.mediaRevisedTranscript || description,
           expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
         })
@@ -696,9 +863,10 @@ export class QuestSubmissionService extends BaseService {
           aiAnalysis,
           submission,
           mediaType,
+          thumbnailUrl, // เพิ่ม thumbnailUrl ในข้อมูลที่ส่งกลับ
           characterUpdate: characterUpdateResult,
           feedItem,
-          story, // เพิ่ม story ในข้อมูลที่ส่งกลับ
+          story,
         }
       }
     } catch (error) {
