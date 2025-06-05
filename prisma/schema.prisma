@@ -187,18 +187,18 @@ model FeedItem {
 }
 
 model Story {
-  id        Int           @id @default(autoincrement())
-  content   String?       @db.Text
-  type      EnumMediaType @default(text)
-  mediaUrl  String?
+  id           Int           @id @default(autoincrement())
+  content      String?       @db.Text
+  type         EnumMediaType @default(text)
+  mediaUrl     String?
   thumbnailUrl String?
-  text      String?       @db.Text
-  expiresAt DateTime
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  userId    Int
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  views     StoryView[]
+  text         String?       @db.Text
+  expiresAt    DateTime
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  views        StoryView[]
 
   @@index([userId], map: "Story_userId_fkey")
 }
@@ -304,18 +304,19 @@ model Quest {
 }
 
 model AssignedQuest {
-  id          Int             @id @default(autoincrement())
-  assignedAt  DateTime        @default(now())
+  id          Int              @id @default(autoincrement())
+  assignedAt  DateTime         @default(now())
   expiresAt   DateTime?
-  status      EnumQuestStatus @default(active)
+  status      EnumQuestStatus  @default(active)
   questId     Int
   characterId Int
   userId      Int
   partyId     Int?
-  character   Character       @relation(fields: [characterId], references: [id])
-  party       Party?          @relation(fields: [partyId], references: [id])
-  quest       Quest           @relation(fields: [questId], references: [id])
-  user        User            @relation(fields: [userId], references: [id])
+  character   Character        @relation(fields: [characterId], references: [id])
+  party       Party?           @relation(fields: [partyId], references: [id])
+  quest       Quest            @relation(fields: [questId], references: [id])
+  user        User             @relation(fields: [userId], references: [id])
+  submission  QuestSubmission?
 
   // @@unique([questId, characterId])
   @@index([characterId], map: "AssignedQuest_characterId_fkey")
@@ -343,10 +344,12 @@ model QuestSubmission {
   mediaAnalysis          String?       @db.Text
   characterId            Int
   questId                Int
+  assignedQuestId        Int           @unique
 
-  feedItems FeedItem[]
-  character Character  @relation(fields: [characterId], references: [id])
-  quest     Quest      @relation(fields: [questId], references: [id])
+  feedItems     FeedItem[]
+  character     Character     @relation(fields: [characterId], references: [id])
+  quest         Quest         @relation(fields: [questId], references: [id])
+  assignedQuest AssignedQuest @relation(fields: [assignedQuestId], references: [id])
 
   @@index([characterId], map: "QuestSubmission_characterId_fkey")
   @@index([questId], map: "QuestSubmission_questId_fkey")

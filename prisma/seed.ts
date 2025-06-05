@@ -1607,9 +1607,19 @@ async function submitQuests(characters: any[], quests: any[]) {
         ratingVIT: faker.number.int({ min: 1, max: 5 }),
         ratingINT: faker.number.int({ min: 1, max: 5 }),
         xpEarned: assignment.quest.xpReward,
-        characterId: assignment.characterId,
-        questId: assignment.questId,
         submittedAt: faker.date.recent({ days: 14 }),
+        // เพิ่มการเชื่อมโยงกับ character
+        character: {
+          connect: { id: assignment.characterId },
+        },
+        // เพิ่มการเชื่อมโยงกับ quest
+        quest: {
+          connect: { id: assignment.questId },
+        },
+        // เพิ่มการเชื่อมโยงกับ assignedQuest
+        assignedQuest: {
+          connect: { id: assignment.id },
+        },
       },
     })
 

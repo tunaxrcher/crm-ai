@@ -128,20 +128,19 @@ export class QuestService extends BaseService {
       // ตรวจสอบเควสที่หมดอายุและจัดการตามประเภท
       await this.handleExpiredQuests(character.id, userId, assignedQuests)
 
-      // ดึงข้อมูลภารกิจที่ได้รับมอบหมายอีกครั้งหลังจากอัปเดต
+      // หลังจากอัปเดตเควสที่หมดอายุแล้ว ดึงข้อมูลเควสอีกครั้ง
       const updatedAssignedQuests =
         await questRepository.getAssignedQuestsByCharacterId(character.id)
 
-      // ตรวจสอบว่าผู้ใช้มีเควสหรือไม่ ถ้าไม่มีให้สุ่มเควสและมอบหมายให้
+      // ตรวจสอบว่ามีเควสหรือไม่ ถ้าไม่มีให้สุ่มเควสและมอบหมายให้
       if (updatedAssignedQuests.length === 0) {
-        console.log(
-          'No quests assigned for new user. Assigning initial quests...'
-        )
+        console.log('No quests assigned. Assigning initial quests...')
         await this.assignInitialQuestsForNewUser(character.id, userId)
 
         // ดึงภารกิจที่เพิ่งมอบหมายใหม่อีกครั้ง
         const newAssignedQuests =
           await questRepository.getAssignedQuestsByCharacterId(character.id)
+
         return this.processQuestData(newAssignedQuests, character.id)
       }
 
@@ -153,37 +152,68 @@ export class QuestService extends BaseService {
       // ถ้าไม่มีเควสรายวันในวันนี้ ให้มอบหมายเควสรายวันใหม่
       if (!hasDailyQuestToday) {
         console.log('No daily quests for today. Assigning new daily quests...')
-        await this.assignNewDailyQuests(character.id, userId)
 
-        // ดึงภารกิจอีกครั้งหลังมอบหมายเควสรายวันใหม่
-        const finalAssignedQuests =
-          await questRepository.getAssignedQuestsByCharacterId(character.id)
-        return this.processQuestData(finalAssignedQuests, character.id)
+        await this.assignNewDailyQuests(character.id, userId)
+      } else {
+        console.log(
+          'Daily quests for today already exist. Not assigning new ones.'
+        )
       }
 
-      const test = this.processQuestData(updatedAssignedQuests, character.id)
+      // ตรวจสอบเควสรายสัปดาห์
+      await this.checkAndAssignWeeklyQuests(
+        character.id,
+        userId,
+        updatedAssignedQuests
+      )
 
-      return this.processQuestData(updatedAssignedQuests, character.id)
+      // ดึงภารกิจอีกครั้งหลังมอบหมายเควสใหม่ (ถ้ามี)
+      const finalAssignedQuests =
+        await questRepository.getAssignedQuestsByCharacterId(character.id)
+
+      return this.processQuestData(finalAssignedQuests, character.id)
     } catch (error) {
       console.error('Error in getQuestsForUser:', error)
       throw new Error('Failed to fetch quests for user')
     }
   }
-
   // ตรวจสอบว่ามีเควสรายวันสำหรับวันนี้หรือไม่
   private hasDailyQuestForToday(assignedQuests: any[]): boolean {
-    const today = new Date().toDateString()
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // เริ่มต้นวันนี้
 
-    // กรองเควสที่เป็นรายวัน และยังไม่หมดอายุ
-    const activeDailyQuests = assignedQuests.filter((aq) => {
-      return (
-        aq.quest.type === 'daily' &&
-        aq.status === 'active' &&
-        new Date(aq.assignedAt).toDateString() === today
-      )
+    // กรองเควสที่เป็นรายวัน และ:
+    // 1. มีสถานะเป็น active หรือ completed
+    // 2. ถูกมอบหมายในวันนี้หรือยังไม่หมดอายุ
+    const dailyQuestsForToday = assignedQuests.filter((aq) => {
+      // ตรวจสอบว่าเป็นเควสรายวันหรือไม่
+      if (aq.quest.type !== 'daily') return false
+
+      // ตรวจสอบสถานะของเควส (active หรือ completed)
+      if (aq.status !== 'active' && aq.status !== 'completed') return false
+
+      // ตรวจสอบว่าเควสนี้ถูกมอบหมายในวันนี้หรือไม่
+      const assignedDate = new Date(aq.assignedAt)
+      assignedDate.setHours(0, 0, 0, 0)
+
+      // หรือเควสยังไม่หมดอายุ (expiresAt ยังไม่ถึงหรือยังเป็นวันเดียวกัน)
+      if (aq.expiresAt) {
+        const expiryDate = new Date(aq.expiresAt)
+        expiryDate.setHours(0, 0, 0, 0)
+
+        // ถ้าวันหมดอายุยังไม่ถึงหรือเป็นวันนี้ และเควสถูกมอบหมายวันนี้ด้วย
+        return (
+          expiryDate.getTime() >= today.getTime() &&
+          assignedDate.getTime() === today.getTime()
+        )
+      }
+
+      // กรณีไม่มีวันหมดอายุ ให้ตรวจสอบเฉพาะวันที่มอบหมาย
+      return assignedDate.getTime() === today.getTime()
     })
 
-    return activeDailyQuests.length > 0
+    console.log(`Found ${dailyQuestsForToday.length} daily quests for today`)
+    return dailyQuestsForToday.length > 0
   }
 
   // จัดการกับเควสที่หมดอายุ
@@ -400,6 +430,9 @@ export class QuestService extends BaseService {
   /**
    * ประมวลผลข้อมูลเควสเพื่อส่งกลับไปยังผู้ใช้
    */
+  // src/features/quest/service/server.ts
+
+  // แก้ไขเมธอด processQuestData
   private async processQuestData(
     assignedQuests: any[],
     characterId: number
@@ -408,21 +441,40 @@ export class QuestService extends BaseService {
     const completedQuests =
       await questRepository.getCompletedQuestsByCharacterId(characterId)
 
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // เริ่มต้นวันนี้
+
     // แปลงข้อมูล assigned quests เป็น Quest objects
     const activeQuests: Quest[] = assignedQuests
       .filter((assignedQuest) => {
         // แสดงภารกิจที่:
-        // 1. มีสถานะเป็น active
-        // 2. อยู่ในช่วงเวลาที่กำหนด (สำหรับ daily/weekly)
-        return (
-          (assignedQuest.status === 'active' ||
-            assignedQuest.status === 'completed') &&
-          this.isQuestInTimeRange(
-            assignedQuest.quest.type,
-            assignedQuest.assignedAt,
-            assignedQuest.expiresAt
-          )
-        )
+        // 1. มีสถานะเป็น active หรือ completed และยังไม่หมดอายุ
+        // 2. สำหรับเควสรายวัน ให้แสดงเฉพาะเควสของวันนี้เท่านั้น
+
+        if (
+          assignedQuest.status !== 'active' &&
+          assignedQuest.status !== 'completed'
+        ) {
+          return false
+        }
+
+        // ตรวจสอบว่าเควสหมดอายุหรือยัง
+        if (
+          assignedQuest.expiresAt &&
+          new Date(assignedQuest.expiresAt) < new Date()
+        ) {
+          return false
+        }
+
+        // สำหรับเควสรายวัน ให้แสดงเฉพาะเควสของวันนี้
+        if (assignedQuest.quest.type === 'daily') {
+          const assignedDate = new Date(assignedQuest.assignedAt)
+          assignedDate.setHours(0, 0, 0, 0)
+          return assignedDate.getTime() === today.getTime()
+        }
+
+        // สำหรับเควสประเภทอื่น แสดงตามปกติ
+        return true
       })
       .map((assignedQuest) => {
         const quest = assignedQuest.quest
@@ -431,6 +483,15 @@ export class QuestService extends BaseService {
           quest.type,
           assignedQuest.expiresAt
         )
+
+        // ตรวจสอบว่าเควสนี้มี submission หรือไม่
+        const hasSubmission =
+          Array.isArray(assignedQuest.questSubmissions) &&
+          assignedQuest.questSubmissions.length > 0
+
+        // ถ้ามี submission แล้ว ให้ถือว่าเควสนี้ completed ไม่ว่า status จะเป็นอะไร
+        const isCompleted =
+          hasSubmission || assignedQuest.status === 'completed'
 
         return {
           id: quest.id.toString(),
@@ -443,12 +504,13 @@ export class QuestService extends BaseService {
             tokens: quest.baseTokenReward,
           },
           deadline,
-          completed: assignedQuest.status === 'completed',
-          status: assignedQuest.status as any,
+          completed: isCompleted,
+          status: isCompleted ? 'completed' : (assignedQuest.status as any),
           imageUrl: quest.imageUrl || undefined,
           isActive: quest.isActive,
           createdAt: quest.createdAt,
           updatedAt: quest.updatedAt,
+          assignedQuestId: assignedQuest.id,
         }
       })
 
@@ -724,7 +786,22 @@ export class QuestSubmissionService extends BaseService {
         )
       if (!quest || !character) throw new Error('Quest or character not found')
 
-      // 2. อัพโหลดไฟล์ไป S3 (ถ้ามี)
+      // 2. ตรวจสอบว่ามี active assigned quest หรือไม่
+      const assignedQuest = await prisma.assignedQuest.findFirst({
+        where: {
+          questId,
+          characterId,
+          status: 'active',
+        },
+        orderBy: {
+          assignedAt: 'desc',
+        },
+      })
+
+      if (!assignedQuest)
+        throw new Error('No active assigned quest found for this user')
+
+      // 2.1 อัพโหลดไฟล์ไป S3 (ถ้ามี)
       let mediaUrl: string | undefined
       let mediaType: 'image' | 'video' | 'text' = 'text'
       let thumbnailUrl: string | undefined
@@ -879,11 +956,26 @@ export class QuestSubmissionService extends BaseService {
 
   async getQuestSubmission(questId: string, characterId: number) {
     try {
+      // เพิ่มการตรวจสอบ AssignedQuest ที่เป็นปัจจุบัน
+      const assignedQuest = await prisma.assignedQuest.findFirst({
+        where: {
+          questId: parseInt(questId),
+          characterId,
+          // อาจเพิ่มเงื่อนไขเวลาตามประเภทของเควส (รายวัน/รายสัปดาห์)
+        },
+        orderBy: {
+          assignedAt: 'desc',
+        },
+      })
+
+      if (!assignedQuest) return null
+
       const submission =
         await questSubmissionRepository.getQuestSubmissionByQuestAndCharacter(
           parseInt(questId),
           characterId
         )
+
       return submission
     } catch (error) {
       console.error('Error in getQuestSubmission:', error)

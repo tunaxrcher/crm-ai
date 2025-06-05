@@ -67,6 +67,56 @@ export class QuestRepository extends BaseRepository<Quest> {
   }
 
   // ดึงภารกิจที่ถูกมอบหมายให้ character (ทั้ง active และ completed)
+  // async getAssignedQuestsByCharacterId(
+  //   characterId: number
+  // ): Promise<AssignedQuestWithDetails[]> {
+  //   try {
+  //     const assignedQuests = await this.prisma.assignedQuest.findMany({
+  //       where: {
+  //         characterId: characterId,
+  //         quest: {
+  //           isActive: true,
+  //         },
+  //       },
+  //       include: {
+  //         quest: true,
+  //       },
+  //       orderBy: [
+  //         { status: 'asc' }, // active quests first, then completed
+  //         { assignedAt: 'desc' },
+  //       ],
+  //     })
+
+  //     // ดึง quest submissions แยกต่างหาก
+  //     const questSubmissions = await this.prisma.questSubmission.findMany({
+  //       where: {
+  //         characterId: characterId,
+  //         questId: {
+  //           in: assignedQuests.map((aq) => aq.questId),
+  //         },
+  //       },
+  //       select: {
+  //         id: true,
+  //         questId: true,
+  //         xpEarned: true,
+  //         submittedAt: true,
+  //       },
+  //     })
+
+  //     // รวมข้อมูล quest submissions เข้ากับ assigned quests
+  //     const enrichedQuests = assignedQuests.map((assignedQuest) => ({
+  //       ...assignedQuest,
+  //       questSubmissions: questSubmissions.filter(
+  //         (submission) => submission.questId === assignedQuest.questId
+  //       ),
+  //     }))
+
+  //     return enrichedQuests
+  //   } catch (error) {
+  //     console.error('Error fetching assigned quests:', error)
+  //     throw new Error('Failed to fetch assigned quests')
+  //   }
+  // }
   async getAssignedQuestsByCharacterId(
     characterId: number
   ): Promise<AssignedQuestWithDetails[]> {
@@ -87,31 +137,37 @@ export class QuestRepository extends BaseRepository<Quest> {
         ],
       })
 
-      // ดึง quest submissions แยกต่างหาก
-      const questSubmissions = await this.prisma.questSubmission.findMany({
-        where: {
-          characterId: characterId,
-          questId: {
-            in: assignedQuests.map((aq) => aq.questId),
-          },
-        },
-        select: {
-          id: true,
-          questId: true,
-          xpEarned: true,
-          submittedAt: true,
-        },
-      })
+      // ดึง quest submissions แยกต่างหาก และผูกกับ assignedQuest ที่ถูกต้อง
+      const submissions = await Promise.all(
+        assignedQuests.map(async (aq) => {
+          // ดึงเฉพาะ submission ที่ถูกส่งหลังจากที่ quest นี้ถูก assign
+          const submissions = await this.prisma.questSubmission.findMany({
+            where: {
+              questId: aq.questId,
+              characterId: characterId,
+              submittedAt: {
+                gte: aq.assignedAt, // เฉพาะ submission ที่ส่งหลังจาก assigned
+              },
+            },
+            select: {
+              id: true,
+              questId: true,
+              xpEarned: true,
+              submittedAt: true,
+            },
+            orderBy: {
+              submittedAt: 'desc',
+            },
+          })
 
-      // รวมข้อมูล quest submissions เข้ากับ assigned quests
-      const enrichedQuests = assignedQuests.map((assignedQuest) => ({
-        ...assignedQuest,
-        questSubmissions: questSubmissions.filter(
-          (submission) => submission.questId === assignedQuest.questId
-        ),
-      }))
+          return {
+            ...aq,
+            questSubmissions: submissions,
+          }
+        })
+      )
 
-      return enrichedQuests
+      return submissions
     } catch (error) {
       console.error('Error fetching assigned quests:', error)
       throw new Error('Failed to fetch assigned quests')
@@ -229,11 +285,35 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
     mediaAnalysis?: MediaAnalysisResult | ImageAnalysisResult
   }) {
     try {
+      // ค้นหา AssignedQuest ที่เกี่ยวข้องก่อนที่จะสร้าง submission
+      const assignedQuest = await this.prisma.assignedQuest.findFirst({
+        where: {
+          questId: data.questId,
+          characterId: data.characterId,
+          status: 'active',
+        },
+        orderBy: {
+          assignedAt: 'desc',
+        },
+      })
+
+      if (!assignedQuest) {
+        throw new Error('No active assigned quest found')
+      }
+
       const mediaType = data.mediaType
 
       const baseData: any = {
-        questId: data.questId,
-        characterId: data.characterId,
+        // เพิ่มความสัมพันธ์โดยตรงแทนการใช้ ID
+        character: {
+          connect: { id: data.characterId },
+        },
+        quest: {
+          connect: { id: data.questId },
+        },
+        assignedQuest: {
+          connect: { id: assignedQuest.id },
+        },
         mediaType,
         mediaUrl: data.mediaUrl,
         description: data.description,
@@ -243,7 +323,6 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
         ratingDEX: data.aiAnalysis.ratings.dex,
         ratingVIT: data.aiAnalysis.ratings.vit,
         ratingINT: data.aiAnalysis.ratings.int,
-        // xpEarned: data.aiAnalysis.xpEarned,
         xpEarned: data.questXpEarned,
         feedback: data.aiAnalysis.feedback,
         score: data.aiAnalysis.score,
@@ -434,10 +513,37 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
     questId: number,
     characterId: number
   ) {
+    // ค้นหา AssignedQuest ที่เกี่ยวข้องก่อน
+    const assignedQuest = await this.prisma.assignedQuest.findFirst({
+      where: {
+        questId,
+        characterId,
+        // ดึงเฉพาะ AssignedQuest ปัจจุบัน (ไม่ใช่ของเก่า)
+        assignedAt: {
+          // ช่วงเวลาที่สร้าง AssignedQuest (เช่น ภายใน 1 วันล่าสุดสำหรับ daily)
+          gte: (() => {
+            const date = new Date()
+            date.setHours(0, 0, 0, 0) // เริ่มต้นวันนี้
+            return date
+          })(),
+        },
+      },
+      orderBy: {
+        assignedAt: 'desc',
+      },
+    })
+
+    if (!assignedQuest) return null
+
+    // ค้นหา QuestSubmission ที่เกี่ยวข้องกับ AssignedQuest นั้น
     return await this.prisma.questSubmission.findFirst({
       where: {
         questId,
         characterId,
+        // เพิ่มเงื่อนไขเวลาที่สร้าง submission ต้องหลังจากเวลาที่ assigned quest
+        submittedAt: {
+          gte: assignedQuest.assignedAt,
+        },
       },
       include: {
         quest: true,
@@ -446,6 +552,9 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
             user: true,
           },
         },
+      },
+      orderBy: {
+        submittedAt: 'desc',
       },
     })
   }

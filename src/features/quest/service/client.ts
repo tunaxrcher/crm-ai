@@ -114,7 +114,6 @@ export class QuestSubmissionService {
       }
 
       const data = await response.json()
-
       return data
     } catch (error) {
       console.error('Error fetching quest submission:', error)
