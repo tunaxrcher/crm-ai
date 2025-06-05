@@ -191,48 +191,68 @@ export default function StoryList({
         {/* Stories container - Facebook style */}
         <div
           ref={storiesRef}
-          className="flex overflow-x-auto pb-2 px-4 pl-0 space-x-2 no-scrollbar"
+          className="flex overflow-x-auto pb-2 px-4 pl-0 space-x-3 no-scrollbar"
           style={{ scrollBehavior: 'smooth' }}>
           {/* Story items - Facebook rectangular style */}
           {stories.map((story, index) => (
             <div
               key={story.id}
-              className="flex-shrink-0 w-24 cursor-pointer group"
+              className="flex-shrink-0 w-32 cursor-pointer group"
               onClick={() => openStory(index)}>
-              <div className="relative w-24 h-36 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
-                {/* Background image or gradient - ปรับให้ใช้ thumbnail สำหรับวิดีโอ */}
-                <div
-                  className="absolute inset-0 bg-gradient-to-b from-blue-400 to-purple-600"
-                  style={{
-                    backgroundImage:
-                      story.media.type === 'video' && story.media.thumbnail
-                        ? `url(${story.media.thumbnail})`
-                        : story.media.type === 'image'
-                          ? `url(${story.media.url})`
-                          : story.user.avatar
-                            ? `url(${story.user.avatar})`
-                            : undefined,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}>
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-black/20" />
+              <div className="flex flex-col items-center relative">
+                <div className="relative w-32 h-48 rounded-xl overflow-hidden hover:shadow-lg transition-shadow mb-4">
+                  {/* Background image or gradient - ปรับให้ใช้ thumbnail สำหรับวิดีโอ */}
+                  <div
+                    className="absolute inset-0 bg-gradient-to-b from-blue-400 to-purple-600"
+                    style={{
+                      backgroundImage:
+                        story.media.type === 'video' && story.media.thumbnail
+                          ? `url(${story.media.thumbnail})`
+                          : story.media.type === 'image'
+                            ? `url(${story.media.url})`
+                            : story.user.avatar
+                              ? `url(${story.user.avatar})`
+                              : undefined,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}>
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/20" />
+                  </div>
+
+                  {/* Story border indicator */}
+                  <div
+                    className={`absolute inset-0 rounded-xl ${
+                      story.viewed
+                        ? 'ring-2 ring-gray-400'
+                        : 'ring-3 ring-blue-500'
+                    }`}
+                  />
+
+                  {/* Media type indicators */}
+                  {story.media.type === 'video' && (
+                    <div className="absolute top-2 right-2">
+                      <div className="bg-black/50 rounded-full p-1">
+                        <Play className="h-3 w-3 text-white" />
+                      </div>
+                    </div>
+                  )}
+
+                  {story.media.type === 'image' && (
+                    <div className="absolute top-2 right-2">
+                      <div className="bg-black/50 rounded-full p-1">
+                        <ImageIcon className="h-3 w-3 text-white" />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Story border indicator */}
-                <div
-                  className={`absolute inset-0 rounded-xl ${
-                    story.viewed
-                      ? 'ring-2 ring-gray-400'
-                      : 'ring-3 ring-blue-500'
-                  }`}
-                />
-
-                {/* User avatar */}
-                <div className="absolute top-2 left-2">
+                {/* User avatar - positioned outside the story card but relative to parent */}
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10">
+                  {/* <div className={`p-0.5 rounded-full ${story.viewed ? 'bg-gray-400' : 'bg-blue-500'}`}> */}
                   <div
-                    className={`p-0.5 rounded-full ${story.viewed ? 'bg-gray-400' : 'bg-blue-500'}`}>
-                    <Avatar className="w-8 h-8 ring-2 ring-white">
+                    className={`p-0.5 rounded-full ${story.viewed ? 'bg-black' : 'bg-black'}`}>
+                    <Avatar className="w-8 h-8  ring-2 ring-black">
                       <AvatarImage
                         src={story.user.avatar || '/placeholder.svg'}
                         alt={story.user.name}
@@ -244,32 +264,10 @@ export default function StoryList({
                   </div>
                 </div>
 
-                {/* Media type indicators */}
-                {story.media.type === 'video' && (
-                  <div className="absolute top-2 right-2">
-                    <div className="bg-black/50 rounded-full p-1">
-                      <Play className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                )}
-
-                {story.media.type === 'image' && (
-                  <div className="absolute top-2 right-2">
-                    <div className="bg-black/50 rounded-full p-1">
-                      <ImageIcon className="h-3 w-3 text-white" />
-                    </div>
-                  </div>
-                )}
-
-                {/* User name */}
-                <div className="absolute bottom-2 left-2 right-2">
-                  <p className="text-white text-xs font-medium truncate drop-shadow-sm">
-                    {story.user.name.split(' ')[0]}
-                  </p>
-                </div>
-
-                {/* Hover effect */}
-                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+                {/* User name below the story */}
+                <p className="text-xs font-medium text-center truncate w-full mt-1">
+                  {story.user.name.split(' ')[0]}
+                </p>
               </div>
             </div>
           ))}

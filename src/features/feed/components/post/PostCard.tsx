@@ -131,7 +131,7 @@ export const PostCard = function PostCard({
 
               {/* แสดง Caption จาก field post */}
               {item.post && (
-                <div className="mb-3 text-foreground">{item.post}</div>
+                <div className="mb-3 text-foreground text-sm">{item.post}</div>
               )}
 
               <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-3">

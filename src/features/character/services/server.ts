@@ -459,9 +459,7 @@ export class CharacterService extends BaseService {
         username,
         password: hashedPassword,
         name: payload.name,
-        avatar: payload.portraitUrl,
-        level: 1,
-        xp: 0,
+        // avatar: payload.portraitUrl,
       },
     })
 

@@ -625,9 +625,11 @@ export async function createCharacters(users: any[], jobClasses: any[]) {
       orderBy: { level: 'asc' },
     })
 
+    let level = faker.number.int({ min: 1, max: 50 })
+
     let selectedJobLevel = jobLevels[0]
     for (const jobLevel of jobLevels) {
-      if (user.level >= jobLevel.requiredCharacterLevel) {
+      if (level >= jobLevel.requiredCharacterLevel) {
         selectedJobLevel = jobLevel
       } else {
         break
@@ -682,15 +684,15 @@ export async function createCharacters(users: any[], jobClasses: any[]) {
         break
     }
 
-    const { portraits, currentUrl } = generatePortraits(user.level)
+    const { portraits, currentUrl } = generatePortraits(level)
 
     const character = await prisma.character.create({
       data: {
         name: `${user.name} (${jobClass.name})`,
-        level: user.level,
+        level: level,
         currentXP: faker.number.int({ min: 0, max: 900 }),
         nextLevelXP: 1000,
-        totalXP: user.level * 1000 + faker.number.int({ min: 0, max: 900 }),
+        totalXP: level * 1000 + faker.number.int({ min: 0, max: 900 }),
         statPoints: faker.number.int({ min: 0, max: 10 }),
         statAGI,
         statSTR,
