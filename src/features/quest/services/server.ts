@@ -1,12 +1,12 @@
-// src/features/quest/service/server.ts
-import { characterService } from '@src/features/character/service/server'
-import { storyService } from '@src/features/feed/service/server'
+// src/features/quest/services/server.ts
+import { characterService } from '@src/features/character/services/server'
+import { storyService } from '@src/features/feed/services/server'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
-import { openaiService } from '@src/lib/service/openaiService'
-import { s3UploadService } from '@src/lib/service/s3UploadService'
-import { BaseService } from '@src/lib/service/server/baseService'
-import { videoThumbnailService } from '@src/lib/service/videoThumbnailService'
+import { openaiService } from '@src/lib/services/openaiService'
+import { s3UploadService } from '@src/lib/services/s3UploadService'
+import { BaseService } from '@src/lib/services/server/baseService'
+import { videoThumbnailService } from '@src/lib/services/videoThumbnailService'
 
 import {
   QuestRepository,
@@ -430,7 +430,7 @@ export class QuestService extends BaseService {
   /**
    * ประมวลผลข้อมูลเควสเพื่อส่งกลับไปยังผู้ใช้
    */
-  // src/features/quest/service/server.ts
+  // src/features/quest/services/server.ts
 
   // แก้ไขเมธอด processQuestData
   private async processQuestData(

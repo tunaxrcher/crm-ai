@@ -1,7 +1,7 @@
-// src/features/feed/hook/api.ts
+// src/features/feed/hooks/api.ts
 import { useCallback, useEffect, useState } from 'react'
 
-import { feedService } from '../service/client'
+import { feedService } from '../services/client'
 import { FeedItemUI, StoryUI } from '../types'
 
 export function useFeed() {

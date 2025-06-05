@@ -1,4 +1,4 @@
-import { BaseService } from '@src/lib/service/client/baseService'
+import { BaseService } from '@src/lib/services/client/baseService'
 
 import { CharacterConfirmPayload, CharacterCreatePayload } from '../types'
 

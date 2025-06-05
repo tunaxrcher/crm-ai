@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getTeamQuests } from '@src/features/party/service/server'
+import { getTeamQuests } from '@src/features/party/services/server'
 
 /**
  * GET handler for fetching available team quests

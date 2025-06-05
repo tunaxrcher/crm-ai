@@ -8,7 +8,7 @@ import { Button } from '@src/components/ui/button'
 import { Card, CardContent } from '@src/components/ui/card'
 import { Skeleton } from '@src/components/ui/skeleton'
 import TeamDetailView from '@src/features/party/components/TeamDetailView'
-import { useTeamDetails } from '@src/features/party/hook/api'
+import { useTeamDetails } from '@src/features/party/hooks/api'
 import { Team } from '@src/features/party/types'
 import { ChevronLeft, Info } from 'lucide-react'
 

@@ -36,7 +36,7 @@ import {
   TabsTrigger,
 } from '@src/components/ui/tabs'
 import { useCharacter } from '@src/contexts/CharacterContext'
-import { useQuestNotifications } from '@src/features/quest/hook/useQuestNotifications'
+import { useQuestNotifications } from '@src/features/quest/hooks/useQuestNotifications'
 import { formatDeadline } from '@src/features/quest/utils'
 import {
   ArrowLeft,
@@ -59,7 +59,7 @@ import {
   useQuestSubmission,
   useQuestSubmissionQuery,
   useUpdateQuestSubmission,
-} from '../hook/api'
+} from '../hooks/api'
 
 // Function to determine difficulty badge color
 const getDifficultyBadge = (difficulty: string) => {

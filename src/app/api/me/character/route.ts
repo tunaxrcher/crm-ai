@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { userService } from '@src/features/user/service/server'
+import { userService } from '@src/features/user/services/server'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const GET = withErrorHandling(

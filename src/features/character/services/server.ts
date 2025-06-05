@@ -1,8 +1,8 @@
-import { userService } from '@src/features/user/service/server'
+import { userService } from '@src/features/user/services/server'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
-import { replicateService } from '@src/lib/replicateService'
-import { BaseService } from '@src/lib/service/server/baseService'
+import { replicateService } from '@src/lib/services/replicateService'
+import { BaseService } from '@src/lib/services/server/baseService'
 import bcrypt from 'bcrypt'
 import 'server-only'
 

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { createTeam } from '@src/features/party/service/server'
+import { createTeam } from '@src/features/party/services/server'
 import type { Team } from '@src/features/party/types'
 
 /**

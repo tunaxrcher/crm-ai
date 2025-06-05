@@ -40,7 +40,7 @@ import {
   User,
 } from 'lucide-react'
 
-import { useRankings } from '../hook/api'
+import { useRankings } from '../hooks/api'
 import { CharacterClass, RankingPeriod, RankingUser } from '../types'
 
 // Class config

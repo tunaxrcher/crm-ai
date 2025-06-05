@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import * as RankingService from '../service/client'
+import * as RankingService from '../services/client'
 import {
   CharacterClass,
   GetRankingsParams,

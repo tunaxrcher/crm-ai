@@ -16,7 +16,7 @@ import {
 import { withErrorHandling } from '@src/hooks'
 import useErrorHandler from '@src/hooks/useErrorHandler'
 
-import { useQuests } from '../hook/api'
+import { useQuests } from '../hooks/api'
 import { GroupedQuests } from '../types'
 import { formatDeadline } from '../utils'
 import CompletedQuestList from './CompletedQuestList'

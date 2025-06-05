@@ -1,5 +1,5 @@
 import { userRepository } from '../repository'
-import { userService } from '../service/server'
+import { userService } from '../services/server'
 import { UserWithCharacter } from './user.type'
 
 export type GetUserCharacterResponse = Awaited<

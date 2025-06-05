@@ -1,4 +1,4 @@
-// import { BaseService } from '@src/lib/service/server/baseService'
+// import { BaseService } from '@src/lib/services/server/baseService'
 
 // import { AssistantDetails } from '../types'
 

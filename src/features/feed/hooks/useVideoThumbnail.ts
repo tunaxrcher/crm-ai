@@ -1,4 +1,4 @@
-// src/features/feed/hook/useVideoThumbnail.ts
+// src/features/feed/hooks/useVideoThumbnail.ts
 import { useCallback, useRef, useState } from 'react'
 
 /**

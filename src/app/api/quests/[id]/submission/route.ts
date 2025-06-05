@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   questService,
   questSubmissionService,
-} from '@src/features/quest/service/server'
+} from '@src/features/quest/services/server'
 
 export async function GET(
   request: NextRequest,

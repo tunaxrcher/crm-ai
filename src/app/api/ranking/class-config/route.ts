@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getClassConfig } from '@src/features/ranking/service/server'
+import { getClassConfig } from '@src/features/ranking/services/server'
 
 export async function GET(request: NextRequest) {
   try {

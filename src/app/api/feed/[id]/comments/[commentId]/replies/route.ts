@@ -1,7 +1,7 @@
 // src/app/api/comments/[commentId]/replies/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
-import { commentService } from '@src/features/feed/service/server'
+import { commentService } from '@src/features/feed/services/server'
 
 // POST /api/comments/[commentId]/replies - ตอบความคิดเห็น
 export async function POST(

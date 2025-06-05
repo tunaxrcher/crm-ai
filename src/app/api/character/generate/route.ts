@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { characterService } from '@src/features/character/service/server'
-import { s3UploadService } from '@src/lib/service/s3UploadService'
+import { characterService } from '@src/features/character/services/server'
+import { s3UploadService } from '@src/lib/services/s3UploadService'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const POST = withErrorHandling(async (request: NextRequest) => {

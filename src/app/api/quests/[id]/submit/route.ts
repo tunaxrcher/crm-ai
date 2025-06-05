@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { questSubmissionService } from '@src/features/quest/service/server'
+import { questSubmissionService } from '@src/features/quest/services/server'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const POST = withErrorHandling(

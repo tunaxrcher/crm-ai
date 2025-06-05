@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getTeamDetails } from '@src/features/party/service/server'
+import { getTeamDetails } from '@src/features/party/services/server'
 
 interface RouteParams {
   params: Promise<{

@@ -3,7 +3,7 @@
 // import { useMutation, useQuery } from '@tanstack/react-query'
 // import toast from 'react-hot-toast'
 
-// import { type AssistantFormData, assistantService } from '../service/client'
+// import { type AssistantFormData, assistantService } from '../services/client'
 
 // // Hook สำหรับสร้าง Assistant
 // export function useCreateAssistant() {

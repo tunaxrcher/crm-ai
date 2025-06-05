@@ -1,5 +1,5 @@
-// src/features/feed/service/client.ts
-import { BaseService } from '@src/lib/service/client/baseService'
+// src/features/feed/services/client.ts
+import { BaseService } from '@src/lib/services/client/baseService'
 
 export class FeedService extends BaseService {
   private static instance: FeedService

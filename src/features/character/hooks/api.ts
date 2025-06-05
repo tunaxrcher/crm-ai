@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 
-import { characterService, jobClassService } from '../service/client'
+import { characterService, jobClassService } from '../services/client'
 import { CharacterConfirmPayload, CharacterCreatePayload } from '../types'
 
 export const useGetJobClass = () => {
@@ -10,14 +10,9 @@ export const useGetJobClass = () => {
   })
 }
 
-// export const useCreateCharacter = () =>
-//   useMutation({
-//     mutationFn: (payload: CharacterCreatePayload) =>
-//       characterService.createCharacter(payload),
-//   })
-
-export const useConfirmCharacter = () =>
-  useMutation({
+export const useConfirmCharacter = () => {
+  return useMutation({
     mutationFn: (payload: CharacterConfirmPayload) =>
       characterService.confirmCharacter(payload),
   })
+}

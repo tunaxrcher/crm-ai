@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { characterService } from '@src/features/character/service/server'
+import { characterService } from '@src/features/character/services/server'
 import { CharacterConfirmPayload } from '@src/features/character/types'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 

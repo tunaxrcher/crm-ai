@@ -1,7 +1,7 @@
 // src/app/api/quests/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
-import { questService } from '@src/features/quest/service/server'
+import { questService } from '@src/features/quest/services/server'
 
 export async function GET(request: NextRequest) {
   try {

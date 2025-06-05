@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { storyRepository } from '@src/features/feed/repository'
 import { getServerSession } from '@src/lib/auth'
-import { s3UploadService } from '@src/lib/service/s3UploadService'
+import { s3UploadService } from '@src/lib/services/s3UploadService'
 import { spawn } from 'child_process'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'

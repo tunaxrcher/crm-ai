@@ -1,7 +1,7 @@
-// src/features/quest/hook/api.ts
+// src/features/quest/hooks/api.ts
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { questService, questSubmissionService } from '../service/client'
+import { questService, questSubmissionService } from '../services/client'
 import {
   CompletedQuest,
   GroupedQuests,

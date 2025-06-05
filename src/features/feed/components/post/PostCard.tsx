@@ -11,7 +11,7 @@ import {
   CardHeader,
 } from '@src/components/ui/card'
 import { Input } from '@src/components/ui/input'
-import { useAutoplayVideo } from '@src/features/feed/hook/useAutoplayVideo'
+import { useAutoplayVideo } from '@src/features/feed/hooks/useAutoplayVideo'
 import { FeedItemUI } from '@src/features/feed/types'
 import {
   Award,

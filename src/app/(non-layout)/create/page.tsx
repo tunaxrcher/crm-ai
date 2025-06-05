@@ -21,8 +21,8 @@ import {
   TabsList,
   TabsTrigger,
 } from '@src/components/ui/tabs'
-import { useGetJobClass } from '@src/features/character/hook/api'
-import { characterService } from '@src/features/character/service/client'
+import { useGetJobClass } from '@src/features/character/hooks/api'
+import { characterService } from '@src/features/character/services/client'
 import {
   CharacterConfirmPayload,
   CharacterConfirmResponse,

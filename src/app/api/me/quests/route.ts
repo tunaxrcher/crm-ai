@@ -1,7 +1,7 @@
 // src/app/api/quests/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
-import { questService } from '@src/features/quest/service/server'
+import { questService } from '@src/features/quest/services/server'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const GET = withErrorHandling(

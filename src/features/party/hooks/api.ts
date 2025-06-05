@@ -6,7 +6,7 @@ import {
   getTeamQuests,
   getTeams,
   joinTeam,
-} from '../service/client'
+} from '../services/client'
 import type { GlobalTeamQuest, Team, TeamDetail } from '../types'
 
 /**

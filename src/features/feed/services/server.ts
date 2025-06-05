@@ -1,7 +1,7 @@
-// src/features/feed/service/server.ts
+// src/features/feed/services/server.ts
 import { Prisma } from '@prisma/client'
 import { getServerSession } from '@src/lib/auth'
-import { BaseService } from '@src/lib/service/server/baseService'
+import { BaseService } from '@src/lib/services/server/baseService'
 import 'server-only'
 
 import {
@@ -208,7 +208,7 @@ export class FeedService extends BaseService {
     })
   }
 
-  // src/features/feed/service/server.ts
+  // src/features/feed/services/server.ts
   async createFeedItem(data: {
     userId: number
     content: string

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { likeService } from '@src/features/feed/service/server'
+import { likeService } from '@src/features/feed/services/server'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const POST = withErrorHandling(

@@ -12,8 +12,8 @@ import { useCharacter } from '@src/contexts/CharacterContext'
 import { useAuth } from '@src/hooks/useAuth'
 import useErrorHandler from '@src/hooks/useErrorHandler'
 
-import { useFeed } from '../hook/api'
-import { useIntersectionObserver } from '../hook/useIntersectionObserver'
+import { useFeed } from '../hooks/api'
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver'
 import PostList from './post/PostList'
 import StoryList from './story/StoryList'
 

@@ -27,7 +27,7 @@ import {
   Users,
 } from 'lucide-react'
 
-import { useTeamDetails } from '../hook/api'
+import { useTeamDetails } from '../hooks/api'
 import type { Team } from '../types'
 
 // Map icon string names to Lucide React components

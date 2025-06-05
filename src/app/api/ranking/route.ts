@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getRankings } from '@src/features/ranking/service/server'
+import { getRankings } from '@src/features/ranking/services/server'
 import { CharacterClass, RankingPeriod } from '@src/features/ranking/types'
 
 export async function GET(request: NextRequest) {

@@ -1,6 +1,6 @@
-// src/features/user/service/server.ts
+// src/features/user/services/server.ts
 import { getServerSession } from '@src/lib/auth'
-import { BaseService } from '@src/lib/service/server/baseService'
+import { BaseService } from '@src/lib/services/server/baseService'
 import 'server-only'
 
 import { UserRepository, userRepository } from '../repository'

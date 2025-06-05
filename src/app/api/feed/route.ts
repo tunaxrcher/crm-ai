@@ -1,7 +1,7 @@
 // src/app/api/feed/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
-import { feedService } from '@src/features/feed/service/server'
+import { feedService } from '@src/features/feed/services/server'
 
 // GET /api/feed - ดึงข้อมูล feed items ทั้งหมด
 export async function GET(request: NextRequest) {

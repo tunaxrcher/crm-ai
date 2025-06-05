@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { commentService } from '@src/features/feed/service/server'
+import { commentService } from '@src/features/feed/services/server'
 import { prisma } from '@src/lib/db'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 

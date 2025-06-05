@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { characterService } from '@src/features/character/service/server'
+import { characterService } from '@src/features/character/services/server'
 
 export async function POST(request: NextRequest) {
   console.log(`[API] Add XP to Character`)

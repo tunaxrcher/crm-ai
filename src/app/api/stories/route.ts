@@ -1,7 +1,7 @@
 // src/app/api/stories/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
-import { storyService } from '@src/features/feed/service/server'
+import { storyService } from '@src/features/feed/services/server'
 
 // GET /api/stories - ดึง stories ที่ยังไม่หมดอายุ
 export async function GET(request: NextRequest) {

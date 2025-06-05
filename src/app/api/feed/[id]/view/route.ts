@@ -1,7 +1,7 @@
 // src/app/api/stories/[id]/view/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
-import { storyService } from '@src/features/feed/service/server'
+import { storyService } from '@src/features/feed/services/server'
 
 // POST /api/stories/[id]/view - บันทึกการดู story
 export async function POST(

@@ -1,4 +1,4 @@
-// src/features/feed/hook/useAutoplayVideo.ts
+// src/features/feed/hooks/useAutoplayVideo.ts
 import { useEffect, useRef } from 'react'
 
 export function useAutoplayVideo() {

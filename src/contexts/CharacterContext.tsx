@@ -8,7 +8,7 @@ import React, {
   useState,
 } from 'react'
 
-import { characterService } from '@src/features/character/service/client'
+import { characterService } from '@src/features/character/services/client'
 import {
   CharacterData as Character,
   JobClassData as JobClass,

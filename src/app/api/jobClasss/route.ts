@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { jobClassService } from '@src/features/character/service/server'
+import { jobClassService } from '@src/features/character/services/server'
 
 export const GET = async () => {
   try {

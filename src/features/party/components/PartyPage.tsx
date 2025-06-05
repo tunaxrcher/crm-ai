@@ -49,7 +49,7 @@ import {
   useJoinTeam,
   useTeamQuests,
   useTeams,
-} from '../hook/api'
+} from '../hooks/api'
 import type { Team } from '../types'
 import TeamDetailView from './TeamDetailView'
 import TeamQuestItem from './TeamQuestItem'
