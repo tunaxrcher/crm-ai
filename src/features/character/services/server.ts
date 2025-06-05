@@ -1,4 +1,5 @@
 import { userService } from '@src/features/user/services/server'
+import { visionService } from '@src/lib/ai/visionService'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
 import { replicateService } from '@src/lib/services/replicateService'
@@ -21,8 +22,6 @@ import {
   GeneratedPortrait,
 } from '../types'
 import { CharacterLevelService, JobClassHelper } from './CharacterLevelService'
-import { openAIVisionService } from './openaiVisionService'
-import { StatsAllocationService } from './statsAllocationService'
 
 export class CharacterService extends BaseService {
   private static instance: CharacterService
@@ -379,8 +378,7 @@ export class CharacterService extends BaseService {
       console.log(
         '[CharacterService] Analyzing uploaded image with OpenAI Vision...'
       )
-      const analysis =
-        await openAIVisionService.analyzePersonaTraits(faceImageUrl)
+      const analysis = await visionService.analyzePersonaTraits(faceImageUrl)
       if (analysis) {
         personaTraits = analysis.fullDescription
         console.log('[CharacterService] Persona traits:', personaTraits)

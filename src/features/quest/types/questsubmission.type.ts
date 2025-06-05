@@ -1,10 +1,3 @@
-export interface QuestSubmissionRequest {
-  questId: string
-  characterId: number
-  mediaFile?: File
-  description?: string
-}
-
 export interface AIAnalysisResult {
   summary: string
   score: number
@@ -19,30 +12,6 @@ export interface AIAnalysisResult {
     vit: number
     int: number
   }
-}
-
-// export interface QuestSubmissionResponse {
-//   success: boolean
-//   submissionId: number
-//   aiAnalysis: AIAnalysisResult
-//   message?: string
-//   mediaType: string
-//   submission: any
-// }
-
-export interface QuestSubmissionResponse {
-  success: boolean
-  message: number
-  mediaType: string
-  aiAnalysis: AIAnalysisResult
-  submission: any
-  characterUpdate?: any
-}
-
-export interface QuestSubmissionResponse {
-  success: boolean
-  message: number
-  data: any
 }
 
 export interface OpenAIPrompt {

@@ -1,5 +1,5 @@
 // src/features/feed/components/post/PostCard.tsx
-import React, { memo, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Badge } from '@src/components/ui/badge'
@@ -18,7 +18,6 @@ import {
   Heart,
   MessageCircle,
   Send,
-  Share,
   ThumbsUp,
   TrendingUp,
 } from 'lucide-react'
@@ -251,13 +250,13 @@ export const PostCard = function PostCard({
               Comment
             </Button>
 
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               className="flex-1 text-muted-foreground hover:bg-muted">
               <Share className="h-5 w-5 mr-2" />
               Share
-            </Button>
+            </Button> */}
           </div>
 
           {/* Comments section - Only show when showComments is true */}

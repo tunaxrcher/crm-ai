@@ -19,9 +19,7 @@ export class CharacterService extends BaseService {
   async fetchCharacter(id?: string) {
     const response = await fetch(`/api/character${id ? `/${id}` : ''}`)
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch character data')
-    }
+    if (!response.ok) throw new Error('Failed to fetch character data')
 
     return response.json()
   }
@@ -35,9 +33,7 @@ export class CharacterService extends BaseService {
       body: JSON.stringify({ amount }),
     })
 
-    if (!response.ok) {
-      throw new Error('Failed to add XP')
-    }
+    if (!response.ok) throw new Error('Failed to add XP')
 
     return response.json()
   }
@@ -50,9 +46,7 @@ export class CharacterService extends BaseService {
       },
     })
 
-    if (!response.ok) {
-      throw new Error('Failed to level up')
-    }
+    if (!response.ok) throw new Error('Failed to level up')
 
     return response.json()
   }
@@ -65,9 +59,7 @@ export class CharacterService extends BaseService {
       },
     })
 
-    if (!response.ok) {
-      throw new Error('Failed to submit daily quest')
-    }
+    if (!response.ok) throw new Error('Failed to submit daily quest')
 
     return response.json()
   }
@@ -123,9 +115,8 @@ export class JobClassService extends BaseService {
   async fetchJobClass() {
     const response = await fetch(`/api/jobClasss`)
 
-    if (!response.ok) {
+    if (!response.ok)
       throw new Error(`Error fetching jobClasss: ${response.statusText}`)
-    }
 
     const data = await response.json()
 

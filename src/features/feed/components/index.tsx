@@ -9,7 +9,6 @@ import {
 } from '@src/components/shared'
 import { useError } from '@src/components/shared/ErrorProvider'
 import { useCharacter } from '@src/contexts/CharacterContext'
-import { useAuth } from '@src/hooks/useAuth'
 import useErrorHandler from '@src/hooks/useErrorHandler'
 
 import { useFeed } from '../hooks/api'
@@ -18,7 +17,6 @@ import PostList from './post/PostList'
 import StoryList from './story/StoryList'
 
 export default function FeedPageComponent() {
-  // Wrap the component with GlobalErrorBoundary
   return (
     <GlobalErrorBoundary>
       <FeedPageContent />

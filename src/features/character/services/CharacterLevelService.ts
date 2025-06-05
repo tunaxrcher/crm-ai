@@ -1,11 +1,11 @@
 // src/features/character/service/characterLevelService.ts
 import { userService } from '@src/features/user/services/server'
+import { StatAnalysisService } from '@src/lib/ai/statAnalysisService'
 import { prisma } from '@src/lib/db'
 import { replicateService } from '@src/lib/services/replicateService'
 import { getStoragePublicUrl } from '@src/lib/utils'
 
 import { characterRepository } from '../repository'
-import { StatsAllocationService } from './statsAllocationService'
 
 interface LevelUpResult {
   character: any
@@ -559,7 +559,7 @@ export class CharacterLevelService {
     oldLevel: number,
     newLevel: number
   ): Promise<StatGains> {
-    const statGains = await StatsAllocationService.calculateStatGains(
+    const statGains = await this.statsAllocationServiceCalculateStatGains(
       character.id,
       oldLevel,
       newLevel,
@@ -571,6 +571,70 @@ export class CharacterLevelService {
     }
     console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
     return statGains
+  }
+
+  /**
+   * คำนวณการจ่าย stats สำหรับการเลเวลอัพด้วย AI structured output
+   */
+  async statsAllocationServiceCalculateStatGains(
+    characterId: number,
+    currentLevel: number,
+    newLevel: number,
+    jobClassName: string
+  ) {
+    try {
+      console.log(
+        `[StatAllocation] Starting AI analysis for character ${characterId}`
+      )
+
+      // ดึง quest submissions ย้อนหลัง
+      const questSubmissions =
+        await characterRepository.getQuestSubmissionsBetweenLevels(
+          characterId,
+          Math.max(1, currentLevel - 3),
+          currentLevel
+        )
+
+      console.log(
+        `[StatAllocation] Found ${questSubmissions.length} quest submissions`
+      )
+
+      // แปลงข้อมูลให้เหมาะสำหรับ AI
+      const questData = questSubmissions.map((submission) => ({
+        questTitle: submission.quest.title,
+        questType: submission.quest.type,
+        description: submission.description || submission.quest.description,
+        ratingAGI: submission.ratingAGI || 0,
+        ratingSTR: submission.ratingSTR || 0,
+        ratingDEX: submission.ratingDEX || 0,
+        ratingVIT: submission.ratingVIT || 0,
+        ratingINT: submission.ratingINT || 0,
+        submittedAt: submission.submittedAt.toISOString(),
+      }))
+
+      // ส่งไป AI วิเคราะห์ stats allocation
+      const statAllocation = await StatAnalysisService.analyzeStatsAllocation(
+        questData,
+        jobClassName,
+        currentLevel,
+        newLevel
+      )
+
+      if (!statAllocation) return new Error('FailedstatAllocatione')
+
+      console.log(`[StatAllocation] AI allocation result:`, statAllocation)
+
+      return {
+        agiGained: statAllocation.AGI,
+        strGained: statAllocation.STR,
+        dexGained: statAllocation.DEX,
+        vitGained: statAllocation.VIT,
+        intGained: statAllocation.INT,
+        reasoning: statAllocation.reasoning,
+      }
+    } catch (error) {
+      console.error('[StatAllocation] Error calculating stat gains:', error)
+    }
   }
 
   /**

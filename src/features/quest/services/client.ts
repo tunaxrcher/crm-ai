@@ -1,12 +1,12 @@
+import {
+  Quest,
+  QuestListResponse,
+  QuestSubmissionResponse,
+} from '@src/features/quest/types'
 import { BaseService } from '@src/lib/services/server/baseService'
-
-import { Quest, QuestListResponse } from '../types'
-import { QuestSubmissionResponse } from '../types/questsubmission.type'
 
 export class QuestService extends BaseService {
   private static instance: QuestService
-
-  private baseUrl = '/api/quests'
 
   constructor() {
     super()
@@ -22,7 +22,7 @@ export class QuestService extends BaseService {
   // ดึงรายการภารกิจทั้งหมด
   async fetchQuests(userId: number): Promise<QuestListResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}?userId=${userId}`)
+      const response = await fetch(`/api/quests?userId=${userId}`)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -40,9 +40,7 @@ export class QuestService extends BaseService {
   // ดึงรายละเอียดภารกิจเดียว
   async fetchQuestById(questId: string, userId: number): Promise<Quest> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/${questId}?userId=${userId}`
-      )
+      const response = await fetch(`/api/quests/${questId}?userId=${userId}`)
 
       if (!response.ok) {
         const errorData = await response.json()

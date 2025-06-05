@@ -1,4 +1,4 @@
-// src/features/character/service/openaiVisionService.ts
+// src/features/character/service/visionService.ts
 import OpenAI from 'openai'
 import 'server-only'
 
@@ -11,8 +11,8 @@ interface PersonaTraits {
   fullDescription: string
 }
 
-export class OpenAIVisionService {
-  private static instance: OpenAIVisionService
+export class VisionService {
+  private static instance: VisionService
   private openai: OpenAI
 
   constructor() {
@@ -22,10 +22,10 @@ export class OpenAIVisionService {
   }
 
   public static getInstance() {
-    if (!OpenAIVisionService.instance) {
-      OpenAIVisionService.instance = new OpenAIVisionService()
+    if (!VisionService.instance) {
+      VisionService.instance = new VisionService()
     }
-    return OpenAIVisionService.instance
+    return VisionService.instance
   }
 
   async analyzePersonaTraits(imageUrl: string) {
@@ -102,6 +102,4 @@ export class OpenAIVisionService {
   //     `
   //   }
 }
-
-// Export instance
-export const openAIVisionService = OpenAIVisionService.getInstance()
+export const visionService = VisionService.getInstance()
