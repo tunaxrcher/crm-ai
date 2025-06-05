@@ -1,7 +1,7 @@
 // src/features/character/service/characterLevelService.ts
 import { userService } from '@src/features/user/service/server'
 import { prisma } from '@src/lib/db'
-import { replicateService } from '@src/lib/replicateService'
+import { replicateService } from '@src/lib/service/replicateService'
 import { getStoragePublicUrl } from '@src/lib/utils'
 
 import { characterRepository } from '../repository'
