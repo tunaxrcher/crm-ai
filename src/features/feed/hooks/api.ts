@@ -58,7 +58,7 @@ export function useFeed() {
             user: {
               id: comment.user.id,
               name: comment.user.name,
-              avatar: comment.user.avatar,
+              character: comment.user.character,
             },
             text: comment.content,
             timestamp: comment.createdAt,
@@ -73,9 +73,8 @@ export function useFeed() {
       user: {
         id: apiItem.user.id,
         name: apiItem.user.name,
-        avatar: apiItem.user.avatar,
-        level: apiItem.user.level,
         title: apiItem.user.bio,
+        character: apiItem.user.character,
       },
       // คัดลอกฟิลด์ post, mediaType และ mediaUrl จาก API
       post: apiItem.post,
@@ -147,8 +146,7 @@ export function useFeed() {
       user: {
         id: apiStory.user.id,
         name: apiStory.user.name,
-        avatar: apiStory.user.avatar,
-        level: apiStory.user.level,
+        character: apiStory.user.character,
       },
       media: {
         type: apiStory.type as 'image' | 'video' | 'text',
@@ -181,7 +179,7 @@ export function useFeed() {
             page: isRefresh ? 1 : page,
             limit: 10,
           }),
-          feedService.getStories(1), // TODO: Get from auth
+          feedService.getStories(),
         ])
 
         // Transform data
@@ -270,7 +268,7 @@ export function useFeed() {
                 user: {
                   id: newComment.user.id,
                   name: newComment.user.name,
-                  avatar: newComment.user.avatar,
+                  character: newComment.user.character,
                 },
                 text: newComment.content,
                 timestamp: newComment.createdAt,

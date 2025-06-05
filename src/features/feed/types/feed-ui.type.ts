@@ -1,3 +1,6 @@
+import { Character } from '@prisma/client'
+import { CharacterResponse } from '@src/features/character/types/character.api'
+
 import type { FeedItemType, StoryMediaType } from '.'
 import type { CommentUI, UserEngagement } from './engagement.type'
 
@@ -8,8 +11,7 @@ export interface FeedItemUI {
   user: {
     id: number
     name: string
-    avatar: string
-    level?: number
+    character?: Character
     title?: string
   }
   content: {
@@ -44,8 +46,7 @@ export interface StoryUI {
   user: {
     id: number
     name: string
-    avatar: string
-    level?: number
+    character?: Character
   }
   media: {
     type: StoryMediaType

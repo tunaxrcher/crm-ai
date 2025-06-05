@@ -1,5 +1,4 @@
 // src/features/feed/services/server.ts
-import { Prisma } from '@prisma/client'
 import { getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/services/server/baseService'
 import 'server-only'
@@ -42,7 +41,11 @@ export class FeedService extends BaseService {
       },
       comments: {
         include: {
-          user: true,
+          user: {
+            include: {
+              character: true, // Include character ที่เชื่อมกับ user
+            },
+          },
           replies: {
             include: { user: true },
           },
@@ -68,13 +71,21 @@ export class FeedService extends BaseService {
           },
         },
         include: {
-          user: true,
+          user: {
+            include: {
+              character: true, // Include character ที่เชื่อมกับ user
+            },
+          },
           likes: {
             include: { user: true },
           },
           comments: {
             include: {
-              user: true,
+              user: {
+                include: {
+                  character: true, // Include character ที่เชื่อมกับ user
+                },
+              },
               replies: {
                 include: { user: true },
               },
@@ -248,55 +259,92 @@ export class StoryService extends BaseService {
     return StoryService.instance
   }
 
-  async getActiveStories(userId?: number) {
-    const stories = await storyRepository.findActiveStories({
-      include: {
-        user: true,
-        views: true, // Include all views always to count
+  // async getActiveStories() {
+  //   const session = await getServerSession()
+  //   const userId = +session.user.id
+
+  //   console.log(`[Server] Feed: ${userId}`)
+
+  //   const stories = await storyRepository.findActiveStories({
+  //     include: {
+  //       user: true,
+  //       views: true, // Include all views always to count
+  //     },
+  //   })
+
+  //   // Type assertion to let TypeScript know about the included relations
+  //   type StoryWithRelations = Prisma.StoryGetPayload<{
+  //     include: {
+  //       user: true
+  //       views: true
+  //     }
+  //   }>
+
+  //   const storiesWithRelations = stories as StoryWithRelations[]
+
+  //   return storiesWithRelations.map((story) => ({
+  //     ...story,
+  //     hasViewed:
+  //       userId && story.views
+  //         ? story.views.some((view) => view.userId === userId)
+  //         : false,
+  //     viewsCount: story.views?.length || 0,
+  //   }))
+  // }
+  async getActiveStories() {
+    const session = await getServerSession()
+    if (!session?.user?.id) {
+      throw new Error('User not authenticated')
+    }
+
+    const userId = +session.user.id
+    console.log(`[StoryService] Fetching stories for user: ${userId}`)
+
+    // 1. ดึง stories พร้อม user และ character
+    const stories = await storyRepository.findActiveStories()
+
+    if (stories.length === 0) {
+      return []
+    }
+
+    // 2. ดึง statistics แบบ parallel
+    const storyIds = stories.map((s) => s.id)
+
+    const [viewStats, userViews] = await Promise.all([
+      storyRepository.getViewStats(storyIds),
+      storyRepository.getUserViewedStories(storyIds, userId),
+    ])
+
+    // 3. สร้าง lookup maps
+    const viewCountMap = new Map(
+      viewStats.map((stat) => [stat.storyId, stat._count._all])
+    )
+    const userViewSet = new Set(userViews.map((v) => v.storyId))
+
+    console.log(stories)
+
+    // 4. Merge ข้อมูลทั้งหมด
+    return stories.map((story) => ({
+      id: story.id,
+      content: story.content,
+      type: story.type,
+      mediaUrl: story.mediaUrl,
+      thumbnailUrl: story.thumbnailUrl,
+      text: story.text,
+      expiresAt: story.expiresAt,
+      createdAt: story.createdAt,
+      userId: story.userId,
+      user: {
+        id: story.user.id,
+        name: story.user.name,
+        email: story.user.email,
+        character: story.user.character,
       },
-    })
-
-    // Type assertion to let TypeScript know about the included relations
-    type StoryWithRelations = Prisma.StoryGetPayload<{
-      include: {
-        user: true
-        views: true
-      }
-    }>
-
-    const storiesWithRelations = stories as StoryWithRelations[]
-
-    return storiesWithRelations.map((story) => ({
-      ...story,
-      hasViewed:
-        userId && story.views
-          ? story.views.some((view) => view.userId === userId)
-          : false,
-      viewsCount: story.views?.length || 0,
+      hasViewed: userViewSet.has(story.id),
+      viewsCount: viewCountMap.get(story.id) || 0,
     }))
   }
 
-  // async createStory(data: {
-  //   userId: number
-  //   content?: string
-  //   type: 'text' | 'image' | 'video'
-  //   mediaUrl?: string
-  //   text?: string
-  //   expiresInHours?: number
-  // }) {
-  //   const expiresAt = new Date()
-  //   expiresAt.setHours(expiresAt.getHours() + (data.expiresInHours || 24))
-
-  //   const { userId, expiresInHours, ...storyData } = data
-
-  //   return storyRepository.create({
-  //     ...storyData,
-  //     expiresAt,
-  //     user: {
-  //       connect: { id: userId },
-  //     },
-  //   })
-  // }
   async createStory(data: {
     userId: number
     content?: string

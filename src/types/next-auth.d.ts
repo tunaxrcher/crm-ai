@@ -15,9 +15,10 @@ declare module 'next-auth/jwt' {
 
 interface BaseUser {
   id: string
+  username: string
   name?: string | null
   email?: string | null
-  username: string
   avatar?: string | null
   characterId?: number
+  currentPortraitUrl?: string
 }

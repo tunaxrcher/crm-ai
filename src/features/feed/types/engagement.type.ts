@@ -1,9 +1,11 @@
+import { Character } from '@prisma/client'
+
 export interface CommentUI {
   id: string
   user: {
     id: number
     name: string
-    avatar: string
+    character: Character
   }
   text: string
   timestamp: string | Date

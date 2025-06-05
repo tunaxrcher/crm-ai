@@ -44,10 +44,11 @@ export class FeedService extends BaseService {
   }
 
   // Story methods
-  async getStories(userId?: number) {
-    const params = userId ? `?userId=${userId}` : ''
-    const response = await fetch(`/api/stories${params}`)
+  async getStories() {
+    const response = await fetch(`/api/stories`)
+
     if (!response.ok) throw new Error('Failed to fetch stories')
+
     return response.json()
   }
 

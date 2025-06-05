@@ -14,8 +14,8 @@ export interface UserRanking {
   userId: number
   characterId: number
   userName: string
-  userAvatar: string | null
-  userLevel: number
+  currentPortraitUrl: string | null
+  level: number
   totalXP: number
   jobClassName: string
   jobLevelTitle: string
@@ -106,13 +106,14 @@ export class RankingRepository extends BaseRepository<Ranking> {
       select: {
         id: true,
         totalXP: true,
+        level: true,
+        currentPortraitUrl: true,
         userId: true,
         user: {
           select: {
             id: true,
             name: true,
             avatar: true,
-            level: true,
           },
         },
         jobClass: {
@@ -164,8 +165,8 @@ export class RankingRepository extends BaseRepository<Ranking> {
         userId: character.userId,
         characterId: character.id,
         userName: character.user.name,
-        userAvatar: character.user.avatar,
-        userLevel: character.user.level,
+        currentPortraitUrl: character.currentPortraitUrl,
+        level: character.level,
         totalXP: period === 'weekly' ? weeklyXP : character.totalXP,
         jobClassName: character.jobClass.name,
         jobLevelTitle: character.currentJobLevel.title,
@@ -198,6 +199,8 @@ export class RankingRepository extends BaseRepository<Ranking> {
       where: { userId },
       select: {
         id: true,
+        level: true,
+        currentPortraitUrl: true,
         totalXP: true,
         userId: true,
         jobClassId: true,
@@ -205,8 +208,6 @@ export class RankingRepository extends BaseRepository<Ranking> {
           select: {
             id: true,
             name: true,
-            avatar: true,
-            level: true,
           },
         },
         jobClass: {
@@ -297,8 +298,8 @@ export class RankingRepository extends BaseRepository<Ranking> {
       userId: character.userId,
       characterId: character.id,
       userName: character.user.name,
-      userAvatar: character.user.avatar,
-      userLevel: character.user.level,
+      currentPortraitUrl: character.currentPortraitUrl,
+      level: character.level,
       totalXP: params.period === 'weekly' ? weeklyXP : character.totalXP,
       jobClassName: character.jobClass.name,
       jobLevelTitle: character.currentJobLevel.title,

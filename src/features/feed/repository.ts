@@ -98,7 +98,22 @@ export class StoryRepository extends BaseRepository<Story> {
     })
   }
 
-  async findActiveStories(args?: Prisma.StoryFindManyArgs) {
+  // async findActiveStories(args?: Prisma.StoryFindManyArgs) {
+  //   return this.prisma.story.findMany({
+  //     where: {
+  //       expiresAt: {
+  //         gt: new Date(),
+  //       },
+  //     },
+  //     orderBy: { createdAt: 'desc' },
+  //     ...args,
+  //   })
+  // }
+
+  /**
+   * ดึง active stories พร้อมข้อมูลที่เกี่ยวข้อง
+   */
+  async findActiveStories() {
     return this.prisma.story.findMany({
       where: {
         expiresAt: {
@@ -106,7 +121,43 @@ export class StoryRepository extends BaseRepository<Story> {
         },
       },
       orderBy: { createdAt: 'desc' },
-      ...args,
+      include: {
+        user: {
+          include: {
+            character: true, // Include character ที่เชื่อมกับ user
+          },
+        },
+      },
+    })
+  }
+
+  /**
+   * ดึงสถิติ views ของแต่ละ story
+   */
+  async getViewStats(storyIds: number[]) {
+    return this.prisma.storyView.groupBy({
+      by: ['storyId'],
+      where: {
+        storyId: { in: storyIds },
+      },
+      _count: {
+        _all: true,
+      },
+    })
+  }
+
+  /**
+   * ดึง stories ที่ user เคยดู
+   */
+  async getUserViewedStories(storyIds: number[], userId: number) {
+    return this.prisma.storyView.findMany({
+      where: {
+        storyId: { in: storyIds },
+        userId: userId,
+      },
+      select: {
+        storyId: true,
+      },
     })
   }
 

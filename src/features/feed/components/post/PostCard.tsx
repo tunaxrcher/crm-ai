@@ -1,5 +1,5 @@
 // src/features/feed/components/post/PostCard.tsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Badge } from '@src/components/ui/badge'
@@ -90,6 +90,7 @@ export const PostCard = function PostCard({
   }
 
   if (!character) return <></>
+
   return (
     <>
       <Card className="mb-6 shadow-sm border overflow-hidden bg-card">
@@ -97,7 +98,7 @@ export const PostCard = function PostCard({
           <div className="flex items-center">
             <Avatar className="h-10 w-10 mr-3">
               <AvatarImage
-                src={user.avatar || '/placeholder.svg'}
+                src={user.character?.currentPortraitUrl || '/placeholder.svg'}
                 alt={user.name}
               />
               <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
@@ -106,9 +107,9 @@ export const PostCard = function PostCard({
             <div className="flex-1">
               <div className="flex items-center">
                 <div className="font-medium text-foreground">{user.name}</div>
-                {user.level && (
+                {user.character?.level && (
                   <Badge className="ml-2 text-xs" variant="outline">
-                    Lvl {user.level}
+                    Lvl {user.character?.level}
                   </Badge>
                 )}
               </div>
@@ -131,7 +132,7 @@ export const PostCard = function PostCard({
 
               {/* แสดง Caption จาก field post */}
               {item.post && (
-                <div className="mb-3 text-foreground text-sm">{item.post}</div>
+                <div className="mb-3 text-foreground">{item.post}</div>
               )}
 
               <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-3">
@@ -269,7 +270,10 @@ export const PostCard = function PostCard({
                     <div key={comment.id} className="flex items-start">
                       <Avatar className="h-8 w-8 mr-2">
                         <AvatarImage
-                          src={comment.user.avatar || '/placeholder.svg'}
+                          src={
+                            comment.user.character?.currentPortraitUrl ||
+                            '/placeholder.svg'
+                          }
                           alt={comment.user.name}
                         />
                         <AvatarFallback>

@@ -210,8 +210,8 @@ export default function StoryList({
                           ? `url(${story.media.thumbnail})`
                           : story.media.type === 'image'
                             ? `url(${story.media.url})`
-                            : story.user.avatar
-                              ? `url(${story.user.avatar})`
+                            : story.user.character?.currentPortraitUrl
+                              ? `url(${story.user.character?.currentPortraitUrl})`
                               : undefined,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
@@ -254,7 +254,10 @@ export default function StoryList({
                     className={`p-0.5 rounded-full ${story.viewed ? 'bg-black' : 'bg-black'}`}>
                     <Avatar className="w-8 h-8  ring-2 ring-black">
                       <AvatarImage
-                        src={story.user.avatar || '/placeholder.svg'}
+                        src={
+                          story.user.character?.currentPortraitUrl ||
+                          '/placeholder.svg'
+                        }
                         alt={story.user.name}
                       />
                       <AvatarFallback className="text-xs bg-gray-300">
@@ -305,7 +308,10 @@ export default function StoryList({
               <div className="flex items-center">
                 <Avatar className="h-10 w-10 mr-3">
                   <AvatarImage
-                    src={currentStory.user.avatar || '/placeholder.svg'}
+                    src={
+                      currentStory.user.character?.currentPortraitUrl ||
+                      '/placeholder.svg'
+                    }
                     alt={currentStory.user.name}
                   />
                   <AvatarFallback>

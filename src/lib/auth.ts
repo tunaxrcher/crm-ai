@@ -39,7 +39,7 @@ export const authOptions: NextAuthOptions = {
         userData.name = user.username
         userData.email = user.email
         userData.username = user.username
-        userData.avatar = user.avatar
+        userData.avatar = user.character?.currentPortraitUrl
         userData.characterId = user.character?.id
 
         return userData
@@ -53,7 +53,7 @@ export const authOptions: NextAuthOptions = {
         token.name = user.name
         token.email = user.email
         token.username = user.username
-        token.avatar = user.avatar
+        token.currentPortraitUrl = user.currentPortraitUrl
         token.characterId = user.characterId
       }
 
@@ -66,7 +66,7 @@ export const authOptions: NextAuthOptions = {
           name: token.name,
           email: token.email,
           username: token.username,
-          avatar: token.avatar,
+          currentPortraitUrl: token.currentPortraitUrl,
           characterId: token.characterId,
         }
       }
