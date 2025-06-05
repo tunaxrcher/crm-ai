@@ -61,18 +61,17 @@ const classConfig = {
 
 function RankingPageComponent() {
   const router = useRouter()
+  const [period, setPeriod] = useState<RankingPeriod>('all-time')
+  const [selectedClass, setSelectedClass] = useState<CharacterClass>('all')
+
   const {
     topUser,
     currentUser,
     orderedRankings,
     isLoading,
     error,
-    period,
-    selectedClass,
-    changePeriod,
-    changeClass,
     refresh: fetchRankings,
-  } = useRankings()
+  } = useRankings(period, selectedClass)
 
   // Use error handler context
   const { showError } = useError()
@@ -153,6 +152,16 @@ function RankingPageComponent() {
     }
   }
 
+  // Handle period change
+  const handlePeriodChange = (value: string) => {
+    setPeriod(value as RankingPeriod)
+  }
+
+  // Handle class change
+  const handleClassChange = (value: string) => {
+    setSelectedClass(value as CharacterClass)
+  }
+
   // Render loading state
   if (isLoading) {
     return (
@@ -181,18 +190,14 @@ function RankingPageComponent() {
   return (
     <div className="p-4 pb-20">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold ai-gradient-text">
-          อันดับผู้เล่น (กำลังพัฒนา...)
-        </h1>
+        <h1 className="text-2xl font-bold ai-gradient-text">อันดับผู้เล่น</h1>
         <p className="text-muted-foreground">
           ดูอันดับของคุณเทียบกับผู้เล่นอื่น
         </p>
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <Tabs
-          defaultValue={period}
-          onValueChange={(value) => changePeriod(value as RankingPeriod)}>
+        <Tabs value={period} onValueChange={handlePeriodChange}>
           <TabsList>
             <TabsTrigger value="all-time" className="flex items-center">
               <Trophy className="h-4 w-4 mr-2" />
@@ -205,9 +210,7 @@ function RankingPageComponent() {
           </TabsList>
         </Tabs>
 
-        <Select
-          value={selectedClass}
-          onValueChange={(value) => changeClass(value as CharacterClass)}>
+        <Select value={selectedClass} onValueChange={handleClassChange}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Select Class" />
           </SelectTrigger>
@@ -261,7 +264,9 @@ function RankingPageComponent() {
               <Badge className="mr-2">Lvl {topUser.level}</Badge>
               <div className="flex items-center">
                 <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                <span className="font-medium">{topUser.xp} XP</span>
+                <span className="font-medium">
+                  {topUser.xp.toLocaleString()} XP
+                </span>
               </div>
             </div>
 
@@ -310,7 +315,7 @@ function RankingPageComponent() {
               <div className="text-right">
                 <div className="font-semibold flex items-center">
                   <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                  <span>{currentUser.xp} XP</span>
+                  <span>{currentUser.xp.toLocaleString()} XP</span>
                 </div>
                 <div className="flex justify-end">
                   {getChangeIndicator(currentUser.change)}
@@ -329,7 +334,7 @@ function RankingPageComponent() {
           <div
             key={user.id}
             className={`relative rounded-lg ${
-              user.id === 'current-user'
+              user.id === currentUser?.id
                 ? 'bg-blue-500/10 border border-blue-500/30'
                 : 'bg-secondary/20'
             } p-3 cursor-pointer`}
@@ -345,7 +350,7 @@ function RankingPageComponent() {
               <div className="flex-1">
                 <div className="font-medium flex items-center">
                   {user.name}
-                  {user.id === 'current-user' && (
+                  {user.id === currentUser?.id && (
                     <span className="ml-2 text-blue-400 text-xs">(คุณ)</span>
                   )}
                   {selectedClass === 'all' && (
@@ -367,7 +372,7 @@ function RankingPageComponent() {
               <div className="text-right">
                 <div className="font-semibold flex items-center justify-end">
                   <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                  <span>{user.xp} XP</span>
+                  <span>{user.xp.toLocaleString()} XP</span>
                 </div>
                 <div className="flex justify-end">
                   {getChangeIndicator(user.change)}

@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 
-import * as RankingService from '../services/client'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+
+import { rankingService } from '../services/client'
 import {
   CharacterClass,
   GetRankingsParams,
@@ -8,49 +10,51 @@ import {
   RankingPeriod,
 } from '../types'
 
-export function useRankings() {
-  const [data, setData] = useState<GetRankingsResponse>({ rankings: [] })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-  const [period, setPeriod] = useState<RankingPeriod>('all-time')
-  const [selectedClass, setSelectedClass] = useState<CharacterClass>('all')
+// Query keys
+const QUERY_KEYS = {
+  rankings: (period: RankingPeriod, characterClass: CharacterClass) => [
+    'rankings',
+    period,
+    characterClass,
+  ],
+  classConfig: ['rankings', 'class-config'],
+  userRanking: (userId: string, period: RankingPeriod) => [
+    'rankings',
+    'user',
+    userId,
+    period,
+  ],
+}
 
-  const fetchRankings = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
+/**
+ * Hook for fetching rankings data
+ */
+export function useRankings(
+  period: RankingPeriod,
+  selectedClass: CharacterClass
+) {
+  const queryClient = useQueryClient()
 
-      const params: GetRankingsParams = {
+  const { data, isLoading, error, refetch } = useQuery<
+    GetRankingsResponse,
+    Error
+  >({
+    queryKey: QUERY_KEYS.rankings(period, selectedClass),
+    queryFn: () =>
+      rankingService.getRankings({
         period,
         characterClass: selectedClass,
-      }
-
-      const result = await RankingService.getRankings(params)
-      setData(result)
-    } catch (err) {
-      console.error('Error fetching rankings:', err)
-      setError(
-        err instanceof Error ? err : new Error('Failed to fetch rankings')
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }, [period, selectedClass])
-
-  useEffect(() => {
-    fetchRankings()
-  }, [fetchRankings])
-
-  const changePeriod = useCallback((newPeriod: RankingPeriod) => {
-    setPeriod(newPeriod)
-  }, [])
-
-  const changeClass = useCallback((newClass: CharacterClass) => {
-    setSelectedClass(newClass)
-  }, [])
+      }),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  })
 
   // Get ordered rankings (excluding top user and prioritizing current user)
   const getOrderedRankings = useCallback(() => {
+    if (!data) return []
+
     const { rankings, topUser, currentUser } = data
 
     if (!rankings || rankings.length === 0) {
@@ -69,51 +73,129 @@ export function useRankings() {
     )
   }, [data])
 
+  // Invalidate and refetch rankings
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.rankings(period, selectedClass),
+    })
+    return refetch()
+  }, [queryClient, period, selectedClass, refetch])
+
   return {
-    rankings: data.rankings || [],
-    topUser: data.topUser,
-    currentUser: data.currentUser,
+    rankings: data?.rankings || [],
+    topUser: data?.topUser,
+    currentUser: data?.currentUser,
     orderedRankings: getOrderedRankings(),
     isLoading,
     error,
-    period,
-    selectedClass,
-    changePeriod,
-    changeClass,
-    refresh: fetchRankings,
+    refresh,
   }
 }
 
+/**
+ * Hook for fetching class configuration
+ */
 export function useClassConfig() {
-  const [config, setConfig] = useState({})
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const queryClient = useQueryClient()
 
-  const fetchClassConfig = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: QUERY_KEYS.classConfig,
+    queryFn: rankingService.getClassConfig,
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    retry: 2,
+  })
 
-      const result = await RankingService.getClassConfig()
-      setConfig(result)
-    } catch (err) {
-      console.error('Error fetching class config:', err)
-      setError(
-        err instanceof Error ? err : new Error('Failed to fetch class config')
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchClassConfig()
-  }, [fetchClassConfig])
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: QUERY_KEYS.classConfig,
+    })
+    return refetch()
+  }, [queryClient, refetch])
 
   return {
-    config,
+    config: data || {},
     isLoading,
     error,
-    refresh: fetchClassConfig,
+    refresh,
   }
+}
+
+/**
+ * Hook for fetching specific user ranking details
+ */
+export function useUserRanking(userId: string, period: RankingPeriod) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: QUERY_KEYS.userRanking(userId, period),
+    queryFn: () => rankingService.getUserRankingDetails(userId, period),
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    retry: 2,
+  })
+
+  return {
+    userRanking: data,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to prefetch rankings data
+ */
+export function usePrefetchRankings() {
+  const queryClient = useQueryClient()
+
+  const prefetchRankings = useCallback(
+    async (period: RankingPeriod, characterClass: CharacterClass) => {
+      await queryClient.prefetchQuery({
+        queryKey: QUERY_KEYS.rankings(period, characterClass),
+        queryFn: () =>
+          rankingService.getRankings({
+            period,
+            characterClass,
+          }),
+        staleTime: 1000 * 60 * 5, // 5 minutes
+      })
+    },
+    [queryClient]
+  )
+
+  return { prefetchRankings }
+}
+
+/**
+ * Hook to invalidate all ranking queries
+ */
+export function useInvalidateRankings() {
+  const queryClient = useQueryClient()
+
+  const invalidateAll = useCallback(async () => {
+    await queryClient.invalidateQueries({
+      queryKey: ['rankings'],
+    })
+  }, [queryClient])
+
+  const invalidateSpecific = useCallback(
+    async (period?: RankingPeriod, characterClass?: CharacterClass) => {
+      if (period && characterClass) {
+        await queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.rankings(period, characterClass),
+        })
+      } else if (period) {
+        await queryClient.invalidateQueries({
+          queryKey: ['rankings', period],
+        })
+      } else {
+        await queryClient.invalidateQueries({
+          queryKey: ['rankings'],
+        })
+      }
+    },
+    [queryClient]
+  )
+
+  return { invalidateAll, invalidateSpecific }
 }

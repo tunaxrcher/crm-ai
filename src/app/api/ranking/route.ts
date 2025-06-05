@@ -1,40 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getRankings } from '@src/features/ranking/services/server'
-import { CharacterClass, RankingPeriod } from '@src/features/ranking/types'
+import { rankingService } from '@src/features/ranking/services/server'
+import { GetRankingsParams } from '@src/features/ranking/types'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export async function GET(request: NextRequest) {
-  try {
-    // Get query parameters
+export const GET = withErrorHandling(
+  async (request: NextRequest, _context: { params: Promise<any> }) => {
+    console.log(`[API] Fetching Ranking`)
+
     const searchParams = request.nextUrl.searchParams
-    const period = (searchParams.get('period') as RankingPeriod) || 'all-time'
-    const characterClass =
-      (searchParams.get('class') as CharacterClass) || 'all'
+    const period = searchParams.get('period') as 'all-time' | 'weekly'
+    const characterClass = searchParams.get('class') as any
 
     // Validate parameters
-    if (!['all-time', 'weekly'].includes(period)) {
+    if (!period || !['all-time', 'weekly'].includes(period)) {
       return NextResponse.json(
         { error: 'Invalid period parameter' },
         { status: 400 }
       )
     }
 
-    if (!['all', 'marketing', 'sales', 'accounting'].includes(characterClass)) {
+    if (
+      !characterClass ||
+      ![
+        'all',
+        'marketing',
+        'sales',
+        'accounting',
+        'designer',
+        'programmer',
+        'mechanic',
+      ].includes(characterClass)
+    ) {
       return NextResponse.json(
         { error: 'Invalid class parameter' },
         { status: 400 }
       )
     }
 
-    // Get rankings
-    const rankings = await getRankings({ period, characterClass })
+    const params: GetRankingsParams = {
+      period,
+      characterClass,
+    }
 
-    return NextResponse.json(rankings)
-  } catch (error) {
-    console.error('Error in rankings API:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch rankings' },
-      { status: 500 }
-    )
+    const result = await rankingService.getRankings(params)
+
+    return NextResponse.json(result)
   }
-}
+)
