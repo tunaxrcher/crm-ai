@@ -8,14 +8,14 @@ import {
   SkeletonLoading,
 } from '@src/components/shared'
 import { useError } from '@src/components/shared/ErrorProvider'
+import { useCharacter } from '@src/contexts/CharacterContext'
+import { useAuth } from '@src/hooks/useAuth'
 import useErrorHandler from '@src/hooks/useErrorHandler'
 
 import { useFeed } from '../hook/api'
 import { useIntersectionObserver } from '../hook/useIntersectionObserver'
 import PostList from './post/PostList'
 import StoryList from './story/StoryList'
-import { useAuth } from '@src/hooks/useAuth'
-import { useCharacter } from '@src/contexts/CharacterContext'
 
 export default function FeedPageComponent() {
   // Wrap the component with GlobalErrorBoundary
@@ -27,9 +27,8 @@ export default function FeedPageComponent() {
 }
 
 function FeedPageContent() {
-
   const { character } = useCharacter()
-  
+
   const {
     feedItems,
     stories,

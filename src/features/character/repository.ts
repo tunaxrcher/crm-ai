@@ -244,18 +244,7 @@ export class CharacterRepository extends BaseRepository<Character> {
   }
 
   // สร้าง quest submission
-  async createQuestSubmission(data: {
-    mediaType: any
-    description?: string
-    ratingAGI?: number
-    ratingSTR?: number
-    ratingDEX?: number
-    ratingVIT?: number
-    ratingINT?: number
-    xpEarned: number
-    characterId: number
-    questId: number
-  }) {
+  async createQuestSubmission(data: any) {
     return await this.prisma.questSubmission.create({
       data,
     })

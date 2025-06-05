@@ -7,36 +7,43 @@ import {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<any> }
 ) {
-  try {
+  console.log(`[API] GET Quest Submission`)
 
-    const questId = params.id;
-    const characterId = parseInt(request.nextUrl.searchParams.get('characterId') || '0');
+  try {
+    const { id: questId } = await context.params
+
+    const characterId = parseInt(
+      request.nextUrl.searchParams.get('characterId') || '0'
+    )
 
     if (!characterId) {
       return NextResponse.json(
         { message: 'Character ID is required' },
         { status: 400 }
-      );
+      )
     }
 
-    const submission = await questSubmissionService.getQuestSubmission(questId, characterId);
+    const submission = await questSubmissionService.getQuestSubmission(
+      questId,
+      characterId
+    )
 
     if (!submission) {
       return NextResponse.json(
         { message: 'Submission not found' },
         { status: 404 }
-      );
+      )
     }
 
-    return NextResponse.json(submission);
+    return NextResponse.json(submission)
   } catch (error) {
-    console.error('Error fetching quest submission:', error);
+    console.error('Error fetching quest submission:', error)
     return NextResponse.json(
       { message: 'Failed to fetch quest submission' },
       { status: 500 }
-    );
+    )
   }
 }
 
