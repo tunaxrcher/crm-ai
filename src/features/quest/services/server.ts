@@ -7,6 +7,7 @@ import { openaiService } from '@src/lib/services/openaiService'
 import { s3UploadService } from '@src/lib/services/s3UploadService'
 import { BaseService } from '@src/lib/services/server/baseService'
 import { videoThumbnailService } from '@src/lib/services/videoThumbnailService'
+import OpenAI from 'openai'
 
 import {
   QuestRepository,
@@ -1000,21 +1001,49 @@ export class QuestSubmissionService extends BaseService {
         newSummary
       )
 
-      // 3. สร้าง story ใหม่หรืออัปเดต story ที่มีอยู่
-      // ตรวจสอบว่ามี story เกี่ยวกับ quest submission นี้อยู่แล้วหรือไม่
-      // (เราต้องกำหนดวิธีการติดตาม story ที่เกี่ยวข้องกับ quest submission)
-      // ในตัวอย่างนี้ จะสร้าง story ใหม่ทุกครั้งที่มีการอัปเดต
-
+      // 3. ค้นหา story ที่เกี่ยวข้องและอัพเดต (ไม่สร้างใหม่)
       if (updatedSubmission.character && updatedSubmission.character.user) {
-        // สร้าง story ใหม่จากข้อมูลที่อัปเดต
-        await storyService.createStory({
-          userId: updatedSubmission.character.user.id,
-          content: `อัปเดตเควส "${updatedSubmission.quest.title}"`,
-          type: updatedSubmission.mediaType as 'text' | 'image' | 'video',
-          mediaUrl: updatedSubmission.mediaUrl || undefined,
-          text: newSummary,
-          expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
+        // ค้นหา story ที่เกี่ยวข้องกับ quest submission นี้
+        const relatedStory = await prisma.story.findFirst({
+          where: {
+            userId: updatedSubmission.character.user.id,
+            // ค้นหา story ที่สร้างในช่วงเวลาใกล้เคียงกับ submission
+            createdAt: {
+              gte: new Date(
+                updatedSubmission.submittedAt.getTime() - 5 * 60000
+              ), // 5 นาทีก่อน submission
+              lte: new Date(
+                updatedSubmission.submittedAt.getTime() + 5 * 60000
+              ), // 5 นาทีหลัง submission
+            },
+            // ตรวจสอบเนื้อหาที่เกี่ยวข้องกับเควส
+            content: {
+              contains: updatedSubmission.quest.title,
+            },
+          },
         })
+
+        if (relatedStory) {
+          // อัพเดต story ที่พบ
+          await prisma.story.update({
+            where: { id: relatedStory.id },
+            data: {
+              text: newSummary,
+              updatedAt: new Date(),
+            },
+          })
+        } else {
+          // ถ้าไม่พบ story ที่เกี่ยวข้อง (อาจเกิดจากกรณีที่ story หมดอายุแล้ว)
+          // สร้าง story ใหม่
+          await storyService.createStory({
+            userId: updatedSubmission.character.user.id,
+            content: `อัปเดตเควส "${updatedSubmission.quest.title}"`,
+            type: updatedSubmission.mediaType as 'text' | 'image' | 'video',
+            mediaUrl: updatedSubmission.mediaUrl || undefined,
+            text: newSummary,
+            expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
+          })
+        }
       }
 
       return {
@@ -1026,6 +1055,270 @@ export class QuestSubmissionService extends BaseService {
     } catch (error) {
       console.error('Error updating submission summary:', error)
       throw new Error('Failed to update submission summary')
+    }
+  }
+
+  async selfSubmitQuest(
+    userId: number,
+    mediaFile?: File,
+    description?: string
+  ) {
+    try {
+      // 1. ดึงข้อมูล character ของ user
+      const character = await prisma.character.findUnique({
+        where: { userId },
+        select: {
+          id: true,
+          userId: true,
+          name: true,
+          level: true,
+        },
+      })
+
+      if (!character) throw new Error('Character not found for this user')
+
+      // 2. อัพโหลดไฟล์ไป S3 (ถ้ามี)
+      let mediaUrl: string | undefined
+      let mediaType: 'image' | 'video' | 'text' = 'text'
+      let thumbnailUrl: string | undefined
+
+      if (mediaFile) {
+        const uploadResult = await s3UploadService.uploadFile(mediaFile)
+
+        if (!uploadResult.success)
+          throw new Error('Failed to upload media file')
+
+        mediaUrl = uploadResult.url
+        mediaType = this.getMediaType(mediaFile)
+
+        // ถ้าเป็นวิดีโอ ให้สร้าง thumbnail
+        if (mediaType === 'video') {
+          try {
+            thumbnailUrl =
+              await videoThumbnailService.generateAndUploadThumbnail(mediaFile)
+            console.log('Generated video thumbnail:', thumbnailUrl)
+          } catch (thumbnailError) {
+            console.error('Failed to generate thumbnail:', thumbnailError)
+          }
+        }
+      }
+
+      // 3. วิเคราะห์สื่อ (วิดีโอหรือรูปภาพ)
+      let mediaAnalysis: any = undefined
+
+      if (mediaFile && mediaUrl) {
+        if (mediaType === 'video') {
+          console.log('Analyzing video content...')
+          try {
+            mediaAnalysis = await openaiService.analyzeVideo(mediaUrl)
+            console.log('Video analysis completed:', mediaAnalysis)
+          } catch (videoError) {
+            console.error('Video analysis failed:', videoError)
+          }
+        } else if (mediaType === 'image') {
+          console.log('Analyzing image content...')
+          try {
+            mediaAnalysis = await openaiService.analyzeImage(mediaUrl)
+            console.log('Image analysis completed:', mediaAnalysis)
+          } catch (imageError) {
+            console.error('Image analysis failed:', imageError)
+          }
+        }
+      }
+
+      // 4. ให้ AI วิเคราะห์เพื่อสร้างภารกิจใหม่
+      const questInfo = await this.generateQuestFromSubmission(
+        description || '',
+        mediaAnalysis,
+        character.level
+      )
+
+      // 5. สร้างเควสใหม่ในฐานข้อมูล
+      const newQuest = await prisma.quest.create({
+        data: {
+          title: questInfo.title,
+          description: questInfo.description,
+          type: 'self', // ตั้งเป็น daily โดยค่าเริ่มต้น
+          difficultyLevel: questInfo.difficultyLevel,
+          xpReward: questInfo.xpReward,
+          baseTokenReward: Math.floor(questInfo.xpReward / 10), // กำหนด token reward เป็น 1/10 ของ XP
+          isActive: true,
+        },
+      })
+
+      // 6. สร้าง AssignedQuest ให้กับผู้ใช้
+      const now = new Date()
+      const expiresAt = new Date(now)
+      expiresAt.setHours(23, 59, 59, 999) // หมดอายุตอนสิ้นวัน
+
+      const assignedQuest = await prisma.assignedQuest.create({
+        data: {
+          questId: newQuest.id,
+          characterId: character.id,
+          userId: userId,
+          assignedAt: now,
+          expiresAt: expiresAt,
+          status: 'active',
+        },
+      })
+
+      // 7. เตรียมข้อมูลสำหรับ AI analysis
+      const aiPrompt: OpenAIPrompt = {
+        questTitle: newQuest.title,
+        questDescription: newQuest.description || '',
+        questRequirements: [], // อาจเพิ่มข้อกำหนดในอนาคต
+        mediaUrl,
+        userDescription: description,
+      }
+
+      // 8. ส่งข้อมูลให้ AI วิเคราะห์
+      const aiAnalysis = await openaiService.analyzeQuestSubmission(
+        aiPrompt,
+        mediaAnalysis
+      )
+
+      // 9. บันทึก quest submission
+      const submission = await questSubmissionRepository.createQuestSubmission({
+        questId: newQuest.id,
+        questXpEarned: newQuest.xpReward,
+        characterId: character.id,
+        mediaType,
+        mediaUrl,
+        description,
+        aiAnalysis,
+        mediaAnalysis,
+      })
+
+      // 10. อัพเดทสถานะ assigned quest
+      await questSubmissionRepository.updateAssignedQuestStatus(
+        newQuest.id,
+        character.id
+      )
+
+      // 11. อัพเดท character XP
+      const characterUpdateResult = await characterService.addXP(
+        newQuest.xpReward
+      )
+
+      // 12. สร้าง feed item
+      const feedItem =
+        await questSubmissionRepository.createQuestCompletionFeedItem(
+          character.userId,
+          'quest_completion',
+          submission.mediaRevisedTranscript,
+          mediaType,
+          newQuest.title,
+          newQuest.xpReward,
+          submission.id,
+          mediaUrl
+        )
+
+      // 13. สร้าง story
+      const story = await storyService.createStory({
+        userId: character.userId,
+        content: `ทำเควส "${newQuest.title}" สำเร็จ`,
+        type: mediaType,
+        mediaUrl,
+        thumbnailUrl,
+        text: submission.mediaRevisedTranscript || description,
+        expiresInHours: 24,
+      })
+
+      return {
+        success: true,
+        message: 'Quest created and completed successfully!',
+        quest: newQuest,
+        submission,
+        characterUpdate: characterUpdateResult,
+        feedItem,
+        story,
+      }
+    } catch (error) {
+      console.error('Self-submit quest error:', error)
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to process quest submission'
+      )
+    }
+  }
+
+  private async generateQuestFromSubmission(
+    description: string,
+    mediaAnalysis: any,
+    characterLevel: number
+  ) {
+    try {
+      // สร้าง prompt สำหรับ OpenAI
+      const prompt = `
+        ผู้ใช้ได้ส่งหลักฐานการทำงานหรือความสำเร็จ ช่วยสร้างภารกิจที่เหมาะสมกับสิ่งที่ผู้ใช้ทำ
+        
+        ${description ? `คำอธิบายของผู้ใช้: ${description}` : ''}
+        
+        ${
+          mediaAnalysis
+            ? `การวิเคราะห์สื่อ:
+          ${mediaAnalysis.summary ? `สรุป: ${mediaAnalysis.summary}` : ''}
+          ${mediaAnalysis.description ? `รายละเอียด: ${mediaAnalysis.description}` : ''}
+          ${mediaAnalysis.actions ? `การกระทำ: ${mediaAnalysis.actions.join(', ')}` : ''}
+          ${mediaAnalysis.keyPoints ? `จุดสำคัญ: ${mediaAnalysis.keyPoints.join(', ')}` : ''}
+        `
+            : ''
+        }
+        
+        ระดับของตัวละคร: ${characterLevel}
+        
+        ตอบกลับในรูปแบบ JSON ภาษาไทย:
+        {
+          "title": "ชื่อภารกิจที่สั้นและกระชับ",
+          "description": "คำอธิบายภารกิจโดยละเอียดที่สอดคล้องกับสิ่งที่ผู้ใช้ทำ",
+          "difficultyLevel": 3, // 1-5 โดย 1 = ง่ายมาก, 5 = ยากมาก
+          "xpReward": 150 // XP ที่ควรได้รับ (อยู่ระหว่าง 100-500 ขึ้นอยู่กับความยาก)
+        }
+      `
+
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      })
+
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'คุณเป็น AI ที่ช่วยสร้างภารกิจสำหรับแอปจำลองเกม RPG ที่ช่วยเพิ่มประสิทธิภาพการทำงาน',
+          },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        response_format: { type: 'json_object' },
+      })
+
+      const result = completion.choices[0]?.message?.content
+
+      if (!result) throw new Error('No response from OpenAI')
+
+      const questInfo = JSON.parse(result)
+      return {
+        title: questInfo.title,
+        description: questInfo.description,
+        difficultyLevel: Math.min(Math.max(questInfo.difficultyLevel, 1), 5), // ระหว่าง 1-5
+        xpReward: Math.min(Math.max(questInfo.xpReward, 100), 500), // ระหว่าง 100-500
+      }
+    } catch (error) {
+      console.error('Error generating quest from submission:', error)
+
+      // Fallback หากไม่สามารถสร้างเควสได้
+      return {
+        title: description
+          ? `บันทึกความสำเร็จ: ${description.substring(0, 30)}...`
+          : 'บันทึกความสำเร็จใหม่',
+        description:
+          description || 'ผู้ใช้ได้บันทึกความสำเร็จและส่งหลักฐานการทำงาน',
+        difficultyLevel: 0,
+        xpReward: 0, // เพิ่ม XP ตามเลเวล
+      }
     }
   }
 }

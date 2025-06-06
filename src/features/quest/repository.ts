@@ -588,6 +588,7 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
       },
       data: {
         content: newContent,
+        post: newContent,
         updatedAt: new Date(),
       },
     })

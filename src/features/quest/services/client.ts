@@ -147,6 +147,36 @@ export class QuestSubmissionService {
       throw error
     }
   }
+
+  async selfSubmitQuest(mediaFile?: File, description?: string): Promise<any> {
+    try {
+      const formData = new FormData()
+
+      if (description) {
+        formData.append('description', description)
+      }
+
+      if (mediaFile) {
+        formData.append('mediaFile', mediaFile)
+      }
+
+      const response = await fetch(`/api/quests/self-submit`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit quest')
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error self-submitting quest:', error)
+      throw error
+    }
+  }
 }
 
 export const questSubmissionService = new QuestSubmissionService()

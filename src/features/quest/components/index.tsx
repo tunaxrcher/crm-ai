@@ -21,6 +21,7 @@ import { GroupedQuests } from '../types'
 import { formatDeadline } from '../utils'
 import CompletedQuestList from './CompletedQuestList'
 import QuestTypeSection from './QuestTypeSection'
+import AddQuestButton from './AddQuestButton'
 
 type QuestPageProps = {
   userId: number
@@ -220,6 +221,7 @@ function QuestPageComponent({ userId }: QuestPageProps) {
           )}
         </TabsContent>
       </Tabs>
+       <AddQuestButton />
     </div>
   )
 }

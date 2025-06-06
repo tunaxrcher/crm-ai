@@ -946,7 +946,7 @@ export default function QuestDetail({
         </Dialog>
 
         {/* Success Dialog */}
-        <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        {/* <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
           <DialogContent className="sm:max-w-md text-center">
             <div className="flex flex-col items-center py-4">
               <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
@@ -978,7 +978,7 @@ export default function QuestDetail({
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
     </ErrorBoundary>
   )

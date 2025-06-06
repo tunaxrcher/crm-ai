@@ -203,3 +203,79 @@ export const useQuestSubmissionQuery = (
     gcTime: 10 * 60 * 1000, // 10 นาที
   })
 }
+
+export const useSelfSubmitQuest = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      mediaFile,
+      description,
+    }: {
+      mediaFile?: File
+      description?: string
+    }): Promise<any> => {
+      return await questSubmissionService.selfSubmitQuest(
+        mediaFile,
+        description
+      )
+    },
+    onSuccess: (data) => {
+      // Invalidate และ refetch quests data
+      queryClient.invalidateQueries({
+        queryKey: ['quests'],
+      })
+
+      // Invalidate character data เนื่องจาก XP อาจเปลี่ยนแปลง
+      queryClient.invalidateQueries({
+        queryKey: ['character'],
+      })
+
+      // Invalidate user data for character context
+      queryClient.invalidateQueries({
+        queryKey: ['me', 'character'],
+      })
+
+      console.log('Self-submitted quest successfully:', data)
+    },
+    onError: (error) => {
+      console.error('Self-quest submission failed:', error)
+    },
+  })
+}
+
+export const useSelfUpdateQuestSubmission = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      submissionId,
+      summary,
+    }: {
+      submissionId: number
+      summary: string
+    }): Promise<any> => {
+      return await questSubmissionService.updateQuestSubmission(
+        '', // ไม่จำเป็นต้องใช้ questId ในกรณีนี้
+        submissionId,
+        summary
+      )
+    },
+    onSuccess: () => {
+      // Invalidate และ refetch quests data
+      queryClient.invalidateQueries({
+        queryKey: ['quests'],
+      })
+
+      // Invalidate feed data เนื่องจากมีการอัพเดต content
+      queryClient.invalidateQueries({
+        queryKey: ['feed'],
+      })
+
+      console.log('Self-submitted quest content updated successfully')
+    },
+    onError: (error) => {
+      console.error('Self-quest content update failed:', error)
+    },
+  })
+}
