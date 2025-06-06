@@ -19,6 +19,7 @@ import {
   Trophy,
   Users,
 } from 'lucide-react'
+import { signOut } from 'next-auth/react'
 
 export default function Home() {
   const router = useRouter()
@@ -29,7 +30,7 @@ export default function Home() {
     const welcomeTimer = setTimeout(() => {
       addNotification({
         type: 'info',
-        title: 'ยินดีต้อนรับสู่ เอไอ & CRM',
+        title: 'ยินดีต้อนรับสู่ KPI & AI',
         message: 'Check out the new features and enhancements!',
         duration: 5000,
         action: {
@@ -45,10 +46,18 @@ export default function Home() {
   return (
     <div className="p-4 pb-20">
       <div className="mb-6 text-center">
-        <h1 className="text-3xl font-bold ai-gradient-text mb-2">เอไอ & CRM</h1>
+        <h1 className="text-3xl font-bold ai-gradient-text mb-2">KPI & AI</h1>
         <p className="text-muted-foreground">
-          Turn your CRM work into an engaging RPG experience
+          Turn your KPI work into an engaging RPG experience
         </p>
+      </div>
+
+      <div className="flex justify-center my-12">
+        <button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="px-6 py-3 bg-red-500 text-white text-lg font-medium rounded-lg hover:bg-red-600 transition">
+          ออกจากระบบ
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-8">

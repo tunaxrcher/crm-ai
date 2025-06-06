@@ -171,26 +171,30 @@ function QuestPageComponent({ userId }: QuestPageProps) {
 
           {/* Weekly Quests Section */}
           {safeGroupedQuests.weekly.length > 0 && (
-            <QuestTypeSection
-              quests={safeGroupedQuests.weekly}
-              type="weekly"
-              isExpanded={expandedTypes.weekly}
-              onToggleExpand={() => toggleExpanded('weekly')}
-              onQuestClick={navigateToQuest}
-              formatDeadline={formatDeadline}
-            />
+            <div className="opacity-60">
+              <QuestTypeSection
+                quests={safeGroupedQuests.weekly}
+                type="weekly"
+                isExpanded={expandedTypes.weekly}
+                onToggleExpand={() => toggleExpanded('weekly')}
+                onQuestClick={navigateToQuest}
+                formatDeadline={formatDeadline}
+              />
+            </div>
           )}
 
           {/* Regular Quests Section */}
           {safeGroupedQuests['no-deadline'].length > 0 && (
-            <QuestTypeSection
-              quests={safeGroupedQuests['no-deadline']}
-              type="no-deadline"
-              isExpanded={expandedTypes['no-deadline']}
-              onToggleExpand={() => toggleExpanded('no-deadline')}
-              onQuestClick={navigateToQuest}
-              formatDeadline={formatDeadline}
-            />
+            <div className="opacity-60">
+              <QuestTypeSection
+                quests={safeGroupedQuests['no-deadline']}
+                type="no-deadline"
+                isExpanded={expandedTypes['no-deadline']}
+                onToggleExpand={() => toggleExpanded('no-deadline')}
+                onQuestClick={navigateToQuest}
+                formatDeadline={formatDeadline}
+              />
+            </div>
           )}
 
           {/* ถ้าไม่มีภารกิจเลย */}

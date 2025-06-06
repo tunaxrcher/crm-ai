@@ -11,7 +11,7 @@ const kanit = Kanit({
 })
 
 export const metadata: Metadata = {
-  title: 'เอไอ & CRM',
+  title: 'KPI & AI',
   description: 'ทดลอง',
 }
 
