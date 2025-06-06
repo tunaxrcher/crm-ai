@@ -117,9 +117,7 @@ export class QuestRepository extends BaseRepository<Quest> {
   //     throw new Error('Failed to fetch assigned quests')
   //   }
   // }
-  async getAssignedQuestsByCharacterId(
-    characterId: number
-  ): Promise<AssignedQuestWithDetails[]> {
+  async getAssignedQuestsByCharacterId(characterId: number) {
     try {
       const assignedQuests = await this.prisma.assignedQuest.findMany({
         where: {

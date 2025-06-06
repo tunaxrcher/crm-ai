@@ -49,6 +49,10 @@ import {
 
 // src/features/quest/components/AddQuestButton.tsx
 
+// src/features/quest/components/AddQuestButton.tsx
+
+// src/features/quest/components/AddQuestButton.tsx
+
 const AddQuestButton = () => {
   const router = useRouter()
   const { addNotification } = useNotification()
@@ -549,63 +553,13 @@ const AddQuestButton = () => {
                 setShowAIResult(false)
                 setShowSuccessDialog(true)
               }}>
-              ตกลง
+              ไปดู Feed
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Success Dialog */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md text-center" hideClose>
-          <div className="flex flex-col items-center py-4">
-            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
-              <Check className="h-8 w-8 text-green-500" />
-            </div>
-
-            <DialogHeader className="text-center mb-6">
-              <DialogTitle className="text-xl font-bold text-center">
-                อัพเดทเรียบร้อย!
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground mt-1">
-                ระบบได้อัพเดทงานของคุณเรียบร้อยแล้ว
-              </DialogDescription>
-            </DialogHeader>
-
-            {/* <div className="flex items-center justify-center w-full mb-4">
-              <div className="flex items-center bg-secondary/30 px-6 py-3 rounded-lg">
-                <Award className="h-6 w-6 mr-2 text-yellow-400" />
-                <span className="text-lg font-bold text-yellow-400">
-                  +{selfSubmitQuest.data?.submission?.xpEarned || 0}
-                </span>
-              </div>
-            </div> */}
-
-            <div className="grid grid-cols-2 gap-4 w-full mb-4">
-              <Button
-                onClick={() => {
-                  setShowSuccessDialog(false)
-                  resetForm()
-                  router.push('/quest')
-                }}
-                variant="outline"
-                className="w-full">
-                ไปที่หน้าภารกิจ
-              </Button>
-
-              <Button
-                onClick={() => {
-                  setShowSuccessDialog(false)
-                  resetForm()
-                  router.push('/feed')
-                }}
-                className="ai-gradient-bg w-full">
-                ไปดู Feed
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

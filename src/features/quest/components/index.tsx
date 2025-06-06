@@ -19,9 +19,9 @@ import useErrorHandler from '@src/hooks/useErrorHandler'
 import { useQuests } from '../hooks/api'
 import { GroupedQuests } from '../types'
 import { formatDeadline } from '../utils'
+import AddQuestButton from './AddQuestButton'
 import CompletedQuestList from './CompletedQuestList'
 import QuestTypeSection from './QuestTypeSection'
-import AddQuestButton from './AddQuestButton'
 
 type QuestPageProps = {
   userId: number
@@ -221,7 +221,7 @@ function QuestPageComponent({ userId }: QuestPageProps) {
           )}
         </TabsContent>
       </Tabs>
-       <AddQuestButton />
+      <AddQuestButton />
     </div>
   )
 }

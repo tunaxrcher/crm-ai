@@ -113,7 +113,7 @@ export class JobClassService extends BaseService {
 
   // Fetch jobClasss
   async fetchJobClass() {
-    const response = await fetch(`/api/jobClasss`)
+    const response = await fetch(`/api/job-class`)
 
     if (!response.ok)
       throw new Error(`Error fetching jobClasss: ${response.statusText}`)

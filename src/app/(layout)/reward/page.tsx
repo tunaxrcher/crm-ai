@@ -113,35 +113,34 @@ export default function RewardPage() {
               </div>
 
               {/* Enhanced Premium Buttons */}
-       <div className="flex space-x-4">
-  <div className="relative group/btn1 w-full">
-    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-blue-600/30 rounded-3xl blur-xl group-hover/btn1:blur-2xl transition-all duration-300"></div>
-    <Button
-      className="relative w-full font-bold py-5 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 border border-blue-400/30 hover:scale-[1.02]"
-      disabled={userPoints < 50}>
-      <div className="flex items-center justify-center">
-        <Sparkles className="h-6 w-6 mr-3 drop-shadow-sm" />
-        <span className="text-lg">กด 1 ครั้ง</span>
-      </div>
-    </Button>
-  </div>
+              <div className="flex space-x-4">
+                <div className="relative group/btn1 w-full">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-blue-600/30 rounded-3xl blur-xl group-hover/btn1:blur-2xl transition-all duration-300"></div>
+                  <Button
+                    className="relative w-full font-bold py-5 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 border border-blue-400/30 hover:scale-[1.02]"
+                    disabled={userPoints < 50}>
+                    <div className="flex items-center justify-center">
+                      <Sparkles className="h-6 w-6 mr-3 drop-shadow-sm" />
+                      <span className="text-lg">กด 1 ครั้ง</span>
+                    </div>
+                  </Button>
+                </div>
 
-  <div className="relative group/btn2 w-full">
-    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-indigo-600/30 rounded-3xl blur-xl group-hover/btn2:blur-2xl transition-all duration-300"></div>
-    <Button
-      className="relative w-full font-bold py-5 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 border border-purple-400/30 hover:scale-[1.02]"
-      disabled={userPoints < 500}>
-      <div className="flex items-center justify-center">
-        <div className="flex -space-x-1 mr-3">
-          <Sparkles className="h-5 w-5 drop-shadow-sm" />
-          <Sparkles className="h-5 w-5 drop-shadow-sm" />
-        </div>
-        <span className="text-lg">กด 10 ครั้ง</span>
-      </div>
-    </Button>
-  </div>
-</div>
-
+                <div className="relative group/btn2 w-full">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-indigo-600/30 rounded-3xl blur-xl group-hover/btn2:blur-2xl transition-all duration-300"></div>
+                  <Button
+                    className="relative w-full font-bold py-5 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 border border-purple-400/30 hover:scale-[1.02]"
+                    disabled={userPoints < 500}>
+                    <div className="flex items-center justify-center">
+                      <div className="flex -space-x-1 mr-3">
+                        <Sparkles className="h-5 w-5 drop-shadow-sm" />
+                        <Sparkles className="h-5 w-5 drop-shadow-sm" />
+                      </div>
+                      <span className="text-lg">กด 10 ครั้ง</span>
+                    </div>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

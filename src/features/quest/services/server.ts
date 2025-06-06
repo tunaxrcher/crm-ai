@@ -550,7 +550,7 @@ export class QuestService extends BaseService {
       return {
         id: quest.id.toString(),
         title: quest.title,
-        description: quest.description,
+        description: quest.description || '',
         type: this.mapQuestType(quest.type),
         difficulty: this.mapDifficultyLevel(quest.difficultyLevel),
         rewards: {
@@ -859,7 +859,7 @@ export class QuestSubmissionService extends BaseService {
         // 4. เตรียมข้อมูลสำหรับ AI analysis
         const aiPrompt: OpenAIPrompt = {
           questTitle: quest.title,
-          questDescription: quest.description,
+          questDescription: quest.description || '',
           questRequirements: [], // ในอนาคตอาจเพิ่ม requirements ใน quest schema
           mediaUrl,
           userDescription: description,

@@ -43,7 +43,7 @@ export class StatAnalysisService {
    * วิเคราะห์ quest submissions และแนะนำการจ่าย stats ด้วย structured output
    */
   static async analyzeStatsAllocation(
-    questSubmissions: QuestSubmissionData[],
+    questSubmissions: any, // QuestSubmissionData[],
     jobClassName: string,
     currentLevel: number,
     newLevel: number
