@@ -35,6 +35,8 @@ import { useSelfSubmitQuest, useUpdateQuestSubmission } from '../hooks/api'
 
 // src/features/quest/components/AddQuestButton.tsx
 
+// src/features/quest/components/AddQuestButton.tsx
+
 const AddQuestButton = () => {
   const router = useRouter()
   const { addNotification } = useNotification()
@@ -202,7 +204,7 @@ const AddQuestButton = () => {
           if (!open && !selfSubmitQuest.isPending) resetForm()
           setShowModal(open)
         }}>
-        <DialogContent className="sm:max-w-md" hideClose>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <Image
               src="/auto-import-evx-logo.png"
