@@ -20,24 +20,6 @@ export const GET = withErrorHandling(
       )
     }
 
-    if (
-      !characterClass ||
-      ![
-        'all',
-        'marketing',
-        'sales',
-        'accounting',
-        'designer',
-        'programmer',
-        'mechanic',
-      ].includes(characterClass)
-    ) {
-      return NextResponse.json(
-        { error: 'Invalid class parameter' },
-        { status: 400 }
-      )
-    }
-
     const params: GetRankingsParams = {
       period,
       characterClass,

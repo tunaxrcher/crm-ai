@@ -1,3 +1,4 @@
+// src/features/ranking/hooks/api.ts
 import { useCallback } from 'react'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -5,8 +6,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { rankingService } from '../services/client'
 import {
   CharacterClass,
-  GetRankingsParams,
   GetRankingsResponse,
+  JobClassInfo,
   RankingPeriod,
 } from '../types'
 
@@ -17,7 +18,7 @@ const QUERY_KEYS = {
     period,
     characterClass,
   ],
-  classConfig: ['rankings', 'class-config'],
+  jobClasses: ['jobClasses'],
   userRanking: (userId: string, period: RankingPeriod) => [
     'rankings',
     'user',
@@ -46,7 +47,7 @@ export function useRankings(
         characterClass: selectedClass,
       }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+    gcTime: 1000 * 60 * 10, // 10 minutes
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
@@ -93,31 +94,24 @@ export function useRankings(
 }
 
 /**
- * Hook for fetching class configuration
+ * Hook for fetching job classes
  */
-export function useClassConfig() {
-  const queryClient = useQueryClient()
-
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: QUERY_KEYS.classConfig,
-    queryFn: rankingService.getClassConfig,
+export function useJobClasses() {
+  const { data, isLoading, error } = useQuery<JobClassInfo[], Error>({
+    queryKey: QUERY_KEYS.jobClasses,
+    queryFn: async () => {
+      const response = await fetch('/api/job-class')
+      if (!response.ok) throw new Error('Failed to fetch job classes')
+      return response.json()
+    },
     staleTime: 1000 * 60 * 60, // 1 hour
     gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    retry: 2,
   })
 
-  const refresh = useCallback(async () => {
-    await queryClient.invalidateQueries({
-      queryKey: QUERY_KEYS.classConfig,
-    })
-    return refetch()
-  }, [queryClient, refetch])
-
   return {
-    config: data || {},
+    jobClasses: data || [],
     isLoading,
     error,
-    refresh,
   }
 }
 

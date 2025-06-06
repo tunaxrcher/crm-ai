@@ -1,3 +1,4 @@
+// src/features/ranking/services/server.ts
 import { getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/services/server/baseService'
 import 'server-only'
@@ -6,29 +7,18 @@ import { RankingRepository, rankingRepository } from '../repository'
 import { GetRankingsParams, GetRankingsResponse, RankingUser } from '../types'
 
 /**
- * Map job class names to frontend format
- */
-const classNameMap: Record<string, string> = {
-  นักการตลาด: 'marketing',
-  นักขาย: 'sales',
-  นักบัญชี: 'accounting',
-  ดีไซน์เนอร์: 'designer',
-  โปรแกรมเมอร์: 'programmer',
-  ช่าง: 'mechanic',
-}
-
-/**
  * Convert DB ranking to frontend format
  */
 function mapToRankingUser(dbRanking: any): RankingUser {
   return {
     id: dbRanking.userId.toString(),
-    name: dbRanking.userName,
-    avatar: dbRanking.userAvatar || '/images/default-avatar.png',
-    level: dbRanking.userLevel,
+    name: dbRanking.userName, // มาจาก character.name
+    avatar: dbRanking.currentPortraitUrl || '/images/default-avatar.png', // ใช้ currentPortraitUrl
+    level: dbRanking.level,
     xp: dbRanking.totalXP,
     title: dbRanking.jobLevelTitle,
-    class: classNameMap[dbRanking.jobClassName] || 'unknown',
+    class: dbRanking.jobClassName,
+    classImage: dbRanking.jobClassImage,
     position: dbRanking.position || 0,
     change: dbRanking.change || 0,
   }
@@ -73,23 +63,17 @@ export class RankingService extends BaseService {
     try {
       const session = await getServerSession()
       const userId = +session.user.id
-      const characterId = +session.user.characterId!
 
       console.log(
         `[Server] Fetching rankings for period: ${period}, class: ${characterClass}`
       )
 
-      // Get job classes for filtering
+      // Get job class ID for filtering
       let jobClassId: number | undefined
       if (characterClass !== 'all') {
-        const jobClasses = await rankingRepository.getJobClasses()
-        const targetClassName = Object.entries(classNameMap).find(
-          ([_, value]) => value === characterClass
-        )?.[0]
-
-        if (targetClassName) {
-          const jobClass = jobClasses.find((jc) => jc.name === targetClassName)
-          jobClassId = jobClass?.id
+        const jobClassIdNum = parseInt(characterClass)
+        if (!isNaN(jobClassIdNum)) {
+          jobClassId = jobClassIdNum
         }
       }
 
@@ -103,11 +87,9 @@ export class RankingService extends BaseService {
       // Convert to frontend format
       const rankings = dbRankings.map(mapToRankingUser)
 
-      // Get current user's ranking (assuming userId is available from session)
-      // For now, we'll use a placeholder userId
-      const currentUserId = userId
+      // Get current user's ranking
       const currentUserRanking = await rankingRepository.getUserRanking(
-        currentUserId,
+        userId,
         {
           period,
           jobClassId,
@@ -141,20 +123,13 @@ export class RankingService extends BaseService {
     try {
       const jobClasses = await rankingRepository.getJobClasses()
 
-      // Create class config based on job classes from database
-      const config: Record<string, { name: string; icon: string }> = {}
-
-      jobClasses.forEach((jobClass) => {
-        const key = classNameMap[jobClass.name]
-        if (key) {
-          config[key] = {
-            name: jobClass.name,
-            icon: key, // Icon name matches the key
-          }
-        }
-      })
-
-      return config
+      // Create simple response
+      return jobClasses.map((jc) => ({
+        id: jc.id,
+        name: jc.name,
+        description: jc.description,
+        imageUrl: jc.imageUrl,
+      }))
     } catch (error) {
       console.error('Error fetching class config from database:', error)
       throw new Error('Failed to fetch class configuration')

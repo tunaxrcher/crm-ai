@@ -1,3 +1,4 @@
+// src/features/ranking/services/client.ts
 import { BaseService } from '@src/lib/services/client/baseService'
 
 import { GetRankingsParams, GetRankingsResponse } from '../types'

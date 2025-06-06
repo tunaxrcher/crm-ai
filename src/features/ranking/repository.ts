@@ -1,3 +1,4 @@
+// src/features/ranking/repository.ts
 import { Ranking } from '@prisma/client'
 import { Prisma } from '@prisma/client'
 import { BaseRepository } from '@src/lib/repository/baseRepository'
@@ -18,6 +19,7 @@ export interface UserRanking {
   level: number
   totalXP: number
   jobClassName: string
+  jobClassImage?: string
   jobLevelTitle: string
   position?: number
   change?: number
@@ -105,20 +107,20 @@ export class RankingRepository extends BaseRepository<Ranking> {
       },
       select: {
         id: true,
+        name: true, // ชื่อของ character
         totalXP: true,
         level: true,
-        currentPortraitUrl: true,
+        currentPortraitUrl: true, // รูปโปรไฟล์จาก character
         userId: true,
         user: {
           select: {
             id: true,
-            name: true,
-            avatar: true,
           },
         },
         jobClass: {
           select: {
             name: true,
+            imageUrl: true,
           },
         },
         currentJobLevel: {
@@ -164,11 +166,12 @@ export class RankingRepository extends BaseRepository<Ranking> {
       return {
         userId: character.userId,
         characterId: character.id,
-        userName: character.user.name,
-        currentPortraitUrl: character.currentPortraitUrl,
+        userName: character.name, // ใช้ name จาก character
+        currentPortraitUrl: character.currentPortraitUrl, // รูปจาก character
         level: character.level,
         totalXP: period === 'weekly' ? weeklyXP : character.totalXP,
         jobClassName: character.jobClass.name,
+        jobClassImage: character.jobClass.imageUrl || undefined,
         jobLevelTitle: character.currentJobLevel.title,
       }
     })
@@ -199,6 +202,7 @@ export class RankingRepository extends BaseRepository<Ranking> {
       where: { userId },
       select: {
         id: true,
+        name: true, // เพิ่ม name
         level: true,
         currentPortraitUrl: true,
         totalXP: true,
@@ -207,12 +211,12 @@ export class RankingRepository extends BaseRepository<Ranking> {
         user: {
           select: {
             id: true,
-            name: true,
           },
         },
         jobClass: {
           select: {
             name: true,
+            imageUrl: true,
           },
         },
         currentJobLevel: {
@@ -297,11 +301,12 @@ export class RankingRepository extends BaseRepository<Ranking> {
     return {
       userId: character.userId,
       characterId: character.id,
-      userName: character.user.name,
+      userName: character.name, // ใช้ name จาก character
       currentPortraitUrl: character.currentPortraitUrl,
       level: character.level,
       totalXP: params.period === 'weekly' ? weeklyXP : character.totalXP,
       jobClassName: character.jobClass.name,
+      jobClassImage: character.jobClass.imageUrl || undefined,
       jobLevelTitle: character.currentJobLevel.title,
       position,
       change: 0, // TODO: Implement change tracking
@@ -317,6 +322,7 @@ export class RankingRepository extends BaseRepository<Ranking> {
         id: true,
         name: true,
         description: true,
+        imageUrl: true,
       },
       orderBy: {
         name: 'asc',

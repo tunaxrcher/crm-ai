@@ -1,7 +1,9 @@
+// src/features/ranking/components/RankingPage.tsx
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 import { ErrorDisplay, SkeletonLoading } from '@src/components/shared'
@@ -17,52 +19,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@src/components/ui/select'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@src/components/ui/tabs'
+import { Tabs, TabsList, TabsTrigger } from '@src/components/ui/tabs'
 import { withErrorHandling } from '@src/hooks'
-import useErrorHandler from '@src/hooks/useErrorHandler'
 import {
   Award,
-  BadgePercent,
   Calendar,
   ChevronRight,
   Crown,
-  LineChart,
   Medal,
-  Receipt,
   Star,
   TrendingUp,
   Trophy,
   User,
 } from 'lucide-react'
 
-import { useRankings } from '../hooks/api'
-import { CharacterClass, RankingPeriod, RankingUser } from '../types'
+import { useJobClasses, useRankings } from '../hooks/api'
+import { CharacterClass, RankingPeriod } from '../types'
 
-// Class config
-const classConfig = {
-  marketing: {
-    name: 'Marketing',
-    icon: <BadgePercent className="h-5 w-5" />,
-  },
-  sales: {
-    name: 'Sales',
-    icon: <LineChart className="h-5 w-5" />,
-  },
-  accounting: {
-    name: 'Accounting',
-    icon: <Receipt className="h-5 w-5" />,
-  },
-}
+// src/features/ranking/components/RankingPage.tsx
+
+// src/features/ranking/components/RankingPage.tsx
+
+// src/features/ranking/components/RankingPage.tsx
+
+// src/features/ranking/components/RankingPage.tsx
+
+// src/features/ranking/components/RankingPage.tsx
 
 function RankingPageComponent() {
   const router = useRouter()
   const [period, setPeriod] = useState<RankingPeriod>('all-time')
   const [selectedClass, setSelectedClass] = useState<CharacterClass>('all')
+  const [imageError, setImageError] = useState(false)
+  const { jobClasses, isLoading: isLoadingClasses } = useJobClasses()
 
   const {
     topUser,
@@ -73,17 +62,7 @@ function RankingPageComponent() {
     refresh: fetchRankings,
   } = useRankings(period, selectedClass)
 
-  // Use error handler context
   const { showError } = useError()
-  const { handleAsyncOperation } = useErrorHandler()
-
-  // Get class icon by class name
-  const getClassIcon = (className: string) => {
-    if (className === 'marketing') return classConfig.marketing.icon
-    if (className === 'sales') return classConfig.sales.icon
-    if (className === 'accounting') return classConfig.accounting.icon
-    return null
-  }
 
   // Get position badge
   const getPositionBadge = (position: number) => {
@@ -139,7 +118,7 @@ function RankingPageComponent() {
     )
   }
 
-  // Handle avatar click to view character profile with error handling
+  // Handle avatar click to view character profile
   const handleViewCharacter = async (userId: string) => {
     try {
       router.push(`/profile/${userId}`)
@@ -163,7 +142,7 @@ function RankingPageComponent() {
   }
 
   // Render loading state
-  if (isLoading) {
+  if (isLoading || isLoadingClasses) {
     return (
       <div className="p-4 pb-20">
         <SkeletonLoading type="ranking" text="กำลังโหลดข้อมูลอันดับ..." />
@@ -171,7 +150,7 @@ function RankingPageComponent() {
     )
   }
 
-  // Show error state with improved error component
+  // Show error state
   if (error) {
     return (
       <div className="p-4 pb-20">
@@ -212,13 +191,27 @@ function RankingPageComponent() {
 
         <Select value={selectedClass} onValueChange={handleClassChange}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Select Class" />
+            <SelectValue placeholder="เลือกอาชีพ" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">ทุกอาชีพ</SelectItem>
-            <SelectItem value="marketing">การตลาด</SelectItem>
-            <SelectItem value="sales">ฝ่ายขาย</SelectItem>
-            <SelectItem value="accounting">บัญชี</SelectItem>
+            {jobClasses.map((jobClass) => (
+              <SelectItem key={jobClass.id} value={jobClass.id.toString()}>
+                <div className="flex items-center gap-2">
+                  {!imageError && jobClass.imageUrl && (
+                    <Image
+                      src={jobClass.imageUrl}
+                      alt={jobClass.name}
+                      width={16}
+                      height={16}
+                      className="rounded"
+                      onError={() => setImageError(true)}
+                    />
+                  )}
+                  {jobClass.name}
+                </div>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -250,10 +243,18 @@ function RankingPageComponent() {
                   <Crown className="h-8 w-8 text-yellow-500 animate-pulse" />
                 </div>
 
-                {/* Class icon */}
-                <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 border-2 border-yellow-500">
-                  {getClassIcon(topUser.class)}
-                </div>
+                {/* Class image badge */}
+                {/* {topUser.classImage && (
+                  <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-1 border-2 border-yellow-500 overflow-hidden">
+                    <Image
+                      src={topUser.classImage}
+                      alt={topUser.class}
+                      width={24}
+                      height={24}
+                      className="rounded-full"
+                    />
+                  </div>
+                )} */}
               </div>
             </div>
 
@@ -301,6 +302,15 @@ function RankingPageComponent() {
                 <div className="font-semibold flex items-center">
                   <span>{currentUser.name}</span>
                   <span className="ml-2 text-blue-400 text-xs">(คุณ)</span>
+                  {/* {currentUser.classImage && (
+                    <Image
+                      src={currentUser.classImage}
+                      alt={currentUser.class}
+                      width={16}
+                      height={16}
+                      className="ml-2 rounded"
+                    />
+                  )} */}
                 </div>
                 <div className="text-sm flex items-center">
                   <Badge variant="outline" className="mr-2 text-xs">
@@ -353,11 +363,15 @@ function RankingPageComponent() {
                   {user.id === currentUser?.id && (
                     <span className="ml-2 text-blue-400 text-xs">(คุณ)</span>
                   )}
-                  {selectedClass === 'all' && (
-                    <div className="ml-2 text-xs flex items-center">
-                      {getClassIcon(user.class)}
-                    </div>
-                  )}
+                  {/* {selectedClass === 'all' && user.classImage && (
+                    <Image
+                      src={user.classImage}
+                      alt={user.class}
+                      width={16}
+                      height={16}
+                      className="ml-2 rounded"
+                    />
+                  )} */}
                 </div>
                 <div className="text-xs flex items-center">
                   <Badge variant="outline" className="mr-2 text-xs">
@@ -388,5 +402,4 @@ function RankingPageComponent() {
   )
 }
 
-// ใช้ Higher Order Component เพื่อเพิ่ม error boundary
 export default withErrorHandling(RankingPageComponent)
