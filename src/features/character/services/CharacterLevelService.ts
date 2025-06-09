@@ -6,6 +6,7 @@ import { replicateService } from '@src/lib/services/replicateService'
 import { getStoragePublicUrl } from '@src/lib/utils'
 
 import { characterRepository } from '../repository'
+import { portraitGenerationService } from '@src/lib/services/portraitGenerationService'
 
 interface LevelUpResult {
   character: any
@@ -516,6 +517,19 @@ export class CharacterLevelService {
       newLevel
     )
 
+    console.log('say hiiii')
+    console.log('newLevel ', newLevel)
+    console.log('characterId ', characterId)
+
+        // 7. ตรวจสอบ pre-generation สำหรับ level ถัดไป
+    await this.handlePreGeneration(characterId, newLevel)
+
+    // 8. Generate portrait ถ้าถึง milestone
+    const newPortraitUrl = await this.handleMilestonePortraitGeneration(
+      characterId,
+      newLevel
+    )
+
     // 7. Create feed notification
     await this.createFeedNotification(
       updatedCharacter,
@@ -536,6 +550,57 @@ export class CharacterLevelService {
       newJobLevel: jobLevelUpdate.newJobLevel,
       portraitUpdated: !!portraitUpdate.unlockedClassLevel,
       aiReasoning: statGains.reasoning,
+    }
+  }
+
+  /**
+   * จัดการ pre-generation
+   */
+  private async handlePreGeneration(characterId: number, currentLevel: number): Promise<void> {
+    try {
+      
+      // ตรวจสอบว่าควร pre-generate หรือไม่
+      const preGenerateCheck = portraitGenerationService.checkPreGenerateCondition(currentLevel)
+      
+      if (preGenerateCheck.shouldPreGenerate) {
+        console.log(`[LevelUp] Triggering pre-generation for character ${characterId}, target class ${preGenerateCheck.targetClassLevel}`)
+        
+        // รัน async โดยไม่รอ
+        portraitGenerationService.preGeneratePortrait(characterId).catch(error => {
+          console.error('[LevelUp] Pre-generation error:', error)
+        })
+      }
+    } catch (error) {
+      console.error('[LevelUp] Handle pre-generation error:', error)
+    }
+  }
+
+   /**
+   * Generate portrait เมื่อถึง milestone
+   */
+  private async handleMilestonePortraitGeneration(
+    characterId: number,
+    newLevel: number
+  ): Promise<string | null> {
+    try {
+      const newPortraitUrl = await portraitGenerationService.generateOnLevelUp(
+        characterId,
+        newLevel
+      )
+
+      if (newPortraitUrl) {
+        // อัพเดท currentPortraitUrl ในฐานข้อมูล
+        await characterRepository.updateCharacterWithPortraitAndJob(characterId, {
+          currentPortraitUrl: newPortraitUrl
+        })
+
+        console.log(`[LevelUp] Updated current portrait for character ${characterId}: ${newPortraitUrl}`)
+      }
+
+      return newPortraitUrl
+    } catch (error) {
+      console.error('[LevelUp] Handle milestone portrait generation error:', error)
+      return null
     }
   }
 

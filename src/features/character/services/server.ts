@@ -2,6 +2,7 @@ import { userService } from '@src/features/user/services/server'
 import { visionService } from '@src/lib/ai/visionService'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
+import { fluxService } from '@src/lib/services/fluxService'
 import { replicateService } from '@src/lib/services/replicateService'
 import { BaseService } from '@src/lib/services/server/baseService'
 import bcrypt from 'bcrypt'
@@ -51,7 +52,7 @@ export class CharacterService extends BaseService {
   }
 
   /**
-   * Create a new character
+   * สร้าง character พร้อม initialize generatedPortraits
    */
   private async createCharacter(params: {
     userId: number
@@ -78,17 +79,14 @@ export class CharacterService extends BaseService {
     const nextLevelXP = this.calculateXPForLevel(level + 1)
     const totalXP = 0
 
-    // เตรียม generatedPortraits โดยใช้รูปเดียวกันสำหรับทุก level
-    const bucket = process.env.DO_SPACES_BUCKET
-    const region = process.env.DO_SPACES_REGION
-    const baseUrl = `https://${bucket}.${region}.digitaloceanspaces.com`
+    // Initialize generatedPortraits with level 1 only
     const generatedPortraits: Record<string, string> = {
       '1': portraitUrl,
-      '10': `${baseUrl}/10.png`,
-      '35': `${baseUrl}/35.png`,
-      '60': `${baseUrl}/60.png`,
-      '80': `${baseUrl}/80.png`,
-      '99': `${baseUrl}/99.png`,
+      '10': '',
+      '35': '',
+      '60': '',
+      '80': '',
+      '99': '',
     }
 
     // สร้าง character
@@ -100,11 +98,11 @@ export class CharacterService extends BaseService {
         nextLevelXP,
         totalXP,
         statPoints: 0,
-        statAGI: 0,
-        statSTR: 0,
-        statDEX: 0,
-        statVIT: 0,
-        statINT: 0,
+        statAGI: 10,
+        statSTR: 10,
+        statDEX: 10,
+        statVIT: 10,
+        statINT: 10,
         currentPortraitUrl: portraitUrl,
         customPortrait: true,
         originalFaceImage: originalFaceImage || null,
@@ -358,7 +356,7 @@ export class CharacterService extends BaseService {
   }
 
   /**
-   * Generate character portraits using AI
+   * Generate character portraits using AI สำหรับการสร้าง character ใหม่
    */
   async generateCharacterPortraits(
     jobClassId: number,
@@ -366,69 +364,121 @@ export class CharacterService extends BaseService {
     portraitType: 'upload' | 'generate',
     faceImageUrl?: string
   ): Promise<CharacterGenerateResponse> {
-    // ดึงข้อมูล job class และ levels
-    const jobClass = await jobClassRepository.findById(jobClassId)
-    if (!jobClass) throw new Error('Job class not found')
+    try {
+      // ดึงข้อมูล job class และ first level
+      const jobClass = await jobClassRepository.findById(jobClassId)
+      if (!jobClass) throw new Error('Job class not found')
 
-    let portraits: GeneratedPortrait[] = []
-    let personaTraits: string = this.generatePersonaTraits(jobClass.name)
+      const firstJobLevel = jobClass.levels[0]
+      if (!firstJobLevel) throw new Error('First job level not found')
 
-    // ถ้ามีการ upload รูป ให้วิเคราะห์ด้วย OpenAI Vision
-    if (portraitType === 'upload' && faceImageUrl) {
+      let portraits: GeneratedPortrait[] = []
+      let personaTraits: string = this.generatePersonaTraits(jobClass.name)
+
+      // ถ้ามีการ upload รูป ให้วิเคราะห์ด้วย OpenAI Vision
+      if (portraitType === 'upload' && faceImageUrl) {
+        console.log(
+          '[CharacterService] Analyzing uploaded image with OpenAI Vision...'
+        )
+        const analysis = await visionService.analyzePersonaTraits(faceImageUrl)
+        if (analysis) {
+          personaTraits = analysis.fullDescription
+          console.log('[CharacterService] Persona traits:', personaTraits)
+        }
+      }
+
+      // สร้าง prompt สำหรับ class level 1 โดยใช้ personaDescription จาก JobLevel
+      const prompt = fluxService.createPrompt(
+        jobClass.name,
+        firstJobLevel.personaDescription || 'Wearing basic work attire, starting professional appearance',
+        1,
+        personaTraits,
+        true // บอกว่าเป็น class แรก ต้องการ full prompt
+      )
+
       console.log(
-        '[CharacterService] Analyzing uploaded image with OpenAI Vision...'
+        '[CharacterService] Generated prompt for class level 1:',
+        prompt
       )
-      const analysis = await visionService.analyzePersonaTraits(faceImageUrl)
-      if (analysis) {
-        personaTraits = analysis.fullDescription
-        console.log('[CharacterService] Persona traits:', personaTraits)
+
+      let referenceBase64: string | undefined
+
+      if (portraitType === 'upload' && faceImageUrl) {
+        // แปลงรูป reference เป็น base64
+        referenceBase64 = await fluxService.imageToBase64(faceImageUrl)
       }
-    }
 
-    if (portraitType === 'generate') {
-      // ใช้ AI สร้างภาพ (แค่ level 1)
-      portraits = await replicateService.generatePortraits(
-        jobClass.name,
-        jobClass.levels[0],
-        undefined,
-        personaTraits
+      // Generate รูป class level 1
+      const generateResponse = await fluxService.generatePortrait({
+        prompt,
+        input_image: referenceBase64,
+        output_format: 'png',
+        aspect_ratio: '1:1',
+        safety_tolerance: 2,
+        prompt_upsampling: true,
+      })
+
+      console.log(
+        `[CharacterService] Generation started with ID: ${generateResponse.id}`
       )
-    } else if (portraitType === 'upload' && faceImageUrl) {
-      // ใช้ภาพที่ upload มาเป็น reference
-      portraits = await replicateService.generatePortraits(
-        jobClass.name,
-        jobClass.levels[0],
-        faceImageUrl,
-        personaTraits
+
+      // รอผลลัพธ์
+     console.log('[CharacterService] Waiting for generation result...')
+      const resultImageUrl = await fluxService.waitForResult(generateResponse.id, 600000)
+
+      console.log('[CharacterService] Generation completed, result URL:', resultImageUrl)
+
+      // Download, ลบพื้นหลัง และอัพโหลดไป S3
+      const tempCharacterId = Date.now()
+      const finalPortraitUrl = await fluxService.downloadRemoveBgAndUploadToS3(
+        resultImageUrl,
+        tempCharacterId,
+        1
       )
-    }
 
-    // สร้าง session ID สำหรับเก็บข้อมูลชั่วคราว
-    const sessionId = `char_gen_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      // สร้าง GeneratedPortrait object
+      portraits = [
+        {
+          id: 'class_1',
+          url: finalPortraitUrl,
+          prompt: prompt,
+          model: 'flux-kontext-pro',
+        },
+      ]
 
-    // เก็บข้อมูลใน cache หรือ session storage
-    global.characterGenerationSessions =
-      global.characterGenerationSessions || {}
-    global.characterGenerationSessions[sessionId] = {
-      jobClassId,
-      name,
-      portraits,
-      originalFaceImage: faceImageUrl,
-      personaTraits,
-      createdAt: new Date(),
-    }
+      // สร้าง session ID สำหรับเก็บข้อมูลชั่วคราว
+      const sessionId = `char_gen_${Date.now()}_${Math.random().toString(36).substring(7)}`
 
-    // ลบ session เก่าที่หมดอายุ (มากกว่า 1 ชั่วโมง)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-    Object.keys(global.characterGenerationSessions).forEach((key) => {
-      if (global.characterGenerationSessions[key].createdAt < oneHourAgo) {
-        delete global.characterGenerationSessions[key]
+      // เก็บข้อมูลใน global cache
+      global.characterGenerationSessions =
+        global.characterGenerationSessions || {}
+      global.characterGenerationSessions[sessionId] = {
+        jobClassId,
+        name,
+        portraits,
+        originalFaceImage: faceImageUrl,
+        personaTraits,
+        createdAt: new Date(),
       }
-    })
 
-    return {
-      portraits,
-      sessionId,
+      // ลบ session เก่าที่หมดอายุ
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+      Object.keys(global.characterGenerationSessions).forEach((key) => {
+        if (global.characterGenerationSessions[key].createdAt < oneHourAgo) {
+          delete global.characterGenerationSessions[key]
+        }
+      })
+
+      return {
+        portraits,
+        sessionId,
+      }
+    } catch (error) {
+      console.error(
+        '[CharacterService] Generate character portraits error:',
+        error
+      )
+      throw error
     }
   }
 
