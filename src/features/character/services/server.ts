@@ -390,7 +390,8 @@ export class CharacterService extends BaseService {
       // สร้าง prompt สำหรับ class level 1 โดยใช้ personaDescription จาก JobLevel
       const prompt = fluxService.createPrompt(
         jobClass.name,
-        firstJobLevel.personaDescription || 'Wearing basic work attire, starting professional appearance',
+        firstJobLevel.personaDescription ||
+          'Wearing basic work attire, starting professional appearance',
         1,
         personaTraits,
         true // บอกว่าเป็น class แรก ต้องการ full prompt
@@ -423,10 +424,16 @@ export class CharacterService extends BaseService {
       )
 
       // รอผลลัพธ์
-     console.log('[CharacterService] Waiting for generation result...')
-      const resultImageUrl = await fluxService.waitForResult(generateResponse.id, 600000)
+      console.log('[CharacterService] Waiting for generation result...')
+      const resultImageUrl = await fluxService.waitForResult(
+        generateResponse.id,
+        600000
+      )
 
-      console.log('[CharacterService] Generation completed, result URL:', resultImageUrl)
+      console.log(
+        '[CharacterService] Generation completed, result URL:',
+        resultImageUrl
+      )
 
       // Download, ลบพื้นหลัง และอัพโหลดไป S3
       const tempCharacterId = Date.now()

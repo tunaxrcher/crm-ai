@@ -48,6 +48,14 @@ import { CharacterClass, RankingPeriod } from '../types'
 
 // src/features/ranking/components/RankingPage.tsx
 
+// src/features/ranking/components/RankingPage.tsx
+
+// src/features/ranking/components/RankingPage.tsx
+
+// src/features/ranking/components/RankingPage.tsx
+
+// src/features/ranking/components/RankingPage.tsx
+
 function RankingPageComponent() {
   const router = useRouter()
   const [period, setPeriod] = useState<RankingPeriod>('all-time')
@@ -273,7 +281,7 @@ function RankingPageComponent() {
               </div>
             </div>
 
-            <div className="flex justify-center">
+            {/* <div className="flex justify-center">
               <Button
                 size="sm"
                 className="ai-gradient-bg"
@@ -281,7 +289,7 @@ function RankingPageComponent() {
                 <User className="h-4 w-4 mr-2" />
                 ดูโปรไฟล์
               </Button>
-            </div>
+            </div> */}
           </div>
         </Card>
       )}

@@ -1,6 +1,8 @@
 // src/features/feed/components/post/PostCard.tsx
 import React, { useEffect, useState } from 'react'
 
+import Image from 'next/image'
+
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Badge } from '@src/components/ui/badge'
 import { Button } from '@src/components/ui/button'
@@ -54,6 +56,8 @@ export const PostCard = function PostCard({
     if (type === 'quest_complete' && content.image) {
       mediaUrl = content.image
     } else if (type === 'post' && content.image) {
+      mediaUrl = content.image
+    } else if (type === 'new_portrait' && content.image) {
       mediaUrl = content.image
     }
 

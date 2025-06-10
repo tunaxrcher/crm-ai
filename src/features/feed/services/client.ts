@@ -22,7 +22,9 @@ export class FeedService extends BaseService {
     if (params.limit) searchParams.append('limit', params.limit.toString())
 
     const response = await fetch(`/api/feed?${searchParams}`)
+
     if (!response.ok) throw new Error('Failed to fetch feed')
+
     return response.json()
   }
 

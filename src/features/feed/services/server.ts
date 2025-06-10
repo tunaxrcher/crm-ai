@@ -67,7 +67,7 @@ export class FeedService extends BaseService {
         orderBy: { createdAt: 'desc' },
         where: {
           type: {
-            in: ['quest_completion', 'level_up', 'achievement'],
+            in: ['quest_completion', 'level_up', 'achievement', 'new_portrait'],
           },
         },
         include: {

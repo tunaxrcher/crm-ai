@@ -30,7 +30,6 @@ class PortraitGenerationService {
    * ตรวจสอบว่าควร pre-generate หรือไม่
    */
   checkPreGenerateCondition(currentLevel: number): PreGenerateCheckResult {
-    console.log('debug aaaaa')
     // หา threshold ที่ใกล้ที่สุด
     const nextThreshold = this.PRE_GENERATE_THRESHOLDS.find(
       (threshold) => currentLevel === threshold
@@ -121,7 +120,10 @@ class PortraitGenerationService {
         isFirstClass // ส่งค่าบอกว่าเป็น class แรกหรือไม่
       )
 
-      console.log(`[PortraitGeneration] Generated prompt for class ${request.targetClassLevel}:`, prompt)
+      console.log(
+        `[PortraitGeneration] Generated prompt for class ${request.targetClassLevel}:`,
+        prompt
+      )
       console.log(`[PortraitGeneration] Is first class: ${isFirstClass}`)
 
       // เริ่ม generation

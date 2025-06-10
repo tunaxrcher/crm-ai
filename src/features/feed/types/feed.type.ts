@@ -37,3 +37,4 @@ export type FeedItemType =
   | 'level_up'
   | 'achievement'
   | 'post'
+  | 'new_portrait'

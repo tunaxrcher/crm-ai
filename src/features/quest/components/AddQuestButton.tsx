@@ -39,6 +39,16 @@ import { useSelfSubmitQuest, useUpdateQuestSubmission } from '../hooks/api'
 
 // src/features/quest/components/AddQuestButton.tsx
 
+// src/features/quest/components/AddQuestButton.tsx
+
+// src/features/quest/components/AddQuestButton.tsx
+
+// src/features/quest/components/AddQuestButton.tsx
+
+// src/features/quest/components/AddQuestButton.tsx
+
+// src/features/quest/components/AddQuestButton.tsx
+
 const AddQuestButton = () => {
   const router = useRouter()
   const { addNotification } = useNotification()
@@ -201,13 +211,115 @@ const AddQuestButton = () => {
   }
   return (
     <>
-      {/* ปุ่มลอย */}
-      <Button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-20 right-4 rounded-full h-14 w-14 ai-gradient-bg shadow-lg z-10"
-        aria-label="Add Quest">
-        <Plus className="h-6 w-6" />
-      </Button>
+      {/* ปุ่มลอย - Fixed Version */}
+      <div className="fixed bottom-20 right-4 z-10">
+        {/* Glow effects */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 opacity-20 blur-2xl scale-150 animate-pulse"></div>
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 opacity-15 blur-xl scale-125 animate-ping"></div>
+
+        {/* Orbiting particles */}
+        <div
+          className="absolute inset-0 flex items-center justify-center animate-spin"
+          style={{ animationDuration: '8s' }}>
+          <div
+            className="absolute w-2 h-2 bg-yellow-400 rounded-full shadow-lg"
+            style={{ transform: 'translateX(35px)' }}></div>
+        </div>
+        <div
+          className="absolute inset-0 flex items-center justify-center animate-spin"
+          style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
+          <div
+            className="absolute w-2 h-2 bg-pink-400 rounded-full shadow-lg"
+            style={{ transform: 'translateX(40px)' }}></div>
+        </div>
+        <div
+          className="absolute inset-0 flex items-center justify-center animate-spin"
+          style={{ animationDuration: '10s' }}>
+          <div
+            className="absolute w-2 h-2 bg-cyan-400 rounded-full shadow-lg"
+            style={{ transform: 'translateX(30px)' }}></div>
+        </div>
+
+        {/* Achievement badges */}
+        {/* <div
+          className="absolute -top-8 -left-8 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full animate-bounce shadow-lg"
+          style={{ animationDelay: "0.3s" }}
+        >
+          +XP
+        </div> */}
+        {/* <div
+          className="absolute -top-6 -right-10 bg-purple-500 text-white text-xs px-2 py-1 rounded-full animate-bounce shadow-lg"
+          style={{ animationDelay: "0.7s" }}
+        >
+          Quest!
+        </div> */}
+        {/* <div
+          className="absolute -bottom-8 -left-6 bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-bounce shadow-lg"
+          style={{ animationDelay: "1s" }}
+        >
+          Level Up
+        </div> */}
+
+        {/* Main button */}
+        <Button
+          onClick={(e) => {
+            setShowModal(true)
+          }}
+          className="relative h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-500 hover:via-blue-500 hover:to-cyan-500 shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 hover:scale-110 group border-4 border-white/30 animate-pulse"
+          aria-label="Add Quest"
+          style={{
+            background:
+              'linear-gradient(45deg, #8b5cf6, #3b82f6, #06b6d4, #10b981, #f59e0b, #ef4444, #ec4899)',
+            backgroundSize: '400% 400%',
+            animation:
+              'gradient-shift 3s ease infinite, pulse 2s ease-in-out infinite',
+            filter: 'drop-shadow(0 0 20px rgba(139, 92, 246, 0.5))',
+          }}>
+          {/* Inner effects */}
+          <div className="absolute inset-1 rounded-full bg-white/10 animate-ping"></div>
+          <div className="absolute inset-2 rounded-full bg-gradient-to-r from-white/20 to-transparent animate-pulse"></div>
+
+          {/* Icon */}
+          <Plus
+            className="h-10 w-10 relative z-10 transition-all duration-500 group-hover:rotate-90 group-hover:scale-125 text-white drop-shadow-lg"
+            style={{ filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.8))' }}
+          />
+
+          {/* Sparkles */}
+          <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 animate-ping shadow-lg"></div>
+          <div
+            className="absolute -bottom-2 -left-2 w-3 h-3 bg-pink-400 rounded-full opacity-0 group-hover:opacity-100 animate-ping shadow-lg"
+            style={{ animationDelay: '0.15s' }}></div>
+          <div
+            className="absolute -top-2 -left-2 w-2 h-2 bg-cyan-400 rounded-full opacity-0 group-hover:opacity-100 animate-ping shadow-lg"
+            style={{ animationDelay: '0.3s' }}></div>
+          <div
+            className="absolute -bottom-2 -right-2 w-3 h-3 bg-green-400 rounded-full opacity-0 group-hover:opacity-100 animate-ping shadow-lg"
+            style={{ animationDelay: '0.45s' }}></div>
+
+          {/* Energy rings */}
+          <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping scale-110"></div>
+          <div
+            className="absolute inset-0 rounded-full border-2 border-white/20 animate-ping scale-125"
+            style={{ animationDelay: '0.3s' }}></div>
+          <div
+            className="absolute inset-0 rounded-full border-2 border-white/10 animate-ping scale-150"
+            style={{ animationDelay: '0.6s' }}></div>
+        </Button>
+      </div>
+
+      {/* Add CSS for gradient animation */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+  `,
+        }}
+      />
 
       {/* Modal หลัก */}
       <Dialog

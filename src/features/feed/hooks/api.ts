@@ -107,7 +107,7 @@ export function useFeed() {
             ...baseContent,
             previousLevel: apiItem.levelHistory?.levelFrom || 0,
             newLevel: apiItem.levelHistory?.levelTo || 0,
-            newTitle: 'New Title',
+            newTitle: '',
           },
         }
 

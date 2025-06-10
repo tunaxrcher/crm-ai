@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
@@ -14,7 +14,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@src/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@src/components/ui/dialog'
 import { Input } from '@src/components/ui/input'
+import { Progress } from '@src/components/ui/progress'
 import {
   Tabs,
   TabsContent,
@@ -41,6 +49,7 @@ import {
   Upload,
   UserCircle2,
 } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { toast } from 'sonner'
 
@@ -60,6 +69,8 @@ export default function CharacterCreation() {
   const [selectedPortrait, setSelectedPortrait] =
     useState<GeneratedPortrait | null>(null)
   const [sessionId, setSessionId] = useState<string>('')
+  const [aiAnalysisProgress, setAiAnalysisProgress] = useState(0)
+  const [showGeneratingDialog, setShowGeneratingDialog] = useState(false)
 
   // Fetch job classes from API
   const {
@@ -73,14 +84,22 @@ export default function CharacterCreation() {
   const generateMutation = useMutation({
     mutationFn: (payload: CharacterCreatePayload) =>
       characterService.generatePortraits(payload),
+    onMutate: () => setShowGeneratingDialog(true),
     onSuccess: (data) => {
       setGeneratedPortraits(data.portraits)
       setSessionId(data.sessionId)
       setCurrentStep(4)
+
+      setAiAnalysisProgress(100)
+      setTimeout(() => {
+        setAiAnalysisProgress(0)
+        setShowGeneratingDialog(false) // ✅ ปิด dialog หลัง reset progress
+      }, 500)
     },
     onError: (error) => {
       toast.error('Failed to generate portraits')
       console.error(error)
+      setShowGeneratingDialog(false) // ✅ ปิด dialog เมื่อ error
     },
   })
 
@@ -186,6 +205,36 @@ export default function CharacterCreation() {
       await confirmMutation.mutate(payload)
     }
   }
+
+  useEffect(() => {
+    if (generateMutation.isPending) {
+      let progress = 0
+      const start = Date.now()
+      const duration = 30000 // 30 วินาที
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - start
+        const calculated = Math.min((elapsed / duration) * 99, 99)
+        progress = calculated
+        setAiAnalysisProgress(progress)
+      }, 200)
+
+      return () => clearInterval(interval)
+    }
+  }, [generateMutation.isPending])
+
+  // useEffect(() => {
+  //   if (generateMutation.isPending) {
+  //     setShowGeneratingDialog(true)
+  //   } else {
+  //     setShowGeneratingDialog(false)
+  //   }
+  // }, [generateMutation.isPending])
+
+  useEffect(() => {
+    if (generateMutation.isSuccess) {
+      setAiAnalysisProgress(100)
+    }
+  }, [generateMutation.isSuccess])
 
   // Show loading state
   if (isLoading) {
@@ -546,6 +595,76 @@ export default function CharacterCreation() {
           </div>
         </div>
       )}
+
+      {/* AI Processing Dialog สำหรับการสร้าง Character */}
+      <Dialog open={showGeneratingDialog} onOpenChange={() => {}}>
+        <DialogContent
+          className="sm:max-w-md text-center py-8 overflow-y-auto max-h-screen"
+          hideClose>
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative w-20 h-20">
+              <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
+              <div className="absolute inset-2 rounded-full bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500 animate-pulse"></div>
+              <div className="absolute inset-[10px] rounded-full bg-card flex items-center justify-center">
+                <Sparkles className="h-8 w-8 text-blue-400" />
+              </div>
+            </div>
+            <DialogHeader className="text-center">
+              <DialogTitle className="text-lg font-semibold text-center">
+                เรากำลังสร้าง Character ของคุณ
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground mt-1 text-center">
+                โปรดรอสักครู่...
+              </DialogDescription>
+            </DialogHeader>
+            <div className="w-full max-w-xs">
+              <div className="flex justify-between text-xs mb-1">
+                <span>Analysis in progress</span>
+                <span>{Math.round(aiAnalysisProgress)}%</span>
+              </div>
+              <Progress value={aiAnalysisProgress} className="h-2" />
+              <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                {aiAnalysisProgress > 10 && (
+                  <div className="flex items-center">
+                    <Check className="h-3 w-3 mr-1 text-green-400" />
+                    <span>กำลังตรวจสอบข้อมูล...</span>
+                  </div>
+                )}
+                {aiAnalysisProgress > 20 && (
+                  <div className="flex items-center">
+                    <Check className="h-3 w-3 mr-1 text-green-400" />
+                    <span>กำลังวิเคราะห์ใบหน้า...</span>
+                  </div>
+                )}
+                {aiAnalysisProgress > 50 && (
+                  <div className="flex items-center">
+                    <Check className="h-3 w-3 mr-1 text-green-400" />
+                    <span>กำลังสร้าง Character...</span>
+                  </div>
+                )}
+                {aiAnalysisProgress > 70 && (
+                  <div className="flex items-center">
+                    <Check className="h-3 w-3 mr-1 text-green-400" />
+                    <span>กำลังสร้าง Remove Background...</span>
+                  </div>
+                )}
+                {aiAnalysisProgress > 90 && (
+                  <div className="flex items-center">
+                    <Check className="h-3 w-3 mr-1 text-green-400" />
+                    <span>บันทึกข้อมูล...</span>
+                  </div>
+                )}
+                {aiAnalysisProgress > 97 && (
+                  <div className="flex items-center">
+                    <Check className="h-3 w-3 mr-1 text-green-400" />
+                    <span>กำลังรอ Response...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

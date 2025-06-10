@@ -55,6 +55,18 @@ export const authOptions: NextAuthOptions = {
         token.username = user.username
         token.currentPortraitUrl = user.currentPortraitUrl
         token.characterId = user.characterId
+      } else {
+        // Request ถัดไป - ตรวจสอบว่า user ยังอยู่ในฐานข้อมูลไหม
+        if (token.id) {
+          const existingUser = await prisma.user.findUnique({
+            where: { id: Number(token.id) },
+          })
+
+          if (!existingUser) {
+            // User ถูกลบแล้ว - ส่ง signal ให้ logout
+            throw new Error('User not found in database')
+          }
+        }
       }
 
       return token

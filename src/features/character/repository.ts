@@ -135,6 +135,7 @@ export class CharacterRepository extends BaseRepository<Character> {
     type: string
     mediaType: any
     userId: number
+    mediaUrl?: string
     questSubmissionId?: number
     levelHistoryId?: number
     achievementId?: number

@@ -2,11 +2,11 @@
 import { userService } from '@src/features/user/services/server'
 import { StatAnalysisService } from '@src/lib/ai/statAnalysisService'
 import { prisma } from '@src/lib/db'
+import { portraitGenerationService } from '@src/lib/services/portraitGenerationService'
 import { replicateService } from '@src/lib/services/replicateService'
 import { getStoragePublicUrl } from '@src/lib/utils'
 
 import { characterRepository } from '../repository'
-import { portraitGenerationService } from '@src/lib/services/portraitGenerationService'
 
 interface LevelUpResult {
   character: any
@@ -142,40 +142,6 @@ export class PortraitHelper {
   /**
    * อัพเดท generatedPortraits โดยเพิ่ม portrait ใหม่สำหรับ class level ที่ปลดล็อก
    */
-  // static async updateGeneratedPortraits(
-  //   characterId: number,
-  //   currentPortraits: any,
-  //   newClassLevel: number,
-  //   originalFaceImage?: string | null
-  // ): Promise<GeneratedPortraits> {
-  //   if (!currentPortraits) {
-  //     currentPortraits = this.initializeEmptyPortraits()
-  //   }
-
-  //   let portraits: GeneratedPortraits
-  //   if (typeof currentPortraits === 'string') {
-  //     try {
-  //       portraits = JSON.parse(currentPortraits)
-  //       console.log(portraits)
-  //     } catch {
-  //       portraits = this.initializeEmptyPortraits()
-  //     }
-  //   } else {
-  //     portraits = { ...currentPortraits }
-  //   }
-
-  //   // Generate new portrait for the unlocked class level
-  //   const newPortraitUrl = await this.generateNewPortrait(
-  //     characterId,
-  //     newClassLevel,
-  //     originalFaceImage
-  //   )
-
-  //   console.log(`[PortraitHelper] Updated portraits:`, portraits)
-
-  //   return portraits
-  // }
-
   static async updateGeneratedPortraits(
     characterId: number,
     currentPortraits: any,
@@ -381,11 +347,6 @@ export class JobClassHelper {
   ): any {
     if (!jobLevels || jobLevels.length === 0) return null
 
-    console.log('Debug getJobLevelForCharacter:', {
-      jobLevelsCount: jobLevels.length,
-      characterLevel: characterLevel,
-    })
-
     // Sort จากน้อยไปมาก
     const sortedLevels = [...jobLevels].sort(
       (a, b) => a.requiredCharacterLevel - b.requiredCharacterLevel
@@ -472,7 +433,6 @@ export class CharacterLevelService {
   ) {
     // 1. Fetch character data
     const character = await this.fetchCharacterData(characterId)
-
     console.log(
       `[ProcessLevelUp] Processing level up: ${oldLevel} → ${newLevel}`
     )
@@ -517,20 +477,15 @@ export class CharacterLevelService {
       newLevel
     )
 
-    console.log('say hiiii')
-    console.log('newLevel ', newLevel)
-    console.log('characterId ', characterId)
-
-        // 7. ตรวจสอบ pre-generation สำหรับ level ถัดไป
+    // 7. ตรวจสอบ pre-generation สำหรับ level ถัดไป
     await this.handlePreGeneration(characterId, newLevel)
-
-    // 8. Generate portrait ถ้าถึง milestone
+    // 7.1. Generate portrait ถ้าถึง milestone
     const newPortraitUrl = await this.handleMilestonePortraitGeneration(
       characterId,
       newLevel
     )
 
-    // 7. Create feed notification
+    // 8. Create feed notification
     await this.createFeedNotification(
       updatedCharacter,
       levelHistory,
@@ -539,7 +494,7 @@ export class CharacterLevelService {
       jobLevelUpdate
     )
 
-    // 8. Return complete result
+    // 9. Return complete result
     const getUserCharacters = await userService.getUserCharacters()
 
     return {
@@ -556,26 +511,33 @@ export class CharacterLevelService {
   /**
    * จัดการ pre-generation
    */
-  private async handlePreGeneration(characterId: number, currentLevel: number): Promise<void> {
+  private async handlePreGeneration(
+    characterId: number,
+    currentLevel: number
+  ): Promise<void> {
     try {
-      
       // ตรวจสอบว่าควร pre-generate หรือไม่
-      const preGenerateCheck = portraitGenerationService.checkPreGenerateCondition(currentLevel)
-      
+      const preGenerateCheck =
+        portraitGenerationService.checkPreGenerateCondition(currentLevel)
+
       if (preGenerateCheck.shouldPreGenerate) {
-        console.log(`[LevelUp] Triggering pre-generation for character ${characterId}, target class ${preGenerateCheck.targetClassLevel}`)
-        
+        console.log(
+          `[LevelUp] Triggering pre-generation for character ${characterId}, target class ${preGenerateCheck.targetClassLevel}`
+        )
+
         // รัน async โดยไม่รอ
-        portraitGenerationService.preGeneratePortrait(characterId).catch(error => {
-          console.error('[LevelUp] Pre-generation error:', error)
-        })
+        portraitGenerationService
+          .preGeneratePortrait(characterId)
+          .catch((error) => {
+            console.error('[LevelUp] Pre-generation error:', error)
+          })
       }
     } catch (error) {
       console.error('[LevelUp] Handle pre-generation error:', error)
     }
   }
 
-   /**
+  /**
    * Generate portrait เมื่อถึง milestone
    */
   private async handleMilestonePortraitGeneration(
@@ -590,16 +552,24 @@ export class CharacterLevelService {
 
       if (newPortraitUrl) {
         // อัพเดท currentPortraitUrl ในฐานข้อมูล
-        await characterRepository.updateCharacterWithPortraitAndJob(characterId, {
-          currentPortraitUrl: newPortraitUrl
-        })
+        await characterRepository.updateCharacterWithPortraitAndJob(
+          characterId,
+          {
+            currentPortraitUrl: newPortraitUrl,
+          }
+        )
 
-        console.log(`[LevelUp] Updated current portrait for character ${characterId}: ${newPortraitUrl}`)
+        console.log(
+          `[LevelUp] Updated current portrait for character ${characterId}: ${newPortraitUrl}`
+        )
       }
 
       return newPortraitUrl
     } catch (error) {
-      console.error('[LevelUp] Handle milestone portrait generation error:', error)
+      console.error(
+        '[LevelUp] Handle milestone portrait generation error:',
+        error
+      )
       return null
     }
   }
@@ -898,6 +868,16 @@ export class CharacterLevelService {
       userId: character.userId,
       levelHistoryId: levelHistory.id,
     })
+
+    if (unlockedClassLevel) {
+      await characterRepository.createFeedItem({
+        content: 'ได้รับภาพ Portrait ใหม่',
+        type: 'new_portrait',
+        mediaType: 'image',
+        userId: character.userId,
+        mediaUrl: character.currentPortraitUrl,
+      })
+    }
   }
 
   /**
