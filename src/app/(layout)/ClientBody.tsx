@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 
@@ -17,28 +18,6 @@ import {
 } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
 import { Activity, Gift, ScrollText, Trophy, User } from 'lucide-react'
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
 
 // src/app/ClientBody.tsx
 
@@ -162,6 +141,8 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
   // Skip footer on character creation page
   const isCharacterCreation = pathname === '/character/create'
 
+  if (!character) return <></>
+
   return (
     <div className="antialiased">
       {!isCharacterCreation && (
@@ -179,10 +160,17 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center space-x-2">
             <NotificationSheet />
-
-            <Link href="/profile/1">
-              <div className="w-8 h-8 rounded-full bg-secondary/80 flex items-center justify-center text-sm font-medium">
-                AR
+            <Link href="/character">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden bg-black">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url(${character.portrait})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center -108px',
+                    transform: 'scale(2.5)',
+                  }}
+                />
               </div>
             </Link>
           </div>

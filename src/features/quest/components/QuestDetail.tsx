@@ -642,7 +642,11 @@ export default function QuestDetail({
                     อัพโหลดภาพ หรือ วิดีโอประกอบงานที่คุณทำ
                   </CardTitle>
                   <CardDescription>
-                    Supported formats: PNG, JPG, MP4 (max 20MB)
+                    Supported formats: PNG, JPG, MP4 (
+                    <span className="text-yellow-500 font-semibold">
+                      สูงสุด 25MB
+                    </span>
+                    )
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

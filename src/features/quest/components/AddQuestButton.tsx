@@ -37,6 +37,8 @@ import { useSelfSubmitQuest, useUpdateQuestSubmission } from '../hooks/api'
 
 // src/features/quest/components/AddQuestButton.tsx
 
+// src/features/quest/components/AddQuestButton.tsx
+
 const AddQuestButton = () => {
   const router = useRouter()
   const { addNotification } = useNotification()
@@ -58,19 +60,29 @@ const AddQuestButton = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const fileURL = URL.createObjectURL(file)
-      setUploadedFile(file)
+    const MAX_SIZE_MB = 25
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
 
-      // ตรวจสอบชนิดของไฟล์
-      if (file.type.startsWith('image/')) {
-        setUploadedImage(fileURL)
-      } else if (file.type.startsWith('video/')) {
-        setUploadedImage(fileURL)
-      } else {
-        setUploadedImage(null)
-      }
+    if (!file) return
+
+    if (file.size > MAX_SIZE_BYTES) {
+      // แจ้งเตือน
+      // addNotification({
+      //   type: 'error',
+      //   title: 'ไฟล์ใหญ่เกินไป',
+      //   message: `ขนาดไฟล์ต้องไม่เกิน ${MAX_SIZE_MB}MB`,
+      //   duration: 3000,
+      // })
+      alert(`ไฟล์มีขนาดเกิน ${MAX_SIZE_MB}MB กรุณาเลือกไฟล์ที่เล็กกว่านี้`)
+
+      // รีเซ็ต input เพื่อให้สามารถเลือกไฟล์เดิมได้อีกครั้ง
+      e.target.value = ''
+      return
     }
+
+    const fileURL = URL.createObjectURL(file)
+    setUploadedFile(file)
+    setUploadedImage(fileURL)
   }
 
   const handleSubmit = async () => {
@@ -204,7 +216,7 @@ const AddQuestButton = () => {
           if (!open && !selfSubmitQuest.isPending) resetForm()
           setShowModal(open)
         }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md overflow-y-auto max-h-screen">
           <DialogHeader>
             <Image
               src="/auto-import-evx-logo.png"
@@ -215,7 +227,9 @@ const AddQuestButton = () => {
             />
             <DialogTitle>อัพโหลดภาพ หรือ วิดีโอประกอบงานที่คุณทำ</DialogTitle>
             <DialogDescription>
-              Supported formats: PNG, JPG, MP4 (max 20MB)
+              Supported formats: PNG, JPG, MP4 (
+              <span className="text-yellow-500 font-semibold">สูงสุด 25MB</span>
+              )
             </DialogDescription>
           </DialogHeader>
 
@@ -344,7 +358,7 @@ const AddQuestButton = () => {
 
       {/* AI Processing Dialog */}
       <Dialog open={selfSubmitQuest.isPending} onOpenChange={() => {}}>
-        <DialogContent className="sm:max-w-md text-center py-8">
+        <DialogContent className="sm:max-w-md text-center py-8 overflow-y-auto max-h-screen">
           <div className="flex flex-col items-center space-y-4">
             <div className="relative w-20 h-20">
               <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping"></div>
@@ -413,7 +427,7 @@ const AddQuestButton = () => {
             if (!open) setShowSuccessDialog(true)
           }
         }}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg overflow-y-auto max-h-screen">
           <DialogHeader>
             <DialogTitle>ผลการวิเคราะห์</DialogTitle>
             <DialogDescription>

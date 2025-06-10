@@ -50,7 +50,7 @@ class NotificationQueueManager {
       this.currentNotification = null
 
       // เว้นช่วงเล็กน้อยระหว่าง notification
-      await new Promise((resolve) => setTimeout(resolve, 150))
+      await new Promise((resolve) => setTimeout(resolve, 100))
     }
 
     this.isProcessing = false
