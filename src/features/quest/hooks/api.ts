@@ -235,8 +235,6 @@ export const useSelfSubmitQuest = () => {
       queryClient.invalidateQueries({
         queryKey: ['me', 'character'],
       })
-
-      console.log('Self-submitted quest successfully:', data)
     },
     onError: (error) => {
       console.error('Self-quest submission failed:', error)

@@ -113,10 +113,7 @@ export default function CharacterCreatePage() {
       // เพิ่ม toast แจ้งความสำเร็จ
       toast.success('สร้าง Character สำเร็จ!')
 
-      // รอสักครู่แล้วใช้ hard redirect
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 1000)
+      window.location.href = '/'
     },
     onError: (error) => {
       toast.error('Failed to create character')

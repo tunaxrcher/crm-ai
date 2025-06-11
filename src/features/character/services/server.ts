@@ -560,6 +560,7 @@ export class CharacterService extends BaseService {
         content: `🎉 ยินดีต้อนรับ ${character.name} สู่โลกแห่งการผจญภัย! เริ่มต้นเส้นทาง${jobClass.name}ของคุณได้เลย`,
         type: 'character_created',
         mediaType: 'text',
+        mediaUrl: character.currentPortraitUrl,
         userId: userId,
       })
 

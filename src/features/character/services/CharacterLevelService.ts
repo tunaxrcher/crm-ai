@@ -3,11 +3,22 @@ import { userService } from '@src/features/user/services/server'
 import { StatAnalysisService } from '@src/lib/ai/statAnalysisService'
 import { prisma } from '@src/lib/db'
 import { portraitGenerationService } from '@src/lib/services/portraitGenerationService'
-import { replicateService } from '@src/lib/services/replicateService'
 import { getStoragePublicUrl } from '@src/lib/utils'
 
 import { characterRepository } from '../repository'
 
+// =============== Constants ===============
+const LEVEL_CONFIG = {
+  CLASS_UNLOCK_LEVELS: [1, 10, 35, 60, 80, 99],
+  IMPORTANT_THRESHOLDS: [10, 35, 60, 80, 99],
+  BASE_XP: 1000,
+  XP_GROWTH_RATE: 1.2,
+  STAT_POINTS_PER_LEVEL: 5,
+  MAX_REASONING_LENGTH: 100,
+  PRE_GENERATE_OFFSET: 3,
+} as const
+
+// =============== Types ===============
 interface StatGains {
   agiGained: number
   strGained: number
@@ -28,13 +39,23 @@ interface JobLevelUpdateResult {
   newJobLevel: any | null
 }
 
-// =============== PortraitHelper Class ===============
 interface GeneratedPortraits {
   [key: string]: string
 }
 
+interface ProcessLevelUpResult {
+  character: any
+  levelHistory: any
+  statGains: StatGains
+  unlockedClassLevel?: number
+  newJobLevel: any | null
+  portraitUpdated: boolean
+  aiReasoning: string
+}
+
+// =============== Portrait Helper Class ===============
 export class PortraitHelper {
-  private static readonly CLASS_LEVELS = [1, 10, 35, 60, 80, 99]
+  private static readonly CLASS_LEVELS = LEVEL_CONFIG.CLASS_UNLOCK_LEVELS
 
   /**
    * ตรวจสอบว่า character level ปัจจุบันควรมี class level ใหม่หรือไม่
@@ -59,78 +80,33 @@ export class PortraitHelper {
         return this.CLASS_LEVELS[i]
       }
     }
+
     return this.CLASS_LEVELS[0]
   }
 
   /**
-   * Generate portrait สำหรับ class level ใหม่
+   * Parse portraits data safely
    */
-  static async generateNewPortrait(
-    characterId: number,
-    newClassLevel: number,
-    originalFaceImage?: string | null
-  ): Promise<string> {
-    try {
-      // ดึงข้อมูล character และ job levels
-      const character = await prisma.character.findUnique({
-        where: { id: characterId },
-        include: {
-          jobClass: {
-            include: {
-              levels: {
-                orderBy: { level: 'asc' },
-              },
-            },
-          },
-        },
-      })
+  private static parsePortraits(data: any): GeneratedPortraits {
+    if (!data) return this.initializeEmptyPortraits()
 
-      if (!character) throw new Error('Character not found')
-
-      // หา job level ที่ตรงกับ class level
-      const jobLevel = character.jobClass.levels.find(
-        (jl) => jl.requiredCharacterLevel === newClassLevel
-      )
-
-      if (!jobLevel) {
-        console.error(
-          `[PortraitHelper] Job level not found for class level ${newClassLevel}`
-        )
-        throw new Error('Job level not found')
+    if (typeof data === 'string') {
+      try {
+        const parsed = JSON.parse(data)
+        return typeof parsed === 'object'
+          ? parsed
+          : this.initializeEmptyPortraits()
+      } catch (error) {
+        console.error('[PortraitHelper] Failed to parse portraits:', error)
+        return this.initializeEmptyPortraits()
       }
-
-      console.log(
-        `[PortraitHelper] Generating portrait for class level ${newClassLevel}`
-      )
-      console.log(
-        `[PortraitHelper] Using job level: ${jobLevel.level} - ${jobLevel.title}`
-      )
-      console.log(
-        `[PortraitHelper] PersonaDescription: ${jobLevel.personaDescription}`
-      )
-
-      // Generate portrait using ReplicateService
-      const portraits = await replicateService.generatePortraits(
-        character.jobClass.name,
-        [jobLevel], // ส่งเฉพาะ job level ที่ต้องการ
-        originalFaceImage || undefined,
-        character.personaTraits || undefined
-      )
-
-      if (!portraits || portraits.length === 0) {
-        throw new Error('Failed to generate portrait')
-      }
-
-      return portraits[0].url
-    } catch (error) {
-      console.error(`[PortraitHelper] Error generating portrait:`, error)
-      // Return placeholder if generation fails
-      return `https://source.unsplash.com/400x400/?portrait,class${newClassLevel}`
     }
+
+    return data as GeneratedPortraits
   }
 
   /**
-   * อัพเดท generatedPortraits โดยเพิ่ม portrait ใหม่สำหรับ class level ที่ปลดล็อก
+   * อัพเดท generatedPortraits โดยเพิ่ม portrait ใหม่สำหรับ class level ที่ปลดล็อค
    */
   static async updateGeneratedPortraits(
     characterId: number,
@@ -138,31 +114,13 @@ export class PortraitHelper {
     newClassLevel: number,
     originalFaceImage?: string | null
   ): Promise<GeneratedPortraits> {
-    if (!currentPortraits) {
-      currentPortraits = this.initializeEmptyPortraits()
-    }
-
-    let portraits: GeneratedPortraits
-    if (typeof currentPortraits === 'string') {
-      try {
-        portraits = JSON.parse(currentPortraits)
-        console.log('[PortraitHelper] Parsed portraits:', portraits)
-      } catch {
-        portraits = this.initializeEmptyPortraits()
-      }
-    } else {
-      portraits = { ...currentPortraits }
-    }
-
-    // ดึงภาพสำหรับ class level ที่ปลดล็อกจากฐานข้อมูล
+    const portraits = this.parsePortraits(currentPortraits)
     const portraitUrl = await this.getPortraitForClassLevel(
       characterId,
       newClassLevel
     )
 
-    // อัพเดทข้อมูล portraits
     portraits[newClassLevel.toString()] = portraitUrl
-
     console.log(`[PortraitHelper] Updated portraits:`, portraits)
 
     return portraits
@@ -170,14 +128,12 @@ export class PortraitHelper {
 
   /**
    * ดึงภาพ portrait สำหรับ class level จากฐานข้อมูล
-   * แทนการเจนภาพใหม่ด้วย replicateService
    */
   static async getPortraitForClassLevel(
     characterId: number,
     classLevel: number
   ): Promise<string> {
     try {
-      // ดึงข้อมูล character และ generatedPortraits
       const character = await prisma.character.findUnique({
         where: { id: characterId },
         select: {
@@ -186,25 +142,9 @@ export class PortraitHelper {
         },
       })
 
-      if (!character) {
-        throw new Error('Character not found')
-      }
+      if (!character) throw new Error('Character not found')
 
-      let portraits: GeneratedPortraits = {}
-
-      // แปลงค่า generatedPortraits เป็น object
-      if (typeof character.generatedPortraits === 'string') {
-        try {
-          portraits = JSON.parse(character.generatedPortraits)
-        } catch {
-          console.error('[PortraitHelper] Failed to parse generatedPortraits')
-          portraits = {}
-        }
-      } else if (character.generatedPortraits) {
-        portraits = character.generatedPortraits as GeneratedPortraits
-      }
-
-      // ตรวจสอบว่ามีภาพสำหรับ classLevel ที่ต้องการหรือไม่
+      const portraits = this.parsePortraits(character.generatedPortraits)
       const portraitUrl = portraits[classLevel.toString()]
 
       if (portraitUrl) {
@@ -214,21 +154,16 @@ export class PortraitHelper {
         return portraitUrl
       }
 
-      // ถ้าไม่มีภาพสำหรับ classLevel ที่ต้องการ ให้ใช้ภาพจากฐานข้อมูลกลาง
       console.log(
-        `[PortraitHelper] Portrait for class level ${classLevel} not found in character data, using default`
+        `[PortraitHelper] Portrait for class level ${classLevel} not found, using default`
       )
 
-      // ดึงภาพ default จากฐานข้อมูลตาม jobClassId และ level
-      const defaultPortrait = await this.getDefaultPortraitByJobClassAndLevel(
+      return this.getDefaultPortraitByJobClassAndLevel(
         character.jobClassId,
         classLevel
       )
-
-      return defaultPortrait || `${getStoragePublicUrl()}/${classLevel}.png`
     } catch (error) {
       console.error(`[PortraitHelper] Error getting portrait:`, error)
-      // Return default placeholder if retrieval fails
       return `${getStoragePublicUrl()}/${classLevel}.png`
     }
   }
@@ -236,18 +171,11 @@ export class PortraitHelper {
   /**
    * ดึงภาพ default จากฐานข้อมูลตาม jobClassId และ level
    */
-  private static async getDefaultPortraitByJobClassAndLevel(
+  private static getDefaultPortraitByJobClassAndLevel(
     jobClassId: number,
     classLevel: number
-  ): Promise<string | null> {
-    // ตรวจสอบว่ามีภาพ default ในฐานข้อมูลหรือไม่
-    // คุณอาจต้องปรับปรุงโค้ดส่วนนี้ตามโครงสร้างฐานข้อมูลของคุณ
-    try {
-      return `https://tawnychatai2.sgp1.digitaloceanspaces.com/${classLevel}.png`
-    } catch (error) {
-      console.error(`[PortraitHelper] Error getting default portrait:`, error)
-      return null
-    }
+  ): string {
+    return `https://tawnychatai2.sgp1.digitaloceanspaces.com/${classLevel}.png`
   }
 
   /**
@@ -259,11 +187,7 @@ export class PortraitHelper {
     const portraits: GeneratedPortraits = {}
 
     this.CLASS_LEVELS.forEach((level) => {
-      if (level === 1) {
-        portraits[level.toString()] = level1PortraitUrl
-      } else {
-        portraits[level.toString()] = ''
-      }
+      portraits[level.toString()] = level === 1 ? level1PortraitUrl : ''
     })
 
     return portraits
@@ -289,21 +213,7 @@ export class PortraitHelper {
     characterLevel: number,
     generatedPortraits: any
   ): string {
-    if (!generatedPortraits) {
-      return ''
-    }
-
-    let portraits: GeneratedPortraits
-    if (typeof generatedPortraits === 'string') {
-      try {
-        portraits = JSON.parse(generatedPortraits)
-      } catch {
-        return ''
-      }
-    } else {
-      portraits = generatedPortraits
-    }
-
+    const portraits = this.parsePortraits(generatedPortraits)
     const currentClassLevel = this.getCurrentClassLevel(characterLevel)
 
     // หาภาพล่าสุดที่มีอยู่
@@ -318,15 +228,16 @@ export class PortraitHelper {
   }
 
   /**
-   * หา class level ถัดไปที่จะปลดล็อก
+   * หา class level ถัดไปที่จะปลดล็อค
    */
   static getNextClassLevel(characterLevel: number): number | null {
     const nextLevel = this.CLASS_LEVELS.find((level) => level > characterLevel)
+
     return nextLevel || null
   }
 }
 
-// =============== JobClassHelper Class ===============
+// =============== JobClass Helper Class ===============
 export class JobClassHelper {
   /**
    * หา job level ที่เหมาะสมตาม character level
@@ -337,12 +248,10 @@ export class JobClassHelper {
   ): any {
     if (!jobLevels || jobLevels.length === 0) return null
 
-    // Sort จากน้อยไปมาก
     const sortedLevels = [...jobLevels].sort(
       (a, b) => a.requiredCharacterLevel - b.requiredCharacterLevel
     )
 
-    // หา job level ที่สูงสุดที่ character level ถึงแล้ว
     for (let i = sortedLevels.length - 1; i >= 0; i--) {
       if (characterLevel >= sortedLevels[i].requiredCharacterLevel) {
         return sortedLevels[i]
@@ -354,23 +263,21 @@ export class JobClassHelper {
 
   /**
    * ตรวจสอบว่าควรอัพเดท job level หรือไม่
-   * ใช้การเปรียบเทียบ ID แทน level เพื่อความแม่นยำ
    */
   static shouldUpdateJobLevel(
     currentJobLevel: any,
     jobLevels: any[],
     newCharacterLevel: number
-  ): { shouldUpdate: boolean; newJobLevel: any | null } {
-    // หา job level ที่เหมาะสมสำหรับ character level ใหม่
+  ): JobLevelUpdateResult {
     const newJobLevel = this.getJobLevelForCharacter(
       jobLevels,
       newCharacterLevel
     )
 
-    if (!newJobLevel || !currentJobLevel)
+    if (!newJobLevel || !currentJobLevel) {
       return { shouldUpdate: !!newJobLevel, newJobLevel }
+    }
 
-    // ใช้ ID ในการเปรียบเทียบแทน level number
     const shouldUpdate = newJobLevel.id !== currentJobLevel.id
 
     return {
@@ -381,19 +288,18 @@ export class JobClassHelper {
 
   /**
    * คำนวณ XP ที่ต้องการสำหรับ level ถัดไป
-   * ใช้สูตร exponential growth
    */
-  static calculateNextLevelXP(
-    currentLevel: number,
-    baseXP: number = 1000
-  ): number {
-    return Math.floor(baseXP * Math.pow(1.2, currentLevel - 1))
+  static calculateNextLevelXP(currentLevel: number): number {
+    return Math.floor(
+      LEVEL_CONFIG.BASE_XP *
+        Math.pow(LEVEL_CONFIG.XP_GROWTH_RATE, currentLevel - 1)
+    )
   }
 }
 
 // =============== Main CharacterLevelService Class ===============
 export class CharacterLevelService {
-  private static IMPORTANT_THRESHOLDS = [10, 35, 60, 80, 99]
+  private static IMPORTANT_THRESHOLDS = LEVEL_CONFIG.IMPORTANT_THRESHOLDS
 
   /**
    * Process character level up with all related updates
@@ -403,79 +309,69 @@ export class CharacterLevelService {
     oldLevel: number,
     newLevel: number,
     shouldUpdateLevel: boolean = true
-  ) {
+  ): Promise<ProcessLevelUpResult> {
     console.log(
       `[ProcessLevelUp] Processing level up: ${oldLevel} → ${newLevel}`
     )
 
-    // 1. Calculate stat gains using AI
-    const statGains = await this.calculateStatGains(
-      character,
-      oldLevel,
-      newLevel
-    )
+    try {
+      // Run parallel operations where possible
+      const [statGains, portraitUpdate] = await Promise.all([
+        this.calculateStatGains(character, oldLevel, newLevel),
+        this.handlePortraitUpdate(character, oldLevel, newLevel),
+      ])
 
-    // 2. Handle portrait updates if needed
-    const portraitUpdate = await this.handlePortraitUpdate(
-      character,
-      oldLevel,
-      newLevel
-    )
+      // Sequential operations that depend on previous results
+      const jobLevelUpdate = this.handleJobLevelUpdate(
+        character,
+        oldLevel,
+        newLevel
+      )
 
-    // 3. Handle job level updates
-    const jobLevelUpdate = this.handleJobLevelUpdate(
-      character,
-      oldLevel,
-      newLevel
-    )
+      const levelHistory = await this.createLevelHistory(
+        character.id,
+        oldLevel,
+        newLevel,
+        statGains,
+        portraitUpdate.unlockedClassLevel
+      )
 
-    // 4. Create level history record
-    const levelHistory = await this.createLevelHistory(
-      character.id,
-      oldLevel,
-      newLevel,
-      statGains,
-      portraitUpdate.unlockedClassLevel
-    )
+      const updatedCharacter = await this.updateCharacterData(
+        character,
+        statGains,
+        portraitUpdate,
+        jobLevelUpdate,
+        shouldUpdateLevel,
+        newLevel
+      )
 
-    // 5. Update character data
-    const updatedCharacter = await this.updateCharacterData(
-      character,
-      statGains,
-      portraitUpdate,
-      jobLevelUpdate,
-      shouldUpdateLevel,
-      newLevel
-    )
+      // Async operations that don't block the main flow
+      await Promise.all([
+        this.handlePreGeneration(character.id, newLevel),
+        this.handleMilestonePortraitGeneration(character.id, newLevel),
+        this.createFeedNotification(
+          updatedCharacter,
+          levelHistory,
+          statGains,
+          portraitUpdate.unlockedClassLevel,
+          jobLevelUpdate
+        ),
+      ])
 
-    // 6. ตรวจสอบ pre-generation สำหรับ level ถัดไป
-    await this.handlePreGeneration(character.id, newLevel)
-    // 6.1. Generate portrait ถ้าถึง milestone
-    const newPortraitUrl = await this.handleMilestonePortraitGeneration(
-      character.id,
-      newLevel
-    )
+      const getUserCharacters = await userService.getUserCharacters()
 
-    // 7. Create feed notification
-    await this.createFeedNotification(
-      updatedCharacter,
-      levelHistory,
-      statGains,
-      portraitUpdate.unlockedClassLevel,
-      jobLevelUpdate
-    )
-
-    // 8. Return complete result
-    const getUserCharacters = await userService.getUserCharacters()
-
-    return {
-      character: getUserCharacters.character,
-      levelHistory,
-      statGains,
-      unlockedClassLevel: portraitUpdate.unlockedClassLevel,
-      newJobLevel: jobLevelUpdate.newJobLevel,
-      portraitUpdated: !!portraitUpdate.unlockedClassLevel,
-      aiReasoning: statGains.reasoning,
+      return {
+        character: getUserCharacters.character,
+        levelHistory,
+        statGains,
+        unlockedClassLevel: portraitUpdate.unlockedClassLevel,
+        newJobLevel: jobLevelUpdate.newJobLevel,
+        portraitUpdated: !!portraitUpdate.unlockedClassLevel,
+        aiReasoning: statGains.reasoning,
+      }
+    } catch (error) {
+      console.error('[ProcessLevelUp] Error during level up:', error)
+      throw error
     }
   }
 
@@ -487,7 +383,6 @@ export class CharacterLevelService {
     currentLevel: number
   ): Promise<void> {
     try {
-      // ตรวจสอบว่าควร pre-generate หรือไม่
       const preGenerateCheck =
         portraitGenerationService.checkPreGenerateCondition(currentLevel)
 
@@ -496,7 +391,6 @@ export class CharacterLevelService {
           `[LevelUp] Triggering pre-generation for character ${characterId}, target class ${preGenerateCheck.targetClassLevel}`
         )
 
-        // รัน async โดยไม่รอ
         portraitGenerationService
           .preGeneratePortrait(characterId)
           .catch((error) => {
@@ -522,12 +416,9 @@ export class CharacterLevelService {
       )
 
       if (newPortraitUrl) {
-        // อัพเดท currentPortraitUrl ในฐานข้อมูล
         await characterRepository.updateCharacterWithPortraitAndJob(
           characterId,
-          {
-            currentPortraitUrl: newPortraitUrl,
-          }
+          { currentPortraitUrl: newPortraitUrl }
         )
 
         console.log(
@@ -546,18 +437,6 @@ export class CharacterLevelService {
   }
 
   /**
-   * Fetch character with all required relations
-   */
-  private async fetchCharacterData(characterId: number) {
-    const character =
-      await characterRepository.findByIdWithJobLevels(characterId)
-    if (!character) {
-      throw new Error('Character not found')
-    }
-    return character
-  }
-
-  /**
    * Calculate stat gains using AI service
    */
   private async calculateStatGains(
@@ -572,11 +451,11 @@ export class CharacterLevelService {
       character.jobClass.name
     )
 
-    if (!statGains || statGains instanceof Error)
+    if (!statGains) {
       throw new Error('Failed to calculate stat gains')
+    }
 
     console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
-
     return statGains
   }
 
@@ -588,17 +467,16 @@ export class CharacterLevelService {
     currentLevel: number,
     newLevel: number,
     jobClassName: string
-  ) {
+  ): Promise<StatGains | null> {
     try {
       console.log(
         `[StatAllocation] Starting AI analysis for character ${characterId}`
       )
 
-      // ดึง quest submissions ย้อนหลัง
       const questSubmissions =
         await characterRepository.getQuestSubmissionsBetweenLevels(
           characterId,
-          Math.max(1, currentLevel - 3),
+          Math.max(1, currentLevel - LEVEL_CONFIG.PRE_GENERATE_OFFSET),
           currentLevel
         )
 
@@ -606,7 +484,6 @@ export class CharacterLevelService {
         `[StatAllocation] Found ${questSubmissions.length} quest submissions`
       )
 
-      // แปลงข้อมูลให้เหมาะสำหรับ AI
       const questData = questSubmissions.map((submission) => ({
         questTitle: submission.quest.title,
         questType: submission.quest.type,
@@ -619,7 +496,6 @@ export class CharacterLevelService {
         submittedAt: submission.submittedAt.toISOString(),
       }))
 
-      // ส่งไป AI วิเคราะห์ stats allocation
       const statAllocation = await StatAnalysisService.analyzeStatsAllocation(
         questData,
         jobClassName,
@@ -627,7 +503,7 @@ export class CharacterLevelService {
         newLevel
       )
 
-      if (!statAllocation) return new Error('FailedstatAllocatione')
+      if (!statAllocation) return null
 
       console.log(`[StatAllocation] AI allocation result:`, statAllocation)
 
@@ -641,6 +517,7 @@ export class CharacterLevelService {
       }
     } catch (error) {
       console.error('[StatAllocation] Error calculating stat gains:', error)
+      return null
     }
   }
 
@@ -668,7 +545,6 @@ export class CharacterLevelService {
       `[ProcessLevelUp] Unlocking new class level: ${unlockedClassLevel}`
     )
 
-    // Generate new portrait
     const updatedPortraits = await PortraitHelper.updateGeneratedPortraits(
       character.id,
       character.generatedPortraits,
@@ -680,7 +556,6 @@ export class CharacterLevelService {
       newLevel,
       updatedPortraits
     )
-
     console.log(`[ProcessLevelUp] New portrait URL: ${newPortraitUrl}`)
 
     return {
@@ -698,7 +573,6 @@ export class CharacterLevelService {
     oldLevel: number,
     newLevel: number
   ): JobLevelUpdateResult {
-    // Check if we're at an important threshold
     if (this.isImportantThreshold(oldLevel, newLevel)) {
       const targetJobLevel = this.findJobLevelForThreshold(
         character.jobClass.levels,
@@ -718,7 +592,6 @@ export class CharacterLevelService {
       }
     }
 
-    // Normal job level check
     return JobClassHelper.shouldUpdateJobLevel(
       character.currentJobLevel,
       character.jobClass.levels,
@@ -731,7 +604,7 @@ export class CharacterLevelService {
    */
   private isImportantThreshold(oldLevel: number, newLevel: number): boolean {
     return (
-      CharacterLevelService.IMPORTANT_THRESHOLDS.includes(newLevel) &&
+      CharacterLevelService.IMPORTANT_THRESHOLDS.includes(newLevel as any) &&
       oldLevel < newLevel
     )
   }
@@ -739,7 +612,7 @@ export class CharacterLevelService {
   /**
    * Find job level matching the threshold
    */
-  private findJobLevelForThreshold(jobLevels: any[], threshold: number) {
+  private findJobLevelForThreshold(jobLevels: any[], threshold: number): any {
     return jobLevels.find((jl) => jl.requiredCharacterLevel === threshold)
   }
 
@@ -752,7 +625,7 @@ export class CharacterLevelService {
     levelTo: number,
     statGains: StatGains,
     unlockedClassLevel?: number
-  ) {
+  ): Promise<any> {
     const reasoning = `AI Analysis: ${statGains.reasoning}${
       unlockedClassLevel ? ` | Unlocked class level ${unlockedClassLevel}` : ''
     }`
@@ -780,31 +653,27 @@ export class CharacterLevelService {
     jobLevelUpdate: JobLevelUpdateResult,
     shouldUpdateLevel: boolean,
     newLevel: number
-  ) {
+  ): Promise<any> {
     const updateData: any = {
-      // Update stats
       statAGI: character.statAGI + statGains.agiGained,
       statSTR: character.statSTR + statGains.strGained,
       statDEX: character.statDEX + statGains.dexGained,
       statVIT: character.statVIT + statGains.vitGained,
       statINT: character.statINT + statGains.intGained,
-      statPoints: character.statPoints + 5,
+      statPoints: character.statPoints + LEVEL_CONFIG.STAT_POINTS_PER_LEVEL,
     }
 
-    // Add level updates if needed
     if (shouldUpdateLevel) {
       updateData.level = newLevel
       updateData.currentXP = 0
       updateData.nextLevelXP = JobClassHelper.calculateNextLevelXP(newLevel)
     }
 
-    // Add portrait updates if changed
     if (portraitUpdate.unlockedClassLevel) {
       updateData.generatedPortraits = portraitUpdate.updatedPortraits
       updateData.currentPortraitUrl = portraitUpdate.newPortraitUrl
     }
 
-    // Add job level updates if changed
     if (jobLevelUpdate.shouldUpdate && jobLevelUpdate.newJobLevel) {
       updateData.jobLevelId = jobLevelUpdate.newJobLevel.id
     }
@@ -824,7 +693,7 @@ export class CharacterLevelService {
     statGains: StatGains,
     unlockedClassLevel?: number,
     jobLevelUpdate?: JobLevelUpdateResult
-  ) {
+  ): Promise<void> {
     const feedContent = this.buildFeedContent(
       character,
       levelHistory,
@@ -880,8 +749,10 @@ export class CharacterLevelService {
         `❤️ VIT +${statGains.vitGained}`
     )
 
-    // Add shortened AI reasoning
-    const shortReasoning = this.truncateReasoning(statGains.reasoning, 100)
+    const shortReasoning = this.truncateReasoning(
+      statGains.reasoning,
+      LEVEL_CONFIG.MAX_REASONING_LENGTH
+    )
     parts.push(`🤖 ${shortReasoning}`)
 
     return parts.join(' ')

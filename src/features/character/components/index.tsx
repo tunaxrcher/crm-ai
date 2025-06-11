@@ -181,43 +181,45 @@ export default function CharacterPageComponent() {
 
           <AchievementSection achievements={character.achievements} />
 
-          {/* Development testing button */}
-          <hr className="mt-5" />
-          <Card className="mb-4 mt-6">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center">
-                <AlertCircle className="h-5 w-5 mr-2 text-yellow-400" />
-                Development Testing ไว้เทสเฉย ๆ
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                onClick={testNotifications}
-                className="w-full">
-                🔔 ทดสอบ Notification
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleAddXp}
-                disabled={loadingAction === 'addXp'}
-                className="w-full">
-                {loadingAction === 'addXp'
-                  ? '⏳ กำลังเพิ่ม XP...'
-                  : '➕ เพิ่ม 100 XP (AI)'}
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={handleLevelUp}
-                disabled={loadingAction === 'levelUp'}
-                className="w-full">
-                {loadingAction === 'levelUp'
-                  ? '⏳ กำลังเลเวลอัพ...'
-                  : '⬆️ เลเวลอัพ (AI)'}
-              </Button>
-            </CardContent>
-          </Card>
+          {process.env.NODE_ENV === 'development' && (
+            <>
+              <hr className="mt-5" />
+              <Card className="mb-4 mt-6">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <AlertCircle className="h-5 w-5 mr-2 text-yellow-400" />
+                    Development Testing ไว้เทสเฉย ๆ
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    variant="outline"
+                    onClick={testNotifications}
+                    className="w-full">
+                    🔔 ทดสอบ Notification
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleAddXp}
+                    disabled={loadingAction === 'addXp'}
+                    className="w-full">
+                    {loadingAction === 'addXp'
+                      ? '⏳ กำลังเพิ่ม XP...'
+                      : '➕ เพิ่ม 100 XP'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleLevelUp}
+                    disabled={loadingAction === 'levelUp'}
+                    className="w-full">
+                    {loadingAction === 'levelUp'
+                      ? '⏳ กำลังเลเวลอัพ...'
+                      : '⬆️ เลเวลอัพ'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
           <hr />
 
