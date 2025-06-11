@@ -3,8 +3,6 @@
 import type React from 'react'
 import { useEffect, useState } from 'react'
 
-import { useRouter } from 'next/navigation'
-
 import { ErrorDisplay, SkeletonLoading } from '@src/components/shared'
 import { Button } from '@src/components/ui/button'
 import {
@@ -32,7 +30,6 @@ import {
 } from '@src/components/ui/tabs'
 import { useGetJobClass } from '@src/features/character/hooks/api'
 import { useCharacterStatus } from '@src/features/character/hooks/useCharacterStatus'
-import { useSessionRefresh } from '@src/features/character/hooks/useSessionRefresh'
 import { characterService } from '@src/features/character/services/client'
 import type {
   CharacterConfirmPayload,
@@ -48,12 +45,14 @@ import { toast } from 'sonner'
 import CharacterSelector from './character-selector'
 
 export default function CharacterCreatePage() {
+  // 🔄 ─── Session & Status ────────────────────────────────────
   const {
     hasCharacter,
     isLoading: isLoadingCharacterStatus,
     isAuthenticated,
   } = useCharacterStatus()
-  const { refreshSession } = useSessionRefresh()
+
+  // 📦 ─── State ───────────────────────────────────────────────
   const [currentStep, setCurrentStep] = useState<number>(1)
   const [selectedJobClassId, setSelectedJobClassId] = useState<string | null>(
     null
@@ -71,6 +70,7 @@ export default function CharacterCreatePage() {
   const [aiAnalysisProgress, setAiAnalysisProgress] = useState(0)
   const [showGeneratingDialog, setShowGeneratingDialog] = useState(false)
 
+  // 🧲 ─── Hooks ───────────────────────────────────────────────
   // Fetch job classes from API
   const {
     data: jobClasses,
@@ -79,6 +79,7 @@ export default function CharacterCreatePage() {
     refetch: refetchJobClasses,
   } = useGetJobClass()
 
+  // ⚙️ ─── Mutations ───────────────────────────────────────────
   // Mutation for generating portraits
   const generateMutation = useMutation({
     mutationFn: (payload: CharacterCreatePayload) =>
@@ -92,13 +93,13 @@ export default function CharacterCreatePage() {
       setAiAnalysisProgress(100)
       setTimeout(() => {
         setAiAnalysisProgress(0)
-        setShowGeneratingDialog(false) // ✅ ปิด dialog หลัง reset progress
+        setShowGeneratingDialog(false)
       }, 500)
     },
     onError: (error) => {
       toast.error('Failed to generate portraits')
       console.error(error)
-      setShowGeneratingDialog(false) // ✅ ปิด dialog เมื่อ error
+      setShowGeneratingDialog(false)
     },
   })
 
@@ -107,7 +108,15 @@ export default function CharacterCreatePage() {
     mutationFn: (payload: CharacterConfirmPayload) =>
       characterService.confirmCharacter(payload),
     onSuccess: async (data: CharacterConfirmResponse) => {
-      await refreshSession()
+      console.log('Character created successfully:', data)
+
+      // เพิ่ม toast แจ้งความสำเร็จ
+      toast.success('สร้าง Character สำเร็จ!')
+
+      // รอสักครู่แล้วใช้ hard redirect
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1000)
     },
     onError: (error) => {
       toast.error('Failed to create character')
@@ -115,6 +124,7 @@ export default function CharacterCreatePage() {
     },
   })
 
+  // 🛠 ─── Handlers ────────────────────────────────────────────
   const confirmCharacter = (portrait: GeneratedPortrait) => {
     const generatedPortraitsMap: Record<string, string> = {}
     generatedPortraits.forEach((p) => {
@@ -184,6 +194,7 @@ export default function CharacterCreatePage() {
     }
   }
 
+  // 🔄 ─── Effects ────────────────────────────────────────
   useEffect(() => {
     if (generateMutation.isPending) {
       let progress = 0
@@ -216,14 +227,11 @@ export default function CharacterCreatePage() {
   }
 
   // แสดง loading ขณะตรวจสอบ session
-  if (isLoadingCharacterStatus) {
+  if (isLoadingCharacterStatus)
     return <div className="flex items-center justify-center min-h-screen"></div>
-  }
 
   // ถ้าไม่ได้ login หรือมี character แล้ว จะถูก redirect ไปแล้วใน hook
-  if (!isAuthenticated || hasCharacter) {
-    return null
-  }
+  if (!isAuthenticated || hasCharacter) return null
 
   // Show error state
   if (error) {
@@ -363,7 +371,7 @@ export default function CharacterCreatePage() {
             onValueChange={(v) => setPortrait(v as 'upload' | 'generate')}>
             <TabsList className="grid grid-cols-2 mb-4">
               <TabsTrigger value="upload">อัปโหลดรูปภาพ</TabsTrigger>
-              <TabsTrigger value="generate">AI Generate</TabsTrigger>
+              <TabsTrigger value="generate">Random</TabsTrigger>
             </TabsList>
 
             <TabsContent value="upload" className="space-y-4">
@@ -371,7 +379,8 @@ export default function CharacterCreatePage() {
                 <CardHeader>
                   <CardTitle>อัปโหลดรูปคุณ</CardTitle>
                   <CardDescription>
-                    รูปภาพของคุณจะถูกใช้เป็นแหล่งอ้างอิง Character โดยระบบ AI
+                    รูปของคุณจะถูกใช้เป็นแหล่งอ้างอิงในการสร้าง Character
+                    ให้เหมือนคุณที่สุด
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
@@ -411,9 +420,9 @@ export default function CharacterCreatePage() {
             <TabsContent value="generate" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>รูป Characterที่สร้างโดย AI</CardTitle>
+                  <CardTitle>Random</CardTitle>
                   <CardDescription>
-                    ให้ AI ของเราสร้างรูป Characterให้คุณ
+                    ให้ AI ของเราสร้างรูป Character ให้คุณ
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center">
@@ -422,8 +431,8 @@ export default function CharacterCreatePage() {
                     <UserCircle2 className="h-20 w-20 text-muted-foreground relative z-10" />
                   </div>
 
-                  <p className="text-center text-sm">
-                    ระบบจะสร้างรูป Characterที่ไม่ซ้ำกัน 6
+                  <p className="text-xs text-muted-foreground mt-4 text-center">
+                    ระบบจะสร้างรูป Character ที่ไม่ซ้ำกัน 6
                     รูปสำหรับระดับความสำเร็จของคุณ
                   </p>
                 </CardContent>
@@ -471,7 +480,7 @@ export default function CharacterCreatePage() {
                       className="object-cover rounded-full mb-4"
                     />
                     <p className="text-sm text-muted-foreground mb-2">
-                      Model: {generatedPortraits[0].model}
+                      Model: EVX {generatedPortraits[0].model.toUpperCase()}
                     </p>
                   </>
                 )}
@@ -501,8 +510,8 @@ export default function CharacterCreatePage() {
           </Card>
 
           <div className="text-center text-sm text-muted-foreground">
-            <p>ระบบได้สร้าง Character ให้คุณแล้ว</p>
-            <p>รูป Character จะเปลี่ยนไปตามระดับที่สูงขึ้น</p>
+            {/* <p>ระบบได้สร้าง Character ให้คุณแล้ว</p> */}
+            {/* <p>รูป Character จะเปลี่ยนไปตามระดับที่สูงขึ้น</p> */}
           </div>
 
           <div className="flex space-x-3 mt-6">
@@ -586,7 +595,7 @@ export default function CharacterCreatePage() {
                 {aiAnalysisProgress > 70 && (
                   <div className="flex items-center">
                     <Check className="h-3 w-3 mr-1 text-green-400" />
-                    <span>กำลังสร้าง Remove Background...</span>
+                    <span>กำลัง Remove Background...</span>
                   </div>
                 )}
                 {aiAnalysisProgress > 90 && (

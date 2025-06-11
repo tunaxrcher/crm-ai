@@ -1,11 +1,8 @@
 import { userService } from '@src/features/user/services/server'
-import { visionService } from '@src/lib/ai/visionService'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
 import { fluxService } from '@src/lib/services/fluxService'
-import { replicateService } from '@src/lib/services/replicateService'
 import { BaseService } from '@src/lib/services/server/baseService'
-import bcrypt from 'bcrypt'
 import 'server-only'
 
 import {
@@ -231,27 +228,23 @@ export class CharacterService extends BaseService {
     const session = await getServerSession()
     const userId = +session.user.id
 
-    console.log(`[Server] levelUp To Character with ID: ${userId}`)
-
     const userCharacter = await characterRepository.findByUserId(userId)
     if (!userCharacter) throw new Error('User Character not found')
+
     const characterId = userCharacter.id
 
     const character =
       await characterRepository.findByIdWithJobLevels(characterId)
     if (!character) throw new Error('Character not found')
 
-    const oldLevel = character.level
-    const newLevel = character.level + 1
+    console.log(`[Server] levelUp To Character with ID: ${characterId}`)
 
     // เรียกใช้ฟังก์ชัน processLevelUp พร้อมอัพเดท level
     const levelService = new CharacterLevelService()
-
-    // เรียกใช้ processLevelUp
     const result = await levelService.processLevelUp(
-      characterId,
-      oldLevel,
-      newLevel,
+      character,
+      character.level,
+      character.level + 1,
       true // shouldUpdateLevel
     )
 
@@ -476,11 +469,6 @@ export class CharacterService extends BaseService {
       throw error
     }
   }
-
-  /**
-   * Confirm and create character
-   */
-  // src/features/character/services/server.ts
 
   /**
    * Confirm and create character for existing authenticated user

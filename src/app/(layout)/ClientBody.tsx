@@ -1,11 +1,9 @@
-// src/app/ClientBody.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 
-import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import { ImageWithFallback } from '@src/components/shared'
 import NotificationSheet from '@src/components/shared/NotificationSheet'
@@ -18,20 +16,6 @@ import {
 } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
 import { Activity, Gift, ScrollText, Trophy, User } from 'lucide-react'
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
-
-// src/app/ClientBody.tsx
 
 // Client body wrapper without notification provider
 export default function ClientBody({
@@ -51,7 +35,6 @@ export default function ClientBody({
 // Inner component without notification context
 function ClientBodyInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
 
   // State for special notification animations
   const [showXPGained, setShowXPGained] = useState(false)
@@ -195,9 +178,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
           <Link
             href="/character"
             className={`footer-icon ${
-              pathname === '/character'
-                ? 'ai-gradient-text'
-                : 'text-muted-foreground'
+              pathname === '/character' ? '' : 'text-muted-foreground'
             }`}>
             <User className="h-6 w-6 mb-1" />
             <span>Character</span>
@@ -206,9 +187,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
           <Link
             href="/feed"
             className={`footer-icon ${
-              pathname === '/feed'
-                ? 'ai-gradient-text'
-                : 'text-muted-foreground'
+              pathname === '/feed' ? '' : 'text-muted-foreground'
             }`}>
             <Activity className="h-6 w-6 mb-1" />
             <span>Feed</span>
@@ -217,9 +196,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
           <Link
             href="/quest"
             className={`footer-icon ${
-              pathname === '/quest'
-                ? 'ai-gradient-text'
-                : 'text-muted-foreground'
+              pathname === '/quest' ? '' : 'text-muted-foreground'
             }`}>
             <ScrollText className="h-6 w-6 mb-1" />
             <span>Quest</span>
@@ -228,9 +205,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
           <Link
             href="/ranking"
             className={`footer-icon ${
-              pathname === '/ranking'
-                ? 'ai-gradient-text'
-                : 'text-muted-foreground'
+              pathname === '/ranking' ? '' : 'text-muted-foreground'
             }`}>
             <Trophy className="h-6 w-6 mb-1" />
             <span>Ranking</span>
@@ -239,9 +214,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
           <Link
             href="/reward"
             className={`footer-icon ${
-              pathname === '/reward'
-                ? 'ai-gradient-text'
-                : 'text-muted-foreground'
+              pathname === '/reward' ? '' : 'text-muted-foreground'
             }`}>
             <Gift className="h-6 w-6 mb-1" />
             <span>Reward</span>

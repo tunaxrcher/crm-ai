@@ -8,16 +8,6 @@ import { getStoragePublicUrl } from '@src/lib/utils'
 
 import { characterRepository } from '../repository'
 
-interface LevelUpResult {
-  character: any
-  levelHistory: any
-  statGains: StatGains
-  unlockedClassLevel?: number
-  newJobLevel?: any
-  portraitUpdated: boolean
-  aiReasoning: string
-}
-
 interface StatGains {
   agiGained: number
   strGained: number
@@ -377,28 +367,11 @@ export class JobClassHelper {
       newCharacterLevel
     )
 
-    if (!newJobLevel || !currentJobLevel) {
+    if (!newJobLevel || !currentJobLevel)
       return { shouldUpdate: !!newJobLevel, newJobLevel }
-    }
 
     // ใช้ ID ในการเปรียบเทียบแทน level number
     const shouldUpdate = newJobLevel.id !== currentJobLevel.id
-
-    // Logging สำหรับ debug
-    console.log('Debug shouldUpdateJobLevel:', {
-      current: {
-        id: currentJobLevel.id,
-        title: currentJobLevel.title,
-        requiredLevel: currentJobLevel.requiredCharacterLevel,
-      },
-      new: {
-        id: newJobLevel.id,
-        title: newJobLevel.title,
-        requiredLevel: newJobLevel.requiredCharacterLevel,
-      },
-      characterLevel: newCharacterLevel,
-      shouldUpdate,
-    })
 
     return {
       shouldUpdate,
@@ -426,48 +399,46 @@ export class CharacterLevelService {
    * Process character level up with all related updates
    */
   async processLevelUp(
-    characterId: number,
+    character: any,
     oldLevel: number,
     newLevel: number,
     shouldUpdateLevel: boolean = true
   ) {
-    // 1. Fetch character data
-    const character = await this.fetchCharacterData(characterId)
     console.log(
       `[ProcessLevelUp] Processing level up: ${oldLevel} → ${newLevel}`
     )
 
-    // 2. Calculate stat gains using AI
+    // 1. Calculate stat gains using AI
     const statGains = await this.calculateStatGains(
       character,
       oldLevel,
       newLevel
     )
 
-    // 3. Handle portrait updates if needed
+    // 2. Handle portrait updates if needed
     const portraitUpdate = await this.handlePortraitUpdate(
       character,
       oldLevel,
       newLevel
     )
 
-    // 4. Handle job level updates
+    // 3. Handle job level updates
     const jobLevelUpdate = this.handleJobLevelUpdate(
       character,
       oldLevel,
       newLevel
     )
 
-    // 5. Create level history record
+    // 4. Create level history record
     const levelHistory = await this.createLevelHistory(
-      characterId,
+      character.id,
       oldLevel,
       newLevel,
       statGains,
       portraitUpdate.unlockedClassLevel
     )
 
-    // 6. Update character data
+    // 5. Update character data
     const updatedCharacter = await this.updateCharacterData(
       character,
       statGains,
@@ -477,15 +448,15 @@ export class CharacterLevelService {
       newLevel
     )
 
-    // 7. ตรวจสอบ pre-generation สำหรับ level ถัดไป
-    await this.handlePreGeneration(characterId, newLevel)
-    // 7.1. Generate portrait ถ้าถึง milestone
+    // 6. ตรวจสอบ pre-generation สำหรับ level ถัดไป
+    await this.handlePreGeneration(character.id, newLevel)
+    // 6.1. Generate portrait ถ้าถึง milestone
     const newPortraitUrl = await this.handleMilestonePortraitGeneration(
-      characterId,
+      character.id,
       newLevel
     )
 
-    // 8. Create feed notification
+    // 7. Create feed notification
     await this.createFeedNotification(
       updatedCharacter,
       levelHistory,
@@ -494,7 +465,7 @@ export class CharacterLevelService {
       jobLevelUpdate
     )
 
-    // 9. Return complete result
+    // 8. Return complete result
     const getUserCharacters = await userService.getUserCharacters()
 
     return {
@@ -601,10 +572,11 @@ export class CharacterLevelService {
       character.jobClass.name
     )
 
-    if (!statGains || statGains instanceof Error) {
+    if (!statGains || statGains instanceof Error)
       throw new Error('Failed to calculate stat gains')
-    }
+
     console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
+
     return statGains
   }
 

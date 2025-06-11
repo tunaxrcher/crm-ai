@@ -347,9 +347,7 @@ class PortraitGenerationService {
       // ตรวจสอบว่าเป็น milestone หรือไม่
       const isClassLevel = this.CLASS_LEVELS.includes(newLevel)
 
-      if (!isClassLevel) {
-        return null
-      }
+      if (!isClassLevel) return null
 
       // ตรวจสอบว่ามีรูปอยู่แล้วหรือไม่
       const alreadyGenerated = await this.isPortraitGenerated(
@@ -367,11 +365,10 @@ class PortraitGenerationService {
         if (character?.generatedPortraits) {
           let portraits: Record<string, string> = {}
 
-          if (typeof character.generatedPortraits === 'string') {
+          if (typeof character.generatedPortraits === 'string')
             portraits = JSON.parse(character.generatedPortraits)
-          } else {
+          else
             portraits = character.generatedPortraits as Record<string, string>
-          }
 
           return portraits[newLevel.toString()] || null
         }
@@ -390,10 +387,7 @@ class PortraitGenerationService {
           },
         },
       })
-
-      if (!character) {
-        throw new Error('Character not found')
-      }
+      if (!character) throw new Error('Character not found')
 
       const targetJobLevel = character.jobClass.levels.find(
         (jl) => jl.requiredCharacterLevel === newLevel

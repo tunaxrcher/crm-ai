@@ -8,6 +8,7 @@ export interface JobLevel {
 export interface JobClass {
   id: string
   name: string
-  description?: string
   levels: JobLevel[]
+  description?: string
+  imageUrl?: string
 }

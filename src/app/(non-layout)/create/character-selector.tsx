@@ -63,14 +63,6 @@ export default function CharacterSelector({
     })
   }
 
-  const selectCharacter = (index: number) => {
-    if (isAnimating || index === currentIndex || index >= jobClasses.length)
-      return
-    setSlideDirection(index > currentIndex ? 'left' : 'right')
-    setIsAnimating(true)
-    setCurrentIndex(index)
-  }
-
   // Touch event handlers
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null) // otherwise the swipe is fired even with usual touch events
