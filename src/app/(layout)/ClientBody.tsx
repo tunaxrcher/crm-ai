@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 
 import { ImageWithFallback } from '@src/components/shared'
 import NotificationSheet from '@src/components/shared/NotificationSheet'
+import ProfileSheet from '@src/components/shared/ProfileSheet'
 import {
   AchievementUnlockedNotification,
   ClassUnlockNotification,
@@ -151,19 +152,7 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center space-x-2">
             <NotificationSheet />
-            <Link href="/character">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden bg-black">
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url(${character.portrait})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center -108px',
-                    transform: 'scale(2.5)',
-                  }}
-                />
-              </div>
-            </Link>
+            <ProfileSheet />
           </div>
         </header>
       )}

@@ -14,6 +14,7 @@ import {
   JobClassData as JobClass,
 } from '@src/features/user/types'
 import { notificationQueue } from '@src/lib/notificationQueue'
+import { signOut } from 'next-auth/react'
 
 interface Achievement {
   id: number
@@ -65,8 +66,10 @@ export const CharacterProvider: React.FC<{ children: ReactNode }> = ({
       setError(null)
 
       const response = await fetch('/api/me/character')
-      if (!response.ok)
+      if (!response.ok) {
+        signOut({ callbackUrl: '/' })
         throw new Error(`HTTP error! status: ${response.status}`)
+      }
 
       const data = await response.json()
 
