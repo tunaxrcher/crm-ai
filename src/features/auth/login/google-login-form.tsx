@@ -1,12 +1,23 @@
 'use client'
 
 import Image from 'next/image'
+import { signIn } from 'next-auth/react'
+import { useState } from 'react'
 
 import { Button } from '@src/components/ui/button'
 
 export function GoogleLoginForm() {
-  const handleGoogleLogin = () => {
-    console.log('Google login clicked')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true)
+      await signIn('google', { callbackUrl: '/' })
+    } catch (error) {
+      console.error('Google login error:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -28,7 +39,8 @@ export function GoogleLoginForm() {
         <Button
           onClick={handleGoogleLogin}
           variant="outline"
-          className="w-full h-12 border border-gray-300  font-medium text-base rounded-md">
+          className="w-full h-12 border border-gray-300  font-medium text-base rounded-md"
+          disabled={isLoading}>
           <svg
             className="w-5 h-5 mr-3"
             viewBox="0 0 24 24"
@@ -51,7 +63,7 @@ export function GoogleLoginForm() {
               fill="#EA4335"
             />
           </svg>
-          เข้าสู่ระบบด้วยบัญชี Google
+          {isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบด้วยบัญชี Google'}
         </Button>
       </div>
 

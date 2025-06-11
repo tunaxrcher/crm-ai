@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Kanit } from 'next/font/google'
 
+import { AuthProvider } from '@src/providers/AuthProvider'
+import ReactQueryProvider from '@src/providers/ReactQueryProvider'
+
 import './globals.css'
 
 const kanit = Kanit({
@@ -23,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="th" className={`${kanit.variable} dark`}>
       <body suppressHydrationWarning className="antialiased">
-        {children}
+        <AuthProvider>
+          <ReactQueryProvider>{children}</ReactQueryProvider>
+        </AuthProvider>
       </body>
     </html>
   )

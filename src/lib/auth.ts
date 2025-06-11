@@ -3,50 +3,48 @@ import { compare } from 'bcrypt'
 import { NextAuthOptions, Session, User } from 'next-auth'
 import { getServerSession as getSession } from 'next-auth/next'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        username: { label: 'Username', type: 'text' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        const userData = {} as User
-
-        if (!credentials?.username || !credentials?.password) return null
-
-        const user = await prisma.user.findFirst({
-          where: { username: credentials.username },
-          include: { character: true },
-        })
-
-        if (!user || !user.password) {
-          return null
-        }
-
-        const isPasswordValid = await compare(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        userData.id = user.id.toString()
-        userData.name = user.username
-        userData.email = user.email
-        userData.username = user.username
-        userData.avatar = user.character?.currentPortraitUrl
-        userData.characterId = user.character?.id
-
-        return userData
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === 'google') {
+        try {
+          // ตรวจสอบว่ามี user อยู่แล้วหรือไม่
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            include: { character: true },
+          })
+
+          if (!existingUser) {
+            // สร้าง user ใหม่ถ้ายังไม่มี
+            const newUser = await prisma.user.create({
+              data: {
+                email: user.email!,
+                name: user.name || '',
+                username: user.email!.split('@')[0], // ใช้ส่วนหน้า @ เป็น username
+                avatar: user.image || null,
+              },
+            })
+            user.id = newUser.id.toString()
+          } else {
+            user.id = existingUser.id.toString()
+            user.characterId = existingUser.character?.id
+          }
+          return true
+        } catch (error) {
+          console.error('Error during Google sign in:', error)
+          return false
+        }
+      }
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
@@ -55,6 +53,19 @@ export const authOptions: NextAuthOptions = {
         token.username = user.username
         token.currentPortraitUrl = user.currentPortraitUrl
         token.characterId = user.characterId
+      }
+
+      // ถ้า login ด้วย Google และยังไม่มีข้อมูล character ให้ดึงจาก database
+      if (token.id && !token.characterId) {
+        const userData = await prisma.user.findUnique({
+          where: { id: parseInt(token.id as string) },
+          include: { character: true },
+        })
+        if (userData?.character) {
+          token.characterId = userData.character.id
+          token.currentPortraitUrl =
+            userData.character.currentPortraitUrl || undefined
+        }
       }
 
       return token

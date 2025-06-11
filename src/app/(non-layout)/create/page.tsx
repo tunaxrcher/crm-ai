@@ -1,5 +1,6 @@
 'use client'
 
+import type React from 'react'
 import { useEffect, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
@@ -31,7 +32,7 @@ import {
 } from '@src/components/ui/tabs'
 import { useGetJobClass } from '@src/features/character/hooks/api'
 import { characterService } from '@src/features/character/services/client'
-import {
+import type {
   CharacterConfirmPayload,
   CharacterConfirmResponse,
   CharacterCreatePayload,
@@ -52,6 +53,8 @@ import {
 import { Check, Sparkles } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { toast } from 'sonner'
+
+import CharacterSelector from './character-selector'
 
 export default function CharacterCreation() {
   const router = useRouter()
@@ -145,7 +148,7 @@ export default function CharacterCreation() {
     })
 
     const payload: CharacterConfirmPayload = {
-      jobClassId: parseInt(selectedJobClassId!),
+      jobClassId: Number.parseInt(selectedJobClassId!),
       name: characterName,
       portraitUrl: portrait.url,
       originalFaceImage: undefined,
@@ -195,7 +198,7 @@ export default function CharacterCreation() {
       })
 
       const payload: CharacterConfirmPayload = {
-        jobClassId: parseInt(selectedJobClassId!),
+        jobClassId: Number.parseInt(selectedJobClassId!),
         name: characterName,
         portraitUrl: selectedPortrait.url,
         originalFaceImage: undefined, // จะได้มาจาก session ที่ server
@@ -222,19 +225,32 @@ export default function CharacterCreation() {
     }
   }, [generateMutation.isPending])
 
-  // useEffect(() => {
-  //   if (generateMutation.isPending) {
-  //     setShowGeneratingDialog(true)
-  //   } else {
-  //     setShowGeneratingDialog(false)
-  //   }
-  // }, [generateMutation.isPending])
-
   useEffect(() => {
     if (generateMutation.isSuccess) {
       setAiAnalysisProgress(100)
     }
   }, [generateMutation.isSuccess])
+
+  // Get job class icon
+  const getJobClassIcon = (jobClass: JobClass) => {
+    switch (jobClass.name) {
+      case 'นักการตลาด':
+      case 'Marketing':
+        return <BadgePercent className="h-8 w-8" />
+      case 'นักขาย':
+      case 'Sales':
+        return <LineChart className="h-8 w-8" />
+      case 'นักบัญชี':
+      case 'Accounting':
+        return <Receipt className="h-8 w-8" />
+      case 'โปรแกรมเมอร์':
+      case 'Programmer':
+        return <UserCircle2 className="h-8 w-8" />
+      // เพิ่มตามสายอาชีพที่มีในระบบ
+      default:
+        return <Briefcase className="h-8 w-8" />
+    }
+  }
 
   // Show loading state
   if (isLoading) {
@@ -265,39 +281,18 @@ export default function CharacterCreation() {
   const selectedJobClass =
     jobClasses.find((jc: any) => jc.id === selectedJobClassId) || null
 
-  // Get job class icon
-  // ปรับให้ switch เช็คจาก jobClass.name (string, เช่น "นักการตลาด", "นักบัญชี" ฯลฯ)
-  const getJobClassIcon = (jobClass: JobClass) => {
-    switch (jobClass.name) {
-      case 'นักการตลาด':
-      case 'Marketing':
-        return <BadgePercent className="h-8 w-8" />
-      case 'นักขาย':
-      case 'Sales':
-        return <LineChart className="h-8 w-8" />
-      case 'นักบัญชี':
-      case 'Accounting':
-        return <Receipt className="h-8 w-8" />
-      case 'โปรแกรมเมอร์':
-      case 'Programmer':
-        return <UserCircle2 className="h-8 w-8" />
-      // เพิ่มตามสายอาชีพที่มีในระบบ
-      default:
-        return <Briefcase className="h-8 w-8" />
-    }
-  }
-
   return (
     <div className="p-4 max-w-md mx-auto">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold ai-gradient-text">หน้าทดสอบ</h1>
+        <h1 className="text-2xl font-bold ai-gradient-text">สร้าง Character</h1>
         <p className="text-muted-foreground">Generate Character ผ่านระบบ AI</p>
       </div>
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 ">
         <div
           className={`flex items-center ${currentStep >= 1 ? 'ai-gradient-text' : 'text-muted-foreground'}`}>
-          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-2">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${currentStep >= 1 ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white' : 'bg-secondary text-muted-foreground'}`}>
             1
           </div>
           <span>อาชีพ</span>
@@ -305,7 +300,8 @@ export default function CharacterCreation() {
         <ChevronRight className="h-5 w-5 text-muted-foreground" />
         <div
           className={`flex items-center ${currentStep >= 2 ? 'ai-gradient-text' : 'text-muted-foreground'}`}>
-          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-2">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${currentStep >= 2 ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white' : 'bg-secondary text-muted-foreground'}`}>
             2
           </div>
           <span>ชื่อ</span>
@@ -313,51 +309,32 @@ export default function CharacterCreation() {
         <ChevronRight className="h-5 w-5 text-muted-foreground" />
         <div
           className={`flex items-center ${currentStep >= 3 ? 'ai-gradient-text' : 'text-muted-foreground'}`}>
-          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-2">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center mr-2 ${currentStep >= 3 ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white' : 'bg-secondary text-muted-foreground'}`}>
             3
           </div>
           <span>Character</span>
         </div>
       </div>
 
-      {/* Step 1: Job Class Selection */}
+      {/* Step 1: Job Class Selection with new Carousel UI */}
       {currentStep === 1 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">เลือกอาชีพของคุณ</h2>
+          <h2 className="text-xl font-semibold mb-4"></h2>
 
-          {jobClasses.map((jobClass: any) => (
-            <Card
-              key={jobClass.id}
-              className={`cursor-pointer hover:ai-gradient-border transition-all ${selectedJobClassId === jobClass.id ? 'ai-gradient-border' : ''}`}
-              onClick={() => handleJobClassSelect(jobClass.id)}>
-              <CardHeader className="flex flex-row items-center pb-2">
-                <div className="mr-4">{getJobClassIcon(jobClass)}</div>
-                <div>
-                  <CardTitle>{jobClass.name}</CardTitle>
-                  <CardDescription className="mt-1">
-                    {jobClass.description}
-                  </CardDescription>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0 pb-2">
-                <div className="text-sm text-muted-foreground">
-                  <span className="ai-gradient-text">Level 1:</span>{' '}
-                  {jobClass.levels[0]?.title}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <span className="ai-gradient-text">Level 100:</span>{' '}
-                  {jobClass.levels[5]?.title}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {/* New Character Selector Carousel */}
+          <CharacterSelector
+            jobClasses={jobClasses || []}
+            selectedJobClassId={selectedJobClassId}
+            onSelectJobClass={handleJobClassSelect}
+          />
 
-          <Button
-            className="w-full ai-gradient-bg"
+          {/* <Button
+            className="w-full ai-gradient-bg mt-6"
             onClick={handleNextStep}
             disabled={!selectedJobClassId}>
             ขั้นตอนถัดไป
-          </Button>
+          </Button> */}
         </div>
       )}
 
@@ -437,7 +414,7 @@ export default function CharacterCreation() {
                   {uploadedImage ? (
                     <div className="mb-4 relative">
                       <img
-                        src={uploadedImage}
+                        src={uploadedImage || '/placeholder.svg'}
                         alt="Uploaded portrait"
                         className="w-32 h-32 object-cover rounded-full border-4 ai-gradient-border"
                       />
@@ -525,7 +502,7 @@ export default function CharacterCreation() {
                 {generatedPortraits.length > 0 && (
                   <>
                     <img
-                      src={generatedPortraits[0].url}
+                      src={generatedPortraits[0].url || '/placeholder.svg'}
                       alt="Generated character"
                       className="object-cover rounded-full mb-4"
                     />

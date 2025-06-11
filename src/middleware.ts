@@ -25,6 +25,7 @@ export const config = {
 
     // Alternative approach with explicit routes
     '/auth/login',
+    '/create',
     '/api/:path*',
   ],
 }
