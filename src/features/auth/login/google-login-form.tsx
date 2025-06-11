@@ -1,10 +1,11 @@
 'use client'
 
-import Image from 'next/image'
-import { signIn } from 'next-auth/react'
 import { useState } from 'react'
 
+import Image from 'next/image'
+
 import { Button } from '@src/components/ui/button'
+import { signIn } from 'next-auth/react'
 
 export function GoogleLoginForm() {
   const [isLoading, setIsLoading] = useState(false)
@@ -33,8 +34,9 @@ export function GoogleLoginForm() {
       </div>
       <hr />
       <div className="my-5 text-center">
-        <p>ระบบ KIP & AI</p>
+        <p className="text-2xl font-semibold animate-glow">KPI & AI</p>
       </div>
+
       <div className="space-y-3">
         <Button
           onClick={handleGoogleLogin}

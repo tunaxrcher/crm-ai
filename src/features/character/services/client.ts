@@ -1,4 +1,5 @@
 import { BaseService } from '@src/lib/services/client/baseService'
+import { signIn } from 'next-auth/react'
 
 import { CharacterConfirmPayload, CharacterCreatePayload } from '../types'
 
@@ -90,9 +91,14 @@ export class CharacterService extends BaseService {
       body: JSON.stringify(payload),
     })
 
-    if (!res.ok) throw new Error(await res.text())
+    if (!res.ok) {
+      const errorText = await res.text()
+      throw new Error(errorText || 'Failed to create character')
+    }
 
-    return res.json()
+    const result = await res.json()
+
+    return result
   }
 }
 export const characterService = CharacterService.getInstance()

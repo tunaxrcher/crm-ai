@@ -375,18 +375,6 @@ export class CharacterService extends BaseService {
       let portraits: GeneratedPortrait[] = []
       let personaTraits: string = this.generatePersonaTraits(jobClass.name)
 
-      // ถ้ามีการ upload รูป ให้วิเคราะห์ด้วย OpenAI Vision
-      if (portraitType === 'upload' && faceImageUrl) {
-        console.log(
-          '[CharacterService] Analyzing uploaded image with OpenAI Vision...'
-        )
-        const analysis = await visionService.analyzePersonaTraits(faceImageUrl)
-        if (analysis) {
-          personaTraits = analysis.fullDescription
-          console.log('[CharacterService] Persona traits:', personaTraits)
-        }
-      }
-
       // สร้าง prompt สำหรับ class level 1 โดยใช้ personaDescription จาก JobLevel
       const prompt = fluxService.createPrompt(
         jobClass.name,
@@ -492,86 +480,113 @@ export class CharacterService extends BaseService {
   /**
    * Confirm and create character
    */
+  // src/features/character/services/server.ts
+
+  /**
+   * Confirm and create character for existing authenticated user
+   */
   async confirmCharacterCreation(
     payload: CharacterConfirmPayload
   ): Promise<CharacterConfirmResponse> {
-    const jobClassId = payload.jobClassId
-
-    // ดึงข้อมูล job class และ first job level
-    const jobClass = await jobClassRepository.findById(jobClassId)
-    if (!jobClass || jobClass.levels.length === 0)
-      throw new Error('Invalid job class')
-
-    const firstJobLevel = jobClass.levels[0]
-
-    // สร้าง user ใหม่
-    const rawPassword = Math.random().toString(36).substring(2, 15)
-    const hashedPassword = await bcrypt.hash(rawPassword, 10)
-    const username =
-      payload.name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now()
-
-    const newUser = await prisma.user.create({
-      data: {
-        email: `${username}@test.com`,
-        username,
-        password: hashedPassword,
-        name: payload.name,
-        // avatar: payload.portraitUrl,
-      },
-    })
-
-    // ดึงข้อมูลจาก session ถ้ามี
-    let originalFaceImage = payload.originalFaceImage
-    let personaTraits = this.generatePersonaTraits(jobClass.name)
-
-    if (global.characterGenerationSessions) {
-      const sessions = Object.values(global.characterGenerationSessions)
-      const recentSession = sessions.find(
-        (s: any) =>
-          s.name === payload.name && s.jobClassId === payload.jobClassId
-      )
-      if (recentSession) {
-        originalFaceImage = recentSession.originalFaceImage || originalFaceImage
-        personaTraits = recentSession.personaTraits || personaTraits
+    try {
+      // ดึงข้อมูล session ของ user ที่ login อยู่
+      const session = await getServerSession()
+      if (!session?.user?.id) {
+        throw new Error('User not authenticated')
       }
-    }
 
-    // สร้าง character
-    const character = await this.createCharacter({
-      userId: newUser.id,
-      name: payload.name,
-      jobClassId: payload.jobClassId,
-      jobLevelId: firstJobLevel.id,
-      portraitUrl: payload.portraitUrl,
-      originalFaceImage,
-      personaTraits,
-    })
+      const userId = parseInt(session.user.id)
 
-    // สร้าง user token
-    await prisma.userToken.create({
-      data: {
-        userId: newUser.id,
-        currentTokens: 0,
-        totalEarnedTokens: 0,
-        totalSpentTokens: 0,
-      },
-    })
+      // ตรวจสอบว่า user มี character อยู่แล้วหรือไม่
+      const existingCharacter = await characterRepository.findByUserId(userId)
+      if (existingCharacter) {
+        throw new Error('User already has a character')
+      }
 
-    // สร้าง quest streak
-    await prisma.questStreak.create({
-      data: {
-        userId: newUser.id,
-        currentStreak: 0,
-        longestStreak: 0,
-      },
-    })
+      const jobClassId = payload.jobClassId
 
-    return {
-      success: true,
-      character,
-      userId: newUser.id,
-      message: 'Character created successfully',
-      credentials: { username, password: rawPassword },
+      // ดึงข้อมูล job class และ first job level
+      const jobClass = await jobClassRepository.findById(jobClassId)
+      if (!jobClass || jobClass.levels.length === 0) {
+        throw new Error('Invalid job class')
+      }
+
+      const firstJobLevel = jobClass.levels[0]
+
+      // ดึงข้อมูลจาก session ถ้ามี (ข้อมูลที่เก็บไว้จากการ generate)
+      let originalFaceImage = payload.originalFaceImage
+      let personaTraits = this.generatePersonaTraits(jobClass.name)
+
+      if (global.characterGenerationSessions && payload.sessionId) {
+        const sessionData =
+          global.characterGenerationSessions[payload.sessionId]
+        if (sessionData) {
+          originalFaceImage = sessionData.originalFaceImage || originalFaceImage
+          personaTraits = sessionData.personaTraits || personaTraits
+
+          // ลบ session หลังจากใช้แล้ว
+          delete global.characterGenerationSessions[payload.sessionId]
+        }
+      }
+
+      // สร้าง character ให้ user ที่ login อยู่
+      const character = await this.createCharacter({
+        userId: userId,
+        name: payload.name,
+        jobClassId: payload.jobClassId,
+        jobLevelId: firstJobLevel.id,
+        portraitUrl: payload.portraitUrl,
+        originalFaceImage,
+        personaTraits,
+      })
+
+      // สร้าง user token ถ้ายังไม่มี
+      const existingUserToken = await characterRepository.findUserToken(userId)
+      if (!existingUserToken) {
+        await prisma.userToken.create({
+          data: {
+            userId: userId,
+            currentTokens: 0,
+            totalEarnedTokens: 0,
+            totalSpentTokens: 0,
+          },
+        })
+      }
+
+      // สร้าง quest streak ถ้ายังไม่มี
+      const existingQuestStreak = await prisma.questStreak.findUnique({
+        where: { userId: userId },
+      })
+      if (!existingQuestStreak) {
+        await prisma.questStreak.create({
+          data: {
+            userId: userId,
+            currentStreak: 0,
+            longestStreak: 0,
+          },
+        })
+      }
+
+      // สร้าง welcome feed item
+      await characterRepository.createFeedItem({
+        content: `🎉 ยินดีต้อนรับ ${character.name} สู่โลกแห่งการผจญภัย! เริ่มต้นเส้นทาง${jobClass.name}ของคุณได้เลย`,
+        type: 'character_created',
+        mediaType: 'text',
+        userId: userId,
+      })
+
+      return {
+        success: true,
+        character,
+        userId: userId,
+        message: 'Character created successfully',
+      }
+    } catch (error) {
+      console.error(
+        '[CharacterService] Confirm character creation error:',
+        error
+      )
+      throw error
     }
   }
 

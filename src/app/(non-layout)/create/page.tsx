@@ -31,33 +31,29 @@ import {
   TabsTrigger,
 } from '@src/components/ui/tabs'
 import { useGetJobClass } from '@src/features/character/hooks/api'
+import { useCharacterStatus } from '@src/features/character/hooks/useCharacterStatus'
+import { useSessionRefresh } from '@src/features/character/hooks/useSessionRefresh'
 import { characterService } from '@src/features/character/services/client'
 import type {
   CharacterConfirmPayload,
   CharacterConfirmResponse,
   CharacterCreatePayload,
   GeneratedPortrait,
-  JobClass,
 } from '@src/features/character/types'
 import { useMutation } from '@tanstack/react-query'
-import {
-  BadgePercent,
-  Briefcase,
-  ChevronRight,
-  LineChart,
-  Loader2,
-  Receipt,
-  Upload,
-  UserCircle2,
-} from 'lucide-react'
+import { ChevronRight, Loader2, Upload, UserCircle2 } from 'lucide-react'
 import { Check, Sparkles } from 'lucide-react'
-import { signIn } from 'next-auth/react'
 import { toast } from 'sonner'
 
 import CharacterSelector from './character-selector'
 
-export default function CharacterCreation() {
-  const router = useRouter()
+export default function CharacterCreatePage() {
+  const {
+    hasCharacter,
+    isLoading: isLoadingCharacterStatus,
+    isAuthenticated,
+  } = useCharacterStatus()
+  const { refreshSession } = useSessionRefresh()
   const [currentStep, setCurrentStep] = useState<number>(1)
   const [selectedJobClassId, setSelectedJobClassId] = useState<string | null>(
     null
@@ -111,28 +107,7 @@ export default function CharacterCreation() {
     mutationFn: (payload: CharacterConfirmPayload) =>
       characterService.confirmCharacter(payload),
     onSuccess: async (data: CharacterConfirmResponse) => {
-      // ถ้ามี credentials (user ใหม่) ให้ login อัตโนมัติ
-      if (data.credentials) {
-        const result = await signIn('credentials', {
-          username: data.credentials.username,
-          password: data.credentials.password,
-          redirect: false,
-        })
-
-        if (result?.ok) {
-          toast.success('Character created and logged in successfully!')
-          router.push('/quest')
-        } else {
-          toast.error(
-            'Character created but failed to login. Please login manually.'
-          )
-          router.push('/auth/login')
-        }
-      } else {
-        // ถ้าเป็น user เก่า redirect ไปหน้า quest เลย
-        toast.success('Character created successfully!')
-        router.push('/quest')
-      }
+      await refreshSession()
     },
     onError: (error) => {
       toast.error('Failed to create character')
@@ -231,27 +206,6 @@ export default function CharacterCreation() {
     }
   }, [generateMutation.isSuccess])
 
-  // Get job class icon
-  const getJobClassIcon = (jobClass: JobClass) => {
-    switch (jobClass.name) {
-      case 'นักการตลาด':
-      case 'Marketing':
-        return <BadgePercent className="h-8 w-8" />
-      case 'นักขาย':
-      case 'Sales':
-        return <LineChart className="h-8 w-8" />
-      case 'นักบัญชี':
-      case 'Accounting':
-        return <Receipt className="h-8 w-8" />
-      case 'โปรแกรมเมอร์':
-      case 'Programmer':
-        return <UserCircle2 className="h-8 w-8" />
-      // เพิ่มตามสายอาชีพที่มีในระบบ
-      default:
-        return <Briefcase className="h-8 w-8" />
-    }
-  }
-
   // Show loading state
   if (isLoading) {
     return (
@@ -259,6 +213,16 @@ export default function CharacterCreation() {
         <SkeletonLoading type="character" text="กำลังโหลดข้อมูลอาชีพ..." />
       </div>
     )
+  }
+
+  // แสดง loading ขณะตรวจสอบ session
+  if (isLoadingCharacterStatus) {
+    return <div className="flex items-center justify-center min-h-screen"></div>
+  }
+
+  // ถ้าไม่ได้ login หรือมี character แล้ว จะถูก redirect ไปแล้วใน hook
+  if (!isAuthenticated || hasCharacter) {
+    return null
   }
 
   // Show error state

@@ -1,6 +1,9 @@
 import { faker } from '@faker-js/faker/locale/en'
 import { EnumMediaType, PrismaClient } from '@prisma/client'
 
+const bucket = process.env.DO_SPACES_BUCKET
+const region = process.env.DO_SPACES_REGION
+
 const prisma = new PrismaClient()
 
 async function main() {
@@ -168,7 +171,7 @@ async function createJobClasses() {
       name: 'นักการตลาด',
       description:
         'ผู้ที่มีความสามารถในการวิเคราะห์ตลาด วางแผนและดำเนินกลยุทธ์ทางการตลาด',
-      imageUrl: 'https://source.unsplash.com/featured/?marketing',
+      imageUrl: `https://${bucket}.${region}.digitaloceanspaces.com/marketing.png`,
       jobLevels: [
         {
           level: 1,
@@ -228,7 +231,7 @@ async function createJobClasses() {
       name: 'นักบัญชี',
       description:
         'ผู้ที่มีความสามารถในการจัดการบัญชี วิเคราะห์การเงิน และวางแผนภาษี',
-      imageUrl: 'https://source.unsplash.com/featured/?accounting',
+      imageUrl: `https://${bucket}.${region}.digitaloceanspaces.com/accounthing.png`,
       jobLevels: [
         {
           level: 1,
@@ -288,7 +291,7 @@ async function createJobClasses() {
       name: 'นักขาย',
       description:
         'ผู้ที่มีความสามารถในการนำเสนอสินค้า เจรจาต่อรอง และปิดการขาย',
-      imageUrl: 'https://source.unsplash.com/featured/?sales',
+      imageUrl: `https://${bucket}.${region}.digitaloceanspaces.com/sales.png`,
       jobLevels: [
         {
           level: 1,
@@ -348,7 +351,7 @@ async function createJobClasses() {
       name: 'ดีไซน์เนอร์',
       description:
         'ผู้ที่มีความสามารถในการออกแบบ สร้างสรรค์งานศิลปะ และพัฒนาแนวคิดใหม่ๆ',
-      imageUrl: 'https://source.unsplash.com/featured/?designer',
+      imageUrl: `https://${bucket}.${region}.digitaloceanspaces.com/designer.png`,
       jobLevels: [
         {
           level: 1,
@@ -405,7 +408,7 @@ async function createJobClasses() {
       name: 'โปรแกรมเมอร์',
       description:
         'ผู้ที่มีความสามารถในการเขียนโปรแกรม พัฒนาซอฟต์แวร์ และแก้ไขปัญหาทางเทคนิค',
-      imageUrl: 'https://source.unsplash.com/featured/?programmer',
+      imageUrl: `https://${bucket}.${region}.digitaloceanspaces.com/programmer.png`,
       jobLevels: [
         {
           level: 1,
@@ -464,7 +467,7 @@ async function createJobClasses() {
       name: 'ช่าง',
       description:
         'ผู้ที่มีความสามารถในการสร้าง ซ่อมแซม และบำรุงรักษาโครงสร้างและเครื่องจักร',
-      imageUrl: 'https://source.unsplash.com/featured/?mechanic',
+      imageUrl: `https://${bucket}.${region}.digitaloceanspaces.com/mechanic.png`,
       jobLevels: [
         {
           level: 1,
@@ -590,8 +593,6 @@ function generatePortraits(level: number): {
   portraits: Record<string, string>
   currentUrl: string
 } {
-  const bucket = process.env.DO_SPACES_BUCKET
-  const region = process.env.DO_SPACES_REGION
   const baseUrl = `https://${bucket}.${region}.digitaloceanspaces.com`
 
   const milestones = [1, 10, 35, 60, 80, 99]

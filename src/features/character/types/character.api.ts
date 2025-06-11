@@ -43,6 +43,7 @@ export interface CharacterConfirmPayload {
   portraitUrl: string
   originalFaceImage?: string
   generatedPortraits: Record<string, string>
+  sessionId?: string
 }
 
 // Supporting Types

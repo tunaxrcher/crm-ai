@@ -5,6 +5,8 @@ import { getServerSession as getSession } from 'next-auth/next'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 
+// src/lib/auth.ts
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -45,7 +47,7 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
         token.name = user.name
@@ -55,8 +57,24 @@ export const authOptions: NextAuthOptions = {
         token.characterId = user.characterId
       }
 
+      // **เพิ่มส่วนนี้** - Refresh token เมื่อมีการ update session
+      if (trigger === 'update') {
+        if (token.id) {
+          const userData = await prisma.user.findUnique({
+            where: { id: parseInt(token.id as string) },
+            include: { character: true },
+          })
+
+          if (userData?.character) {
+            token.characterId = userData.character.id
+            token.currentPortraitUrl =
+              userData.character.currentPortraitUrl || undefined
+          }
+        }
+      }
+
       // ถ้า login ด้วย Google และยังไม่มีข้อมูล character ให้ดึงจาก database
-      if (token.id && !token.characterId) {
+      if (token.id && !token.characterId && trigger !== 'update') {
         const userData = await prisma.user.findUnique({
           where: { id: parseInt(token.id as string) },
           include: { character: true },

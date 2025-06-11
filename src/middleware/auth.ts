@@ -1,3 +1,4 @@
+// src/middleware/auth.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 import { getToken } from 'next-auth/jwt'
@@ -19,6 +20,7 @@ export async function authMiddleware(req: NextRequest) {
     if (!token.characterId) {
       return NextResponse.redirect(new URL('/create', req.url))
     }
+
     return NextResponse.redirect(new URL('/', req.url))
   }
 
@@ -27,12 +29,8 @@ export async function authMiddleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/create', req.url))
   }
 
-  // Role-based access control
-  if (token?.role === 'trials' && path.includes('/admin')) {
-    return NextResponse.redirect(new URL('/', req.url))
-  }
-
-  if (token?.userType === 'member' && path.includes('/workspaces')) {
+  // **เพิ่มส่วนนี้** - If user is logged in, has character, and trying to access create page
+  if (token && token.characterId && isCreatePage) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 

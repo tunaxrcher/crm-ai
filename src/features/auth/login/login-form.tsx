@@ -1,10 +1,10 @@
 'use client'
 
-import { Button } from '@src/components/ui/button'
-import { Input } from '@src/components/ui/input'
 import type React from 'react'
 import { useState } from 'react'
 
+import { Button } from '@src/components/ui/button'
+import { Input } from '@src/components/ui/input'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
