@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react'
 
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Badge } from '@src/components/ui/badge'
@@ -47,24 +48,22 @@ export const PostCard = function PostCard({
   // สร้าง ref สำหรับวิดีโอโดยใช้ custom hook
   const videoRef = useAutoplayVideo()
   const [showComments, setShowComments] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   // ฟังก์ชันสำหรับแสดง media ตามประเภท
   const renderMedia = () => {
     let mediaUrl = null
 
     // กำหนด media URL ตามประเภทของ content
-    if (type === 'quest_complete' && content.image) {
-      mediaUrl = content.image
-    } else if (type === 'post' && content.image) {
-      mediaUrl = content.image
-    } else if (type === 'new_portrait' && content.image) {
-      mediaUrl = content.image
-    }
+    if (type === 'quest_complete' && content.image) mediaUrl = content.image
+    else if (type === 'post' && content.image) mediaUrl = content.image
+    else if (type === 'new_portrait' && content.image) mediaUrl = content.image
 
     if (!mediaUrl) return null
 
     // ตรวจสอบประเภทของ media (video หรือ image)
-    const isVideo = mediaUrl.includes('.mp4') || mediaUrl.includes('/video')
+    const isVideo =
+      /\.(mp4|mov)$/i.test(mediaUrl) || mediaUrl.includes('/video')
 
     if (isVideo) {
       return (
@@ -86,7 +85,8 @@ export const PostCard = function PostCard({
           <img
             src={mediaUrl || '/placeholder.svg'}
             alt="Content media"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover cursor-zoom-in"
+            onClick={() => setSelectedImage(mediaUrl)}
           />
         </div>
       )
@@ -100,20 +100,40 @@ export const PostCard = function PostCard({
       <Card className="mb-6 shadow-sm border overflow-hidden bg-card">
         <CardHeader className="pb-2 px-4">
           <div className="flex items-center">
-            <Avatar className="h-10 w-10 mr-3">
-              <AvatarImage
-                src={user.character?.currentPortraitUrl || '/placeholder.svg'}
-                alt={user.name}
-              />
-              <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
-            </Avatar>
+            <Link
+              href={`/profile/${user.character?.id}`}
+              className="relative w-10 h-10 mr-3">
+              {/* ภาพโปรไฟล์แบบ bg cover */}
+              <div className="w-10 h-10 rounded-full overflow-hidden ai-gradient-bg relative">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url(${user.character?.currentPortraitUrl})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center -108px',
+                    transform: 'scale(2.5)',
+                  }}
+                />
+              </div>
+
+              {/* Level Badge ซ้อนล่างขวา */}
+              {user.character?.level && (
+                <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 z-10">
+                  <span className="text-[10px] bg-background border border-border rounded px-1.5 py-[1px] font-medium shadow-sm">
+                    {user.character.level}
+                  </span>
+                </div>
+              )}
+            </Link>
 
             <div className="flex-1">
               <div className="flex items-center">
-                <div className="font-medium text-foreground">{user.name}</div>
-                {user.character?.level && (
+                <div className="font-medium text-foreground">
+                  {user.character?.name}
+                </div>
+                {user.character?.currentJobLevel?.title && (
                   <Badge className="ml-2 text-xs" variant="outline">
-                    Lvl {user.character?.level}
+                    {user.character?.currentJobLevel?.title}
                   </Badge>
                 )}
               </div>
@@ -232,7 +252,7 @@ export const PostCard = function PostCard({
         </div>
 
         <CardFooter className="flex flex-col pt-0 px-4 pb-0">
-          <div className="flex items-center justify-between w-full py-2">
+          <div className="flex items-center justify-between w-full pt-0 pb-2">
             <Button
               variant="ghost"
               size="sm"
@@ -254,14 +274,6 @@ export const PostCard = function PostCard({
               <MessageCircle className="h-5 w-5 mr-2" />
               Comment
             </Button>
-
-            {/* <Button
-              variant="ghost"
-              size="sm"
-              className="flex-1 text-muted-foreground hover:bg-muted">
-              <Share className="h-5 w-5 mr-2" />
-              Share
-            </Button> */}
           </div>
 
           {/* Comments section - Only show when showComments is true */}
@@ -272,23 +284,21 @@ export const PostCard = function PostCard({
                 <div className="space-y-3">
                   {content.engagement.comments.map((comment: any) => (
                     <div key={comment.id} className="flex items-start">
-                      <Avatar className="h-8 w-8 mr-2">
-                        <AvatarImage
-                          src={
-                            comment.user.character?.currentPortraitUrl ||
-                            '/placeholder.svg'
-                          }
-                          alt={comment.user.name}
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg mr-2">
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            backgroundImage: `url(${comment.user.character?.currentPortraitUrl})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center -108px',
+                            transform: 'scale(2.5)',
+                          }}
                         />
-                        <AvatarFallback>
-                          {comment.user.name.slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-
+                      </div>
                       <div className="flex-1">
                         <div className="bg-muted p-2 rounded-lg">
                           <div className="font-medium text-xs text-foreground">
-                            {comment.user.name}
+                            {comment.user.character?.name}
                           </div>
                           <div className="text-sm text-foreground">
                             {comment.text}
@@ -296,12 +306,12 @@ export const PostCard = function PostCard({
                         </div>
                         <div className="text-xs text-muted-foreground mt-1 flex items-center space-x-2">
                           <span>{formatTimeDiff(comment.timestamp)}</span>
-                          <button className="hover:text-primary font-medium">
+                          {/* <button className="hover:text-primary font-medium">
                             Like
                           </button>
                           <button className="hover:text-primary font-medium">
                             Reply
-                          </button>
+                          </button> */}
                         </div>
                       </div>
                     </div>
@@ -311,19 +321,23 @@ export const PostCard = function PostCard({
 
               {/* Comment input - Always show when comments section is open */}
               <div className="flex items-center w-full pb-4">
-                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage
-                    src={character.portrait || '/placeholder.svg'}
-                    alt={character.name}
+                <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg mr-2">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url(${character?.portrait})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center -108px',
+                      transform: 'scale(2.5)',
+                    }}
                   />
-                  <AvatarFallback>{character.name.slice(0, 2)}</AvatarFallback>
-                </Avatar>
+                </div>
 
-                <div className="flex-1 flex items-center bg-muted rounded-full overflow-hidden pl-3">
+                <div className="flex-1 flex items-center bg-muted rounded-full overflow-hidden">
                   <Input
                     type="text"
-                    placeholder="Write a comment..."
-                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground"
+                    placeholder={`แสดงความคิดเห็นในชื่อ ${character.name}`}
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground pl-3"
                     value={commentInput}
                     onChange={(e) => onCommentInputChange(e.target.value)}
                     onKeyDown={(e) => {
@@ -347,6 +361,18 @@ export const PostCard = function PostCard({
           )}
         </CardFooter>
       </Card>
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 ai-gradient-bg/80 z-50 flex items-center justify-center"
+          onClick={() => setSelectedImage(null)}>
+          <img
+            src={selectedImage}
+            alt="Full size"
+            className="max-w-full max-h-full object-contain"
+          />
+        </div>
+      )}
     </>
   )
 }

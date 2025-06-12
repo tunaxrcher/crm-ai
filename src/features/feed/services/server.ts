@@ -34,32 +34,6 @@ export class FeedService extends BaseService {
     const { page, limit } = params
     const skip = (page - 1) * limit
 
-    const includeRelations = {
-      user: true,
-      likes: {
-        include: { user: true },
-      },
-      comments: {
-        include: {
-          user: {
-            include: {
-              character: true, // Include character ที่เชื่อมกับ user
-            },
-          },
-          replies: {
-            include: { user: true },
-          },
-        },
-      },
-      questSubmission: {
-        include: { quest: true },
-      },
-      levelHistory: true,
-      achievement: {
-        include: { achievement: true },
-      },
-    } as const
-
     const [items, total] = (await Promise.all([
       feedRepository.findMany({
         skip,
@@ -73,7 +47,11 @@ export class FeedService extends BaseService {
         include: {
           user: {
             include: {
-              character: true, // Include character ที่เชื่อมกับ user
+              character: {
+                include: {
+                  currentJobLevel: true,
+                },
+              },
             },
           },
           likes: {
@@ -83,7 +61,11 @@ export class FeedService extends BaseService {
             include: {
               user: {
                 include: {
-                  character: true, // Include character ที่เชื่อมกับ user
+                  character: {
+                    include: {
+                      currentJobLevel: true,
+                    },
+                  },
                 },
               },
               replies: {
@@ -337,7 +319,17 @@ export class CommentService extends BaseService {
       include: {
         user: true,
         replies: {
-          include: { user: true },
+          include: {
+            user: {
+              include: {
+                character: {
+                  include: {
+                    currentJobLevel: true,
+                  },
+                },
+              },
+            },
+          },
           orderBy: { createdAt: 'asc' },
         },
       },

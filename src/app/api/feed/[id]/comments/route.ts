@@ -40,7 +40,17 @@ export const POST = withErrorHandling(
 
     const commentWithUser = await prisma.comment.findUnique({
       where: { id: comment.id },
-      include: { user: true },
+      include: {
+        user: {
+          include: {
+            character: {
+              include: {
+                currentJobLevel: true,
+              },
+            },
+          },
+        },
+      },
     })
 
     return NextResponse.json(commentWithUser)

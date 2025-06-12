@@ -250,20 +250,17 @@ export default function StoryList({
                 {/* User avatar - positioned outside the story card but relative to parent */}
                 <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10">
                   {/* <div className={`p-0.5 rounded-full ${story.viewed ? 'bg-gray-400' : 'bg-blue-500'}`}> */}
-                  <div
-                    className={`p-0.5 rounded-full ${story.viewed ? 'bg-black' : 'bg-black'}`}>
-                    <Avatar className="w-8 h-8  ring-2 ring-black">
-                      <AvatarImage
-                        src={
-                          story.user.character?.currentPortraitUrl ||
-                          '/placeholder.svg'
-                        }
-                        alt={story.user.name}
-                      />
-                      <AvatarFallback className="text-xs bg-gray-300">
-                        {story.user.name.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
+
+                  <div className="relative w-10 h-10 rounded-full overflow-hidden bg-black">
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: `url(${story.user.character?.currentPortraitUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center -108px',
+                        transform: 'scale(2.5)',
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -306,18 +303,17 @@ export default function StoryList({
             {/* Story header */}
             <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/60 to-transparent">
               <div className="flex items-center">
-                <Avatar className="h-10 w-10 mr-3">
-                  <AvatarImage
-                    src={
-                      currentStory.user.character?.currentPortraitUrl ||
-                      '/placeholder.svg'
-                    }
-                    alt={currentStory.user.name}
+                <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg mr-3">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url(${currentStory.user.character?.currentPortraitUrl})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center -108px',
+                      transform: 'scale(2.5)',
+                    }}
                   />
-                  <AvatarFallback>
-                    {currentStory.user.name.slice(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
+                </div>
 
                 <div>
                   <div className="text-white font-medium">

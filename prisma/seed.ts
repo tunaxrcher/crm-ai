@@ -21,81 +21,81 @@ async function main() {
   )
 
   // ============= สร้าง User =============
-  const users = await createUsers()
-  console.log(`✅ สร้าง User ${users.length} คนเรียบร้อย`)
+  // const users = await createUsers()
+  // console.log(`✅ สร้าง User ${users.length} คนเรียบร้อย`)
 
   // ============= สร้าง Character =============
-  const characters = await createCharacters(users, jobClasses)
-  console.log(`✅ สร้าง Character ${characters.length} ตัวเรียบร้อย`)
+  // const characters = await createCharacters(users, jobClasses)
+  // console.log(`✅ สร้าง Character ${characters.length} ตัวเรียบร้อย`)
 
   // ============= สร้าง Achievement =============
   const achievements = await createAchievements()
   console.log(`✅ สร้าง Achievement ${achievements.length} ชิ้นเรียบร้อย`)
 
   // ============= มอบ Achievement ให้กับ Character =============
-  const characterAchievements = await assignAchievements(
-    characters,
-    achievements,
-    users
-  )
-  console.log(
-    `✅ มอบ Achievement ${characterAchievements.length} รายการเรียบร้อย`
-  )
+  // const characterAchievements = await assignAchievements(
+  //   characters,
+  //   achievements,
+  //   users
+  // )
+  // console.log(
+  //   `✅ มอบ Achievement ${characterAchievements.length} รายการเรียบร้อย`
+  // )
 
   // ============= สร้าง Party =============
-  const parties = await createParties(users)
-  console.log(`✅ สร้าง Party ${parties.length} ทีมเรียบร้อย`)
+  // const parties = await createParties(users)
+  // console.log(`✅ สร้าง Party ${parties.length} ทีมเรียบร้อย`)
 
   // ============= สร้าง Quest =============
   const quests = await createQuests()
   console.log(`✅ สร้าง Quest ${quests.length} เควสเรียบร้อย`)
 
   // ============= เพิ่ม AssignedQuest =============
-  const assignedQuests = await assignQuests(characters, quests, users)
-  console.log(`✅ มอบหมาย Quest ${assignedQuests.length} เควสเรียบร้อย`)
+  // const assignedQuests = await assignQuests(characters, quests, users)
+  // console.log(`✅ มอบหมาย Quest ${assignedQuests.length} เควสเรียบร้อย`)
 
   // ============= ส่ง QuestSubmission =============
-  const questSubmissions = await submitQuests(characters, quests)
-  console.log(
-    `✅ ส่ง QuestSubmission ${questSubmissions.length} รายการเรียบร้อย`
-  )
+  // const questSubmissions = await submitQuests(characters, quests)
+  // console.log(
+  //   `✅ ส่ง QuestSubmission ${questSubmissions.length} รายการเรียบร้อย`
+  // )
 
   // ============= สร้าง LevelHistory =============
-  const levelHistories = await createLevelHistories(characters)
-  console.log(`✅ สร้าง LevelHistory ${levelHistories.length} รายการเรียบร้อย`)
+  // const levelHistories = await createLevelHistories(characters)
+  // console.log(`✅ สร้าง LevelHistory ${levelHistories.length} รายการเรียบร้อย`)
 
   // ============= สร้าง FeedItem =============
-  const feedItems = await createFeedItems(
-    users,
-    questSubmissions,
-    levelHistories,
-    characterAchievements
-  )
-  console.log(`✅ สร้าง FeedItem ${feedItems.length} รายการเรียบร้อย`)
+  // const feedItems = await createFeedItems(
+  //   users,
+  //   questSubmissions,
+  //   levelHistories,
+  //   characterAchievements
+  // )
+  // console.log(`✅ สร้าง FeedItem ${feedItems.length} รายการเรียบร้อย`)
 
   // ============= สร้าง Story =============
-  const stories = await createStories(users)
-  console.log(`✅ สร้าง Story ${stories.length} รายการเรียบร้อย`)
+  // const stories = await createStories(users)
+  // console.log(`✅ สร้าง Story ${stories.length} รายการเรียบร้อย`)
 
   // ============= สร้าง Like =============
-  const likes = await createLikes(users, feedItems)
-  console.log(`✅ สร้าง Like ${likes.length} รายการเรียบร้อย`)
+  // const likes = await createLikes(users, feedItems)
+  // console.log(`✅ สร้าง Like ${likes.length} รายการเรียบร้อย`)
 
   // ============= สร้าง Comment =============
-  const comments = await createComments(users, feedItems)
-  console.log(`✅ สร้าง Comment ${comments.length} รายการเรียบร้อย`)
+  // const comments = await createComments(users, feedItems)
+  // console.log(`✅ สร้าง Comment ${comments.length} รายการเรียบร้อย`)
 
   // ============= สร้าง ReplyComment =============
-  const replyComments = await createReplyComments(users, comments)
-  console.log(`✅ สร้าง ReplyComment ${replyComments.length} รายการเรียบร้อย`)
+  // const replyComments = await createReplyComments(users, comments)
+  // console.log(`✅ สร้าง ReplyComment ${replyComments.length} รายการเรียบร้อย`)
 
   // ============= สร้าง StoryView =============
-  const storyViews = await createStoryViews(users, stories)
-  console.log(`✅ สร้าง StoryView ${storyViews.length} รายการเรียบร้อย`)
+  // const storyViews = await createStoryViews(users, stories)
+  // console.log(`✅ สร้าง StoryView ${storyViews.length} รายการเรียบร้อย`)
 
   // ============= สร้าง UserToken =============
-  const userTokens = await createUserTokens(users)
-  console.log(`✅ สร้าง UserToken ${userTokens.length} รายการเรียบร้อย`)
+  // const userTokens = await createUserTokens(users)
+  // console.log(`✅ สร้าง UserToken ${userTokens.length} รายการเรียบร้อย`)
 
   console.log('✨ เสร็จสิ้นการ Seed ข้อมูล')
 }
@@ -122,10 +122,10 @@ async function cleanupDB() {
     'LevelHistory',
     'QuestSubmission',
     'AssignedQuest',
-    'PartyQuest',
+    // 'PartyQuest',
     'Quest',
-    'PartyMember',
-    'Party',
+    // 'PartyMember',
+    // 'Party',
     'CharacterAchievement',
     'Achievement',
     'Notification',
@@ -817,53 +817,53 @@ async function assignAchievements(
 }
 
 // ========== ฟังก์ชันสร้าง Party ==========
-async function createParties(users: any[]) {
-  // สร้าง Party 3 ทีม
-  const partyData = [
-    {
-      name: 'ทีมนักการตลาดรุ่นใหม่',
-      description: 'กลุ่มคนรุ่นใหม่ไฟแรงที่จะพลิกโฉมวงการการตลาด',
-      imageUrl: 'https://source.unsplash.com/featured/?team,marketing',
-    },
-    {
-      name: 'ทีมพัฒนาซอฟต์แวร์',
-      description: 'ทีมโปรแกรมเมอร์ที่จะสร้างแอปที่ดีที่สุด',
-      imageUrl: 'https://source.unsplash.com/featured/?team,programming',
-    },
-    {
-      name: 'ทีมดีไซน์เนอร์สร้างสรรค์',
-      description: 'รวมตัวดีไซน์เนอร์มากความสามารถ',
-      imageUrl: 'https://source.unsplash.com/featured/?team,design',
-    },
-  ]
+// async function createParties(users: any[]) {
+//   // สร้าง Party 3 ทีม
+//   const partyData = [
+//     {
+//       name: 'ทีมนักการตลาดรุ่นใหม่',
+//       description: 'กลุ่มคนรุ่นใหม่ไฟแรงที่จะพลิกโฉมวงการการตลาด',
+//       imageUrl: 'https://source.unsplash.com/featured/?team,marketing',
+//     },
+//     {
+//       name: 'ทีมพัฒนาซอฟต์แวร์',
+//       description: 'ทีมโปรแกรมเมอร์ที่จะสร้างแอปที่ดีที่สุด',
+//       imageUrl: 'https://source.unsplash.com/featured/?team,programming',
+//     },
+//     {
+//       name: 'ทีมดีไซน์เนอร์สร้างสรรค์',
+//       description: 'รวมตัวดีไซน์เนอร์มากความสามารถ',
+//       imageUrl: 'https://source.unsplash.com/featured/?team,design',
+//     },
+//   ]
 
-  const parties = []
+//   const parties = []
 
-  for (const partyInfo of partyData) {
-    const party = await prisma.party.create({
-      data: partyInfo,
-    })
+//   for (const partyInfo of partyData) {
+//     const party = await prisma.party.create({
+//       data: partyInfo,
+//     })
 
-    // สุ่มเลือกสมาชิก 3-4 คน
-    const partySize = faker.number.int({ min: 3, max: 4 })
-    const partyMembers = faker.helpers.arrayElements(users, partySize)
+//     // สุ่มเลือกสมาชิก 3-4 คน
+//     const partySize = faker.number.int({ min: 3, max: 4 })
+//     const partyMembers = faker.helpers.arrayElements(users, partySize)
 
-    // เพิ่มสมาชิกในทีม
-    for (let i = 0; i < partyMembers.length; i++) {
-      await prisma.partyMember.create({
-        data: {
-          partyId: party.id,
-          userId: partyMembers[i].id,
-          role: i === 0 ? 'leader' : 'member',
-        },
-      })
-    }
+//     // เพิ่มสมาชิกในทีม
+//     for (let i = 0; i < partyMembers.length; i++) {
+//       await prisma.partyMember.create({
+//         data: {
+//           partyId: party.id,
+//           userId: partyMembers[i].id,
+//           role: i === 0 ? 'leader' : 'member',
+//         },
+//       })
+//     }
 
-    parties.push(party)
-  }
+//     parties.push(party)
+//   }
 
-  return parties
-}
+//   return parties
+// }
 
 // ========== ฟังก์ชันสร้าง Quest ==========
 async function createQuests() {

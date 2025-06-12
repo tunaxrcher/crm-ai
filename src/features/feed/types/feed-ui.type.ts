@@ -1,8 +1,7 @@
 import { Character } from '@prisma/client'
-import { CharacterResponse } from '@src/features/character/types/character.api'
 
 import type { FeedItemType, StoryMediaType } from '.'
-import type { CommentUI, UserEngagement } from './engagement.type'
+import type { UserEngagement } from './engagement.type'
 
 export interface FeedItemUI {
   id: string
@@ -11,7 +10,7 @@ export interface FeedItemUI {
   user: {
     id: number
     name: string
-    character?: Character
+    character?: any
     title?: string
   }
   content: {

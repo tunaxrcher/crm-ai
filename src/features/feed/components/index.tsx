@@ -25,8 +25,17 @@ export default function FeedPageComponent() {
 }
 
 function FeedPageContent() {
-  const { character } = useCharacter()
+  // 📦 ─── State ───────────────────────────────────────────────
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
+  const [currentStoryIndex, setCurrentStoryIndex] = useState<number | null>(
+    null
+  )
+  const [scrollPosition, setScrollPosition] = useState(0)
+  const [isClient, setIsClient] = useState(false)
+  const storiesRef = useRef<HTMLDivElement | null>(null)
 
+  // 🧲 ─── Hooks ───────────────────────────────────────────────
+  const { character } = useCharacter()
   const {
     feedItems,
     stories,
@@ -41,41 +50,10 @@ function FeedPageContent() {
     hasMore,
     isLoadingMore,
   } = useFeed()
-
   const { showError } = useError()
   const { handleAsyncOperation } = useErrorHandler()
 
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
-  const [currentStoryIndex, setCurrentStoryIndex] = useState<number | null>(
-    null
-  )
-  const [scrollPosition, setScrollPosition] = useState(0)
-  const [isClient, setIsClient] = useState(false)
-  const storiesRef = useRef<HTMLDivElement | null>(null)
-
-  // This prevents hydration mismatch by only running client-side code after mount
-  useEffect(() => {
-    setIsClient(true)
-
-    // Add scroll event listener to storiesRef
-    const handleScroll = () => {
-      if (storiesRef.current) {
-        setScrollPosition(storiesRef.current.scrollLeft)
-      }
-    }
-
-    const currentRef = storiesRef.current
-    if (currentRef) {
-      currentRef.addEventListener('scroll', handleScroll)
-    }
-
-    return () => {
-      if (currentRef) {
-        currentRef.removeEventListener('scroll', handleScroll)
-      }
-    }
-  }, [])
-
+  // 🛠 ─── Handlers ────────────────────────────────────────────
   // Handle adding a comment
   const handleAddComment = async (feedItemId: string) => {
     if (!commentInputs[feedItemId] || commentInputs[feedItemId].trim() === '')
@@ -140,9 +118,7 @@ function FeedPageContent() {
     setCurrentStoryIndex(index)
   }
 
-  const closeStory = () => {
-    setCurrentStoryIndex(null)
-  }
+  const closeStory = () => setCurrentStoryIndex(null)
 
   const nextStory = () => {
     if (
@@ -167,6 +143,30 @@ function FeedPageContent() {
     callback: loadMore,
     enabled: !isLoading && !isLoadingMore && hasMore,
   })
+
+  // 🔄 ─── Effects ────────────────────────────────────────
+  // This prevents hydration mismatch by only running client-side code after mount
+  useEffect(() => {
+    setIsClient(true)
+
+    // Add scroll event listener to storiesRef
+    const handleScroll = () => {
+      if (storiesRef.current) {
+        setScrollPosition(storiesRef.current.scrollLeft)
+      }
+    }
+
+    const currentRef = storiesRef.current
+    if (currentRef) {
+      currentRef.addEventListener('scroll', handleScroll)
+    }
+
+    return () => {
+      if (currentRef) {
+        currentRef.removeEventListener('scroll', handleScroll)
+      }
+    }
+  }, [])
 
   // Show loading state
   if (isLoading && !isRefreshing) {

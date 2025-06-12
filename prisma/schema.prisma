@@ -24,7 +24,6 @@ model User {
   feedItems         FeedItem[]
   likes             Like[]
   notifications     Notification[]
-  parties           PartyMember[]
   questStreak       QuestStreak?
   questTokens       QuestToken[]
   rankings          Ranking[]
@@ -254,33 +253,6 @@ model ReplyComment {
   @@index([userId], map: "ReplyComment_userId_fkey")
 }
 
-model Party {
-  id             Int             @id @default(autoincrement())
-  name           String
-  description    String?
-  imageUrl       String?
-  isPublic       Boolean         @default(true)
-  maxMembers     Int             @default(5)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  assignedQuests AssignedQuest[]
-  members        PartyMember[]
-  partyQuests    PartyQuest[]
-}
-
-model PartyMember {
-  id       Int      @id @default(autoincrement())
-  role     String
-  joinedAt DateTime @default(now())
-  partyId  Int
-  userId   Int
-  party    Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([partyId, userId])
-  @@index([userId], map: "PartyMember_userId_fkey")
-}
-
 model Quest {
   id               Int               @id @default(autoincrement())
   title            String
@@ -296,7 +268,6 @@ model Quest {
   maxTokenReward   Int?
   tokenMultiplier  Float             @default(1)
   assignedQuests   AssignedQuest[]
-  partyQuests      PartyQuest[]
   questSubmissions QuestSubmission[]
   questTokens      QuestToken[]
 }
@@ -309,16 +280,13 @@ model AssignedQuest {
   questId     Int
   characterId Int
   userId      Int
-  partyId     Int?
   character   Character        @relation(fields: [characterId], references: [id])
-  party       Party?           @relation(fields: [partyId], references: [id])
   quest       Quest            @relation(fields: [questId], references: [id])
   user        User             @relation(fields: [userId], references: [id])
   submission  QuestSubmission?
 
   // @@unique([questId, characterId])
   @@index([characterId], map: "AssignedQuest_characterId_fkey")
-  @@index([partyId], map: "AssignedQuest_partyId_fkey")
   @@index([userId], map: "AssignedQuest_userId_fkey")
 }
 
@@ -351,20 +319,6 @@ model QuestSubmission {
 
   @@index([characterId], map: "QuestSubmission_characterId_fkey")
   @@index([questId], map: "QuestSubmission_questId_fkey")
-}
-
-model PartyQuest {
-  id          Int       @id @default(autoincrement())
-  startedAt   DateTime  @default(now())
-  completedAt DateTime?
-  status      String
-  partyId     Int
-  questId     Int
-  party       Party     @relation(fields: [partyId], references: [id], onDelete: Cascade)
-  quest       Quest     @relation(fields: [questId], references: [id])
-
-  @@unique([partyId, questId])
-  @@index([questId], map: "PartyQuest_questId_fkey")
 }
 
 model Ranking {
@@ -537,7 +491,6 @@ enum EnumTokenTransactionType {
   level_up_reward
   first_quest_bonus
   perfect_rating_bonus
-  party_bonus
   shop_purchase
   admin_grant
   admin_deduct

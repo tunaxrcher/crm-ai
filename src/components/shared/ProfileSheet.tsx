@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 
 import Image from 'next/image'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Button } from '@src/components/ui/button'
 import {
   Sheet,
@@ -30,7 +29,7 @@ export default function ProfileSheet() {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative p-0">
-          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-black">
+          <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg">
             <div
               className="absolute inset-0"
               style={{

@@ -47,7 +47,7 @@ export default function PostList({
   if (!feedItems || feedItems.length === 0) {
     return (
       <div className="p-4 text-center">
-        <p className="text-muted-foreground">No feed items to display</p>
+        <p className="text-muted-foreground">ไม่มีโพสสำหรับวันนี้</p>
       </div>
     )
   }
