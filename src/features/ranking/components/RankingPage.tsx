@@ -68,6 +68,8 @@ import { CharacterClass, RankingPeriod } from '../types'
 
 // src/features/ranking/components/RankingPage.tsx
 
+// src/features/ranking/components/RankingPage.tsx
+
 function RankingPageComponent() {
   const router = useRouter()
   const [period, setPeriod] = useState<RankingPeriod>('all-time')
@@ -349,9 +351,9 @@ function RankingPageComponent() {
                   <Star className="h-4 w-4 text-yellow-400 mr-1" />
                   <span>{currentUser.xp.toLocaleString()} XP</span>
                 </div>
-                <div className="flex justify-end">
+                {/* <div className="flex justify-end">
                   {getChangeIndicator(currentUser.change)}
-                </div>
+                </div> */}
               </div>
 
               <ChevronRight className="h-5 w-5 ml-2 text-muted-foreground" />
@@ -410,9 +412,9 @@ function RankingPageComponent() {
                   <Star className="h-4 w-4 text-yellow-400 mr-1" />
                   <span>{user.xp.toLocaleString()} XP</span>
                 </div>
-                <div className="flex justify-end">
+                {/* <div className="flex justify-end">
                   {getChangeIndicator(user.change)}
-                </div>
+                </div> */}
               </div>
 
               <ChevronRight className="h-5 w-5 ml-2 text-muted-foreground" />

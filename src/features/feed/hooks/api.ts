@@ -29,16 +29,18 @@ export function useFeed() {
       const transformedFeed = feedResponse.items.map(transformApiToFeedItem)
 
       if (transformedFeed.length === 0) {
+        console.log('[Feed] No more items. Stopping load.')
         setHasMore(false)
-      } else {
-        setFeedItems((prev) => [...prev, ...transformedFeed])
-        setPage((prev) => prev + 1)
+        return
       }
 
-      // Check if there are more pages
-      setHasMore(
-        feedResponse.pagination.page < feedResponse.pagination.totalPages
-      )
+      setFeedItems((prev) => [...prev, ...transformedFeed])
+      setPage((prev) => prev + 1)
+
+      const isLastPage =
+        feedResponse.pagination.page >= feedResponse.pagination.totalPages
+
+      setHasMore(!isLastPage)
     } catch (err) {
       console.error('Load more failed:', err)
     } finally {

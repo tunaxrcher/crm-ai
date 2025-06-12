@@ -1,4 +1,3 @@
-// src/hooks/useIntersectionObserver.ts
 import { useEffect, useRef } from 'react'
 
 interface UseIntersectionObserverProps {
@@ -13,6 +12,7 @@ export function useIntersectionObserver({
   enabled = true,
 }: UseIntersectionObserverProps) {
   const targetRef = useRef<HTMLDivElement>(null)
+  const hasTriggeredRef = useRef(false)
 
   useEffect(() => {
     if (!enabled) return
@@ -21,7 +21,8 @@ export function useIntersectionObserver({
     if (!target) return
 
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+      if (entry.isIntersecting && !hasTriggeredRef.current) {
+        hasTriggeredRef.current = true
         callback()
       }
     }, options)
@@ -30,6 +31,7 @@ export function useIntersectionObserver({
 
     return () => {
       observer.disconnect()
+      hasTriggeredRef.current = false // Reset for next time
     }
   }, [callback, options, enabled])
 
