@@ -110,8 +110,8 @@ export const PostCard = function PostCard({
                   style={{
                     backgroundImage: `url(${user.character?.currentPortraitUrl})`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center -108px',
-                    transform: 'scale(2.5)',
+                    backgroundPosition: 'center -110px',
+                    transform: 'scale(2)',
                   }}
                 />
               </div>
@@ -290,8 +290,8 @@ export const PostCard = function PostCard({
                           style={{
                             backgroundImage: `url(${comment.user.character?.currentPortraitUrl})`,
                             backgroundSize: 'cover',
-                            backgroundPosition: 'center -108px',
-                            transform: 'scale(2.5)',
+                            backgroundPosition: 'center -110px',
+                            transform: 'scale(2)',
                           }}
                         />
                       </div>
@@ -327,8 +327,8 @@ export const PostCard = function PostCard({
                     style={{
                       backgroundImage: `url(${character?.portrait})`,
                       backgroundSize: 'cover',
-                      backgroundPosition: 'center -108px',
-                      transform: 'scale(2.5)',
+                      backgroundPosition: 'center -110px',
+                      transform: 'scale(2)',
                     }}
                   />
                 </div>

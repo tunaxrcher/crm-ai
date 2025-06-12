@@ -182,7 +182,7 @@ export default function CharacterPageComponent() {
           <AchievementSection achievements={character.achievements} />
 
           {process.env.NODE_ENV === 'development' && (
-          // {true && (
+            // {true && (
             <>
               <hr className="mt-5" />
               <Card className="mb-4 mt-6">

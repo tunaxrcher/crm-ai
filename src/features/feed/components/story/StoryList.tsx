@@ -257,8 +257,8 @@ export default function StoryList({
                       style={{
                         backgroundImage: `url(${story.user.character?.currentPortraitUrl})`,
                         backgroundSize: 'cover',
-                        backgroundPosition: 'center -108px',
-                        transform: 'scale(2.5)',
+                        backgroundPosition: 'center -110px',
+                        transform: 'scale(2)',
                       }}
                     />
                   </div>
@@ -266,7 +266,7 @@ export default function StoryList({
 
                 {/* User name below the story */}
                 <p className="text-xs font-medium text-center truncate w-full mt-1">
-                  {story.user.name.split(' ')[0]}
+                  {story.user.character?.name.split(' ')[0]}
                 </p>
               </div>
             </div>
@@ -293,7 +293,7 @@ export default function StoryList({
         <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
           {/* Close button */}
           <button
-            className="absolute top-4 right-4 z-10 text-white bg-black/20 p-2 rounded-full hover:bg-black/40 transition-colors"
+            className="absolute top-4 right-4 z-[9999] text-white bg-black/20 p-2 rounded-full hover:bg-black/40 transition-colors"
             onClick={closeStory}>
             <X className="h-6 w-6" />
           </button>
@@ -309,15 +309,15 @@ export default function StoryList({
                     style={{
                       backgroundImage: `url(${currentStory.user.character?.currentPortraitUrl})`,
                       backgroundSize: 'cover',
-                      backgroundPosition: 'center -108px',
-                      transform: 'scale(2.5)',
+                      backgroundPosition: 'center -110px',
+                      transform: 'scale(2)',
                     }}
                   />
                 </div>
 
                 <div>
                   <div className="text-white font-medium">
-                    {currentStory.user.name}
+                    {currentStory.user.character?.name}
                   </div>
                   <div className="text-xs text-gray-300">
                     {currentStory.questTitle}

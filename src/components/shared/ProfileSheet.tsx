@@ -35,8 +35,8 @@ export default function ProfileSheet() {
               style={{
                 backgroundImage: `url(${character?.portrait})`,
                 backgroundSize: 'cover',
-                backgroundPosition: 'center -108px',
-                transform: 'scale(2.5)',
+                backgroundPosition: 'center -110px',
+                transform: 'scale(2)',
               }}
             />
           </div>
