@@ -64,6 +64,8 @@ import { CharacterClass, RankingPeriod } from '../types'
 
 // src/features/ranking/components/RankingPage.tsx
 
+// src/features/ranking/components/RankingPage.tsx
+
 function RankingPageComponent() {
   const router = useRouter()
   const [period, setPeriod] = useState<RankingPeriod>('all-time')

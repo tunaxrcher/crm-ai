@@ -121,7 +121,7 @@ export class CharacterService extends BaseService {
     const session = await getServerSession()
     const userId = +session.user.id
 
-    console.log(`[Server] addXP To Character with ID: ${userId}`)
+    console.log(`[SERVER] addXP To Character with ID: ${userId}`)
 
     const userCharacter = await characterRepository.findByUserId(userId)
     if (!userCharacter) throw new Error('User Character not found')
@@ -237,7 +237,7 @@ export class CharacterService extends BaseService {
       await characterRepository.findByIdWithJobLevels(characterId)
     if (!character) throw new Error('Character not found')
 
-    console.log(`[Server] levelUp To Character with ID: ${characterId}`)
+    console.log(`[SERVER] levelUp To Character with ID: ${characterId}`)
 
     // เรียกใช้ฟังก์ชัน processLevelUp พร้อมอัพเดท level
     const levelService = new CharacterLevelService()
@@ -673,6 +673,8 @@ export class JobClassService extends BaseService {
   }
 
   async getAllJobClasss() {
+    console.log(`[SERVER] GET ALL Job Class`)
+
     return this.jobClassRepository.findAll()
   }
 

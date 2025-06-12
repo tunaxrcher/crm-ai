@@ -1,13 +1,4 @@
-// src/features/feed/repository.ts
-import {
-  Comment,
-  FeedItem,
-  Like,
-  Prisma,
-  ReplyComment,
-  Story,
-  StoryView,
-} from '@prisma/client'
+import { Comment, FeedItem, Like, Prisma, Story } from '@prisma/client'
 import { BaseRepository } from '@src/lib/repository/baseRepository'
 
 // Feed Repository
@@ -97,18 +88,6 @@ export class StoryRepository extends BaseRepository<Story> {
       where: { id },
     })
   }
-
-  // async findActiveStories(args?: Prisma.StoryFindManyArgs) {
-  //   return this.prisma.story.findMany({
-  //     where: {
-  //       expiresAt: {
-  //         gt: new Date(),
-  //       },
-  //     },
-  //     orderBy: { createdAt: 'desc' },
-  //     ...args,
-  //   })
-  // }
 
   /**
    * ดึง active stories พร้อมข้อมูลที่เกี่ยวข้อง

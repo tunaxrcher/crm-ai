@@ -65,7 +65,7 @@ export class RankingService extends BaseService {
       const userId = +session.user.id
 
       console.log(
-        `[Server] Fetching rankings for period: ${period}, class: ${characterClass}`
+        `[SERVER] Fetching rankings for period: ${period}, class: ${characterClass}`
       )
 
       // Get job class ID for filtering
@@ -118,7 +118,7 @@ export class RankingService extends BaseService {
    * Get the class configuration for rankings
    */
   async getClassConfig() {
-    console.log('[Server] Fetching class config for rankings')
+    console.log('[SERVER] Fetching class config for rankings')
 
     try {
       const jobClasses = await rankingRepository.getJobClasses()

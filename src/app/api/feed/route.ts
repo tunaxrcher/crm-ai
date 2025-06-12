@@ -2,38 +2,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { feedService } from '@src/features/feed/services/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 // GET /api/feed - ดึงข้อมูล feed items ทั้งหมด
-export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  console.log(`[API] GET Feed`)
 
-    const result = await feedService.getFeedItems({
-      page,
-      limit,
-    })
+  const searchParams = request.nextUrl.searchParams
+  const page = parseInt(searchParams.get('page') || '1')
+  const limit = parseInt(searchParams.get('limit') || '10')
 
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error('Error fetching feed:', error)
-    return NextResponse.json({ error: 'Failed to fetch feed' }, { status: 500 })
-  }
-}
+  const result = await feedService.getFeedItems({
+    page,
+    limit,
+  })
+
+  return NextResponse.json(result)
+})
 
 // POST /api/feed - สร้าง feed item ใหม่
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const feedItem = await feedService.createFeedItem(body)
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log(`[API] CREATE Feed`)
 
-    return NextResponse.json(feedItem)
-  } catch (error) {
-    console.error('Error creating feed item:', error)
-    return NextResponse.json(
-      { error: 'Failed to create feed item' },
-      { status: 500 }
-    )
-  }
-}
+  const body = await request.json()
+
+  const feedItem = await feedService.createFeedItem(body)
+
+  return NextResponse.json(feedItem)
+})

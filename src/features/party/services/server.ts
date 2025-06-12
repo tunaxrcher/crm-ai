@@ -77,7 +77,7 @@ const mockTeams: Team[] = [
 ]
 
 export async function getTeams(): Promise<Team[]> {
-  console.log('[Server] Fetching teams...')
+  console.log('[SERVER] Fetching teams...')
   // In a real app, this would fetch from a database/API
   return mockTeams
 }
@@ -278,7 +278,7 @@ const mockTeamDetail: TeamDetail = {
 export async function getTeamDetails(
   teamId: string
 ): Promise<TeamDetail | null> {
-  console.log(`[Server] Fetching details for team ${teamId}...`)
+  console.log(`[SERVER] Fetching details for team ${teamId}...`)
   // ในแอพจริง จะดึงข้อมูลจาก database/API
   if (teamId === 'team-1') {
     return mockTeamDetail
@@ -360,7 +360,7 @@ const mockTeamQuests: GlobalTeamQuest[] = [
 ]
 
 export async function getTeamQuests(): Promise<GlobalTeamQuest[]> {
-  console.log('[Server] Fetching team quests...')
+  console.log('[SERVER] Fetching team quests...')
   // ในแอพจริง จะดึงข้อมูลจาก database/API
   return mockTeamQuests
 }
@@ -378,7 +378,7 @@ export async function joinTeam(
   message: string
 ): Promise<{ success: boolean; message: string }> {
   console.log(
-    `[Server] Processing join request for team ${teamId} from user ${userId}`
+    `[SERVER] Processing join request for team ${teamId} from user ${userId}`
   )
 
   // In a real app, this would:
@@ -401,7 +401,7 @@ export async function joinTeam(
 export async function createTeam(
   teamData: Partial<Team>
 ): Promise<{ success: boolean; teamId?: string; message: string }> {
-  console.log('[Server] Creating new team:', teamData.name)
+  console.log('[SERVER] Creating new team:', teamData.name)
 
   // In a real app, this would:
   // 1. Validate the team data

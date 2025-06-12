@@ -12,9 +12,7 @@ export default function FeedPage() {
   useEffect(() => {
     try {
       // Detect errors that might occur during hydration or rendering
-      if (hasError) {
-        console.error('Feed page error:', errorMessage)
-      }
+      if (hasError) console.error('Feed page error:', errorMessage)
     } catch (error) {
       setHasError(true)
       setErrorMessage(error instanceof Error ? error.message : 'Unknown error')

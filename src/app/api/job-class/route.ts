@@ -1,15 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 import { jobClassService } from '@src/features/character/services/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export const GET = async () => {
-  try {
-    const workspaces = await jobClassService.getAllJobClasss()
-    return NextResponse.json(workspaces)
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    )
-  }
-}
+export const GET = withErrorHandling(async (_request: NextRequest) => {
+  console.log(`[API] GET ALL Job Class`)
+
+  const jobClass = await jobClassService.getAllJobClasss()
+
+  return NextResponse.json(jobClass)
+})

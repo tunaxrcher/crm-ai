@@ -29,7 +29,7 @@ export class FeedService extends BaseService {
     const session = await getServerSession()
     const userId = +session.user.id
 
-    console.log(`[Server] Feeds: ${userId}`)
+    console.log(`[SERVER] Feeds: ${userId}`)
 
     const { page, limit } = params
     const skip = (page - 1) * limit
@@ -126,79 +126,6 @@ export class FeedService extends BaseService {
     }
   }
 
-  // async getFeedItems(params: { page: number; limit: number; userId?: number }) {
-  //   const { page, limit, userId } = params;
-
-  //   // Step 1: ดึงจำนวนทั้งหมดของ feed ที่ตรงเงื่อนไข
-  //   const total = await feedRepository.count({
-  //     where: {
-  //       type: {
-  //         in: ["quest_completion", "level_up", "achievement"],
-  //       },
-  //     },
-  //   });
-
-  //   // Step 2: สุ่ม offset (โดยใช้ Math.random)
-  //   const maxOffset = Math.max(0, total - limit);
-  //   const skip = Math.floor(Math.random() * (maxOffset + 1));
-
-  //   // Step 3: ดึง feed แบบ random
-  //   const items = await feedRepository.findMany({
-  //     skip,
-  //     take: limit,
-  //     where: {
-  //       type: {
-  //         in: ["quest_completion", "level_up", "achievement"],
-  //       },
-  //     },
-  //     orderBy: {
-  //       createdAt: "desc", // หรือจะไม่ใส่ก็ได้หากไม่อยาก bias การเรียง
-  //     },
-  //     include: {
-  //       user: true,
-  //       likes: {
-  //         include: { user: true },
-  //       },
-  //       comments: {
-  //         include: {
-  //           user: true,
-  //           replies: {
-  //             include: { user: true },
-  //           },
-  //         },
-  //       },
-  //       questSubmission: {
-  //         include: { quest: true },
-  //       },
-  //       levelHistory: true,
-  //       achievement: {
-  //         include: { achievement: true },
-  //       },
-  //     },
-  //   });
-
-  //   // Step 4: enrich ข้อมูล hasLiked, likesCount, commentsCount
-  //   const itemsWithLikeStatus = items.map((item) => ({
-  //     ...item,
-  //     hasLiked: userId
-  //       ? item.likes.some((like) => like.userId === userId)
-  //       : false,
-  //     likesCount: item.likes.length,
-  //     commentsCount: item.comments.length,
-  //   }));
-
-  //   // Step 5: return พร้อม pagination
-  //   return {
-  //     items: itemsWithLikeStatus,
-  //     pagination: {
-  //       page,
-  //       limit,
-  //       total,
-  //       totalPages: Math.ceil(total / limit),
-  //     },
-  //   };
-  // }
-
   async getFeedItemById(id: number) {
     return feedRepository.findById(id, {
       include: {
@@ -219,7 +146,6 @@ export class FeedService extends BaseService {
     })
   }
 
-  // src/features/feed/services/server.ts
   async createFeedItem(data: {
     userId: number
     content: string
@@ -259,53 +185,15 @@ export class StoryService extends BaseService {
     return StoryService.instance
   }
 
-  // async getActiveStories() {
-  //   const session = await getServerSession()
-  //   const userId = +session.user.id
-
-  //   console.log(`[Server] Feed: ${userId}`)
-
-  //   const stories = await storyRepository.findActiveStories({
-  //     include: {
-  //       user: true,
-  //       views: true, // Include all views always to count
-  //     },
-  //   })
-
-  //   // Type assertion to let TypeScript know about the included relations
-  //   type StoryWithRelations = Prisma.StoryGetPayload<{
-  //     include: {
-  //       user: true
-  //       views: true
-  //     }
-  //   }>
-
-  //   const storiesWithRelations = stories as StoryWithRelations[]
-
-  //   return storiesWithRelations.map((story) => ({
-  //     ...story,
-  //     hasViewed:
-  //       userId && story.views
-  //         ? story.views.some((view) => view.userId === userId)
-  //         : false,
-  //     viewsCount: story.views?.length || 0,
-  //   }))
-  // }
   async getActiveStories() {
     const session = await getServerSession()
-    if (!session?.user?.id) {
-      throw new Error('User not authenticated')
-    }
-
     const userId = +session.user.id
-    console.log(`[StoryService] Fetching stories for user: ${userId}`)
+
+    console.log(`[SERVER] Fetching stories for user: ${userId}`)
 
     // 1. ดึง stories พร้อม user และ character
     const stories = await storyRepository.findActiveStories()
-
-    if (stories.length === 0) {
-      return []
-    }
+    if (stories.length === 0) return []
 
     // 2. ดึง statistics แบบ parallel
     const storyIds = stories.map((s) => s.id)
@@ -320,8 +208,6 @@ export class StoryService extends BaseService {
       viewStats.map((stat) => [stat.storyId, stat._count._all])
     )
     const userViewSet = new Set(userViews.map((v) => v.storyId))
-
-    console.log(stories)
 
     // 4. Merge ข้อมูลทั้งหมด
     return stories.map((story) => ({
@@ -403,7 +289,7 @@ export class LikeService extends BaseService {
     const session = await getServerSession()
     const userId = +session.user.id
 
-    console.log(`[Server] Like Feed: ${feedItemId}`)
+    console.log(`[SERVER] Like Feed: ${feedItemId}`)
 
     const existingLike = await likeRepository.findByUserAndFeedItem(
       userId,
@@ -463,7 +349,7 @@ export class CommentService extends BaseService {
     const session = await getServerSession()
     const userId = +session.user.id
 
-    console.log(`[Server] createComment: ${feedItemId}`)
+    console.log(`[SERVER] createComment: ${feedItemId}`)
 
     return commentRepository.create({
       feedItemId,

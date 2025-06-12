@@ -35,7 +35,7 @@ export class UserService extends BaseService {
     const session = await getServerSession()
     const userId = +session.user.id
 
-    console.log(`[Server] Fetching User Character with ID: ${userId}`)
+    console.log(`[SERVER] Fetching User Character with ID: ${userId}`)
 
     const userWithCharacter = await this.getUserWithCharacterData(userId)
     const character = userWithCharacter.character!
