@@ -27,10 +27,6 @@ import {
   Zap,
 } from 'lucide-react'
 
-// src/features/feed/components/CharacterDialog.tsx
-
-// src/features/feed/components/CharacterDialog.tsx
-
 interface CharacterDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -92,7 +88,7 @@ export default function CharacterDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md" hideClose>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <Image
             src="/auto-import-evx-logo.png"
