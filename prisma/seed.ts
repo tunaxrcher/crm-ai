@@ -1765,7 +1765,7 @@ async function createRewardItems() {
       stock: null,
       isActive: true,
       rarity: 'common' as const,
-      gachaProbability: 0.4,
+      gachaProbability: 0.01,
       metadata: {
         value: 10,
         currency: 'USD',
@@ -1784,7 +1784,7 @@ async function createRewardItems() {
       stock: null,
       isActive: true,
       rarity: 'uncommon' as const,
-      gachaProbability: 0.3,
+      gachaProbability: 0.02,
       metadata: {
         days: 1,
         type: 'paid',
@@ -1804,7 +1804,7 @@ async function createRewardItems() {
       stock: 5,
       isActive: true,
       rarity: 'rare' as const,
-      gachaProbability: 0.05,
+      gachaProbability: 0.001,
       metadata: {
         brand: 'Apple',
         model: 'Series 9',
@@ -1825,7 +1825,7 @@ async function createRewardItems() {
       stock: 3,
       isActive: true,
       rarity: 'epic' as const,
-      gachaProbability: 0.02,
+      gachaProbability: 0.002,
       metadata: {
         brand: 'Xiaomi',
         model: 'Mi Electric Scooter Pro 2',
