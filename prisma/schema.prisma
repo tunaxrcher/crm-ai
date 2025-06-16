@@ -99,6 +99,9 @@ model Character {
   questTokens        QuestToken[]
   rankings           Ranking[]
   tokenPurchases     TokenPurchase[]
+  rewardPurchases    RewardPurchase[]
+  gachaHistories     GachaHistory[]
+  rewardStats        UserRewardStats?
 
   @@index([jobClassId], map: "Character_jobClassId_fkey")
   @@index([jobLevelId], map: "Character_jobLevelId_fkey")
@@ -299,9 +302,9 @@ model QuestSubmission {
   ratingVIT              Int?
   ratingINT              Int?
   xpEarned               Int
-  tokensEarned           Int           @default(0)     // จำนวน token ที่ได้รับ
-  tokenMultiplier        Float         @default(1)     // ตัวคูณที่ใช้
-  bonusTokens            Int           @default(0)     // token โบนัส
+  tokensEarned           Int           @default(0) // จำนวน token ที่ได้รับ
+  tokenMultiplier        Float         @default(1) // ตัวคูณที่ใช้
+  bonusTokens            Int           @default(0) // token โบนัส
   feedback               String?       @db.Text
   score                  Int?
   submittedAt            DateTime      @default(now())
@@ -517,4 +520,100 @@ enum EnumPurchaseStatus {
   cancelled
   refunded
   expired
+}
+
+model RewardItem {
+  id               Int              @id @default(autoincrement())
+  name             String
+  subtitle         String?
+  description      String?          @db.Text
+  category         String // 'voucher', 'leave', 'gadget', 'vehicle'
+  itemType         String // 'gift_card', 'day_off', 'smartwatch', 'scooter'
+  icon             String?
+  imageUrl         String?
+  color            String? // gradient color class
+  tokenCost        Int // ราคาสำหรับซื้อตรง
+  gachaCost        Int              @default(50) // ราคาต่อครั้งสำหรับ gacha
+  stock            Int? // null = unlimited
+  isActive         Boolean          @default(true)
+  rarity           EnumRewardRarity @default(common)
+  gachaProbability Float            @default(0.1) // 0-1 probability
+  metadata         Json? // เก็บข้อมูลเพิ่มเติม เช่น gift card value
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  purchases      RewardPurchase[]
+  gachaHistories GachaHistory[]
+}
+
+model RewardPurchase {
+  id           Int              @id @default(autoincrement())
+  characterId  Int
+  rewardItemId Int
+  purchaseType EnumPurchaseType // 'direct' หรือ 'gacha'
+  tokenSpent   Int
+  quantity     Int              @default(1)
+  status       EnumRewardStatus @default(pending)
+  claimedAt    DateTime?
+  expiresAt    DateTime?
+  metadata     Json? // เก็บข้อมูล code, serial number etc.
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  character  Character  @relation(fields: [characterId], references: [id])
+  rewardItem RewardItem @relation(fields: [rewardItemId], references: [id])
+
+  @@index([characterId])
+  @@index([rewardItemId])
+}
+
+model GachaHistory {
+  id           Int      @id @default(autoincrement())
+  characterId  Int
+  rewardItemId Int? // null = ไม่ได้รางวัล
+  sessionId    String // group gacha pulls ที่เกิดพร้อมกัน
+  pullNumber   Int // ลำดับที่ดึงใน session (1-10)
+  tokenSpent   Int
+  isWin        Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  character  Character   @relation(fields: [characterId], references: [id])
+  rewardItem RewardItem? @relation(fields: [rewardItemId], references: [id])
+
+  @@index([characterId])
+  @@index([sessionId])
+}
+
+model UserRewardStats {
+  id               Int       @id @default(autoincrement())
+  characterId      Int       @unique
+  totalGachaPulls  Int       @default(0)
+  totalGachaWins   Int       @default(0)
+  totalTokensSpent Int       @default(0)
+  lastGachaAt      DateTime?
+  luckyStreak      Int       @default(0) // จำนวนครั้งที่ไม่ได้รางวัล (pity system)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  character Character @relation(fields: [characterId], references: [id])
+}
+
+enum EnumRewardRarity {
+  common
+  uncommon
+  rare
+  epic
+  legendary
+}
+
+enum EnumPurchaseType {
+  direct
+  gacha
+}
+
+enum EnumRewardStatus {
+  pending
+  claimed
+  expired
+  cancelled
 }

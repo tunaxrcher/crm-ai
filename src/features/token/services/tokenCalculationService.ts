@@ -51,12 +51,14 @@ export class TokenCalculationService {
     const characterBoostMultiplier = await this.getCharacterBoostMultiplier(
       character.id
     )
-    if (characterBoostMultiplier > 1) appliedBonuses.push(`Character Boost x${characterBoostMultiplier}`)
-    
+    if (characterBoostMultiplier > 1)
+      appliedBonuses.push(`Character Boost x${characterBoostMultiplier}`)
+
     // 4. Event multiplier
     const eventMultiplier = await this.getActiveEventMultiplier(quest.type)
-    if (eventMultiplier > 1) appliedBonuses.push(`Event Bonus x${eventMultiplier}`)
-    
+    if (eventMultiplier > 1)
+      appliedBonuses.push(`Event Bonus x${eventMultiplier}`)
+
     // 5. Calculate bonus tokens
     let bonusTokens = 0
 

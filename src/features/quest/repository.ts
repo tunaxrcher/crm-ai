@@ -443,7 +443,7 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
         // 2. ดึงข้อมูล character และ user
         const character = await tx.character.findUnique({
           where: { id: data.characterId },
-          include: { user: true }
+          include: { user: true },
         })
 
         if (!character) {
@@ -471,10 +471,18 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
             bonusTokens: data.tokenReward.bonusTokens,
             feedback: data.aiAnalysis.feedback,
             score: data.aiAnalysis.score,
-            mediaTranscript: data.mediaType === 'video' && data.mediaAnalysis && 'transcript' in data.mediaAnalysis 
-              ? data.mediaAnalysis.transcript : undefined,
-            mediaRevisedTranscript: data.mediaType === 'video' && data.mediaAnalysis && 'revised_transcript' in data.mediaAnalysis
-              ? data.mediaAnalysis.revised_transcript : undefined,
+            mediaTranscript:
+              data.mediaType === 'video' &&
+              data.mediaAnalysis &&
+              'transcript' in data.mediaAnalysis
+                ? data.mediaAnalysis.transcript
+                : undefined,
+            mediaRevisedTranscript:
+              data.mediaType === 'video' &&
+              data.mediaAnalysis &&
+              'revised_transcript' in data.mediaAnalysis
+                ? data.mediaAnalysis.revised_transcript
+                : undefined,
             mediaAnalysis: data.mediaAnalysis?.summary,
             submittedAt: new Date(),
           },
@@ -482,7 +490,7 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
 
         // 4. อัพเดท UserToken
         let userToken = await tx.userToken.findUnique({
-          where: { userId: character.userId }
+          where: { userId: character.userId },
         })
 
         if (!userToken) {
@@ -492,8 +500,8 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
               userId: character.userId,
               currentTokens: data.tokenReward.tokensEarned,
               totalEarnedTokens: data.tokenReward.tokensEarned,
-              totalSpentTokens: 0
-            }
+              totalSpentTokens: 0,
+            },
           })
         } else {
           // อัพเดท tokens
@@ -501,8 +509,8 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
             where: { userId: character.userId },
             data: {
               currentTokens: { increment: data.tokenReward.tokensEarned },
-              totalEarnedTokens: { increment: data.tokenReward.tokensEarned }
-            }
+              totalEarnedTokens: { increment: data.tokenReward.tokensEarned },
+            },
           })
         }
 
@@ -512,11 +520,12 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
             userId: character.userId,
             questId: data.questId,
             characterId: data.characterId,
-            tokensEarned: data.tokenReward.tokensEarned - data.tokenReward.bonusTokens,
+            tokensEarned:
+              data.tokenReward.tokensEarned - data.tokenReward.bonusTokens,
             bonusTokens: data.tokenReward.bonusTokens,
             multiplier: data.tokenReward.tokenMultiplier,
-            completedAt: new Date()
-          }
+            completedAt: new Date(),
+          },
         })
 
         // 6. สร้าง TokenTransaction
@@ -528,9 +537,10 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
             description: `Completed quest and earned ${data.tokenReward.tokensEarned} tokens`,
             referenceId: submission.id,
             referenceType: 'quest_submission',
-            balanceBefore: userToken.currentTokens - data.tokenReward.tokensEarned,
-            balanceAfter: userToken.currentTokens
-          }
+            balanceBefore:
+              userToken.currentTokens - data.tokenReward.tokensEarned,
+            balanceAfter: userToken.currentTokens,
+          },
         })
 
         return { submission, userToken }

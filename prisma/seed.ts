@@ -7,97 +7,100 @@ const region = process.env.DO_SPACES_REGION
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 เริ่มต้น Seeding...')
+  // console.log('🌱 เริ่มต้น Seeding...')
 
-  // ล้างข้อมูลเก่าออกก่อน (จะมีข้อมูลอยู่ในฐานข้อมูลหรือไม่ก็ได้)
-  await cleanupDB()
+  // // ล้างข้อมูลเก่าออกก่อน (จะมีข้อมูลอยู่ในฐานข้อมูลหรือไม่ก็ได้)
+  // await cleanupDB()
 
-  console.log('🔄 เริ่มสร้างข้อมูลใหม่...')
+  // console.log('🔄 เริ่มสร้างข้อมูลใหม่...')
 
-  // ============= สร้าง JobClass และ JobLevel =============
-  const jobClasses = await createJobClasses()
-  console.log(
-    `✅ สร้าง JobClass และ JobLevel ${jobClasses.length} อาชีพเรียบร้อย`
-  )
-
-  // ============= สร้าง User =============
-  // const users = await createUsers()
-  // console.log(`✅ สร้าง User ${users.length} คนเรียบร้อย`)
-
-  // ============= สร้าง Character =============
-  // const characters = await createCharacters(users, jobClasses)
-  // console.log(`✅ สร้าง Character ${characters.length} ตัวเรียบร้อย`)
-
-  // ============= สร้าง Achievement =============
-  const achievements = await createAchievements()
-  console.log(`✅ สร้าง Achievement ${achievements.length} ชิ้นเรียบร้อย`)
-
-  // ============= มอบ Achievement ให้กับ Character =============
-  // const characterAchievements = await assignAchievements(
-  //   characters,
-  //   achievements,
-  //   users
-  // )
+  // // ============= สร้าง JobClass และ JobLevel =============
+  // const jobClasses = await createJobClasses()
   // console.log(
-  //   `✅ มอบ Achievement ${characterAchievements.length} รายการเรียบร้อย`
+  //   `✅ สร้าง JobClass และ JobLevel ${jobClasses.length} อาชีพเรียบร้อย`
   // )
 
-  // ============= สร้าง Party =============
-  // const parties = await createParties(users)
-  // console.log(`✅ สร้าง Party ${parties.length} ทีมเรียบร้อย`)
+  // // ============= สร้าง User =============
+  // // const users = await createUsers()
+  // // console.log(`✅ สร้าง User ${users.length} คนเรียบร้อย`)
 
-  // ============= สร้าง Quest =============
-  const quests = await createQuests()
-  console.log(`✅ สร้าง Quest ${quests.length} เควสเรียบร้อย`)
+  // // ============= สร้าง Character =============
+  // // const characters = await createCharacters(users, jobClasses)
+  // // console.log(`✅ สร้าง Character ${characters.length} ตัวเรียบร้อย`)
 
-  // ============= เพิ่ม AssignedQuest =============
-  // const assignedQuests = await assignQuests(characters, quests, users)
-  // console.log(`✅ มอบหมาย Quest ${assignedQuests.length} เควสเรียบร้อย`)
+  // // ============= สร้าง Achievement =============
+  // const achievements = await createAchievements()
+  // console.log(`✅ สร้าง Achievement ${achievements.length} ชิ้นเรียบร้อย`)
 
-  // ============= ส่ง QuestSubmission =============
-  // const questSubmissions = await submitQuests(characters, quests)
-  // console.log(
-  //   `✅ ส่ง QuestSubmission ${questSubmissions.length} รายการเรียบร้อย`
-  // )
+  // // ============= มอบ Achievement ให้กับ Character =============
+  // // const characterAchievements = await assignAchievements(
+  // //   characters,
+  // //   achievements,
+  // //   users
+  // // )
+  // // console.log(
+  // //   `✅ มอบ Achievement ${characterAchievements.length} รายการเรียบร้อย`
+  // // )
 
-  // ============= สร้าง LevelHistory =============
-  // const levelHistories = await createLevelHistories(characters)
-  // console.log(`✅ สร้าง LevelHistory ${levelHistories.length} รายการเรียบร้อย`)
+  // // ============= สร้าง Party =============
+  // // const parties = await createParties(users)
+  // // console.log(`✅ สร้าง Party ${parties.length} ทีมเรียบร้อย`)
 
-  // ============= สร้าง FeedItem =============
-  // const feedItems = await createFeedItems(
-  //   users,
-  //   questSubmissions,
-  //   levelHistories,
-  //   characterAchievements
-  // )
-  // console.log(`✅ สร้าง FeedItem ${feedItems.length} รายการเรียบร้อย`)
+  // // ============= สร้าง Quest =============
+  // const quests = await createQuests()
+  // console.log(`✅ สร้าง Quest ${quests.length} เควสเรียบร้อย`)
 
-  // ============= สร้าง Story =============
-  // const stories = await createStories(users)
-  // console.log(`✅ สร้าง Story ${stories.length} รายการเรียบร้อย`)
+  // // ============= เพิ่ม AssignedQuest =============
+  // // const assignedQuests = await assignQuests(characters, quests, users)
+  // // console.log(`✅ มอบหมาย Quest ${assignedQuests.length} เควสเรียบร้อย`)
 
-  // ============= สร้าง Like =============
-  // const likes = await createLikes(users, feedItems)
-  // console.log(`✅ สร้าง Like ${likes.length} รายการเรียบร้อย`)
+  // // ============= ส่ง QuestSubmission =============
+  // // const questSubmissions = await submitQuests(characters, quests)
+  // // console.log(
+  // //   `✅ ส่ง QuestSubmission ${questSubmissions.length} รายการเรียบร้อย`
+  // // )
 
-  // ============= สร้าง Comment =============
-  // const comments = await createComments(users, feedItems)
-  // console.log(`✅ สร้าง Comment ${comments.length} รายการเรียบร้อย`)
+  // // ============= สร้าง LevelHistory =============
+  // // const levelHistories = await createLevelHistories(characters)
+  // // console.log(`✅ สร้าง LevelHistory ${levelHistories.length} รายการเรียบร้อย`)
 
-  // ============= สร้าง ReplyComment =============
-  // const replyComments = await createReplyComments(users, comments)
-  // console.log(`✅ สร้าง ReplyComment ${replyComments.length} รายการเรียบร้อย`)
+  // // ============= สร้าง FeedItem =============
+  // // const feedItems = await createFeedItems(
+  // //   users,
+  // //   questSubmissions,
+  // //   levelHistories,
+  // //   characterAchievements
+  // // )
+  // // console.log(`✅ สร้าง FeedItem ${feedItems.length} รายการเรียบร้อย`)
 
-  // ============= สร้าง StoryView =============
-  // const storyViews = await createStoryViews(users, stories)
-  // console.log(`✅ สร้าง StoryView ${storyViews.length} รายการเรียบร้อย`)
+  // // ============= สร้าง Story =============
+  // // const stories = await createStories(users)
+  // // console.log(`✅ สร้าง Story ${stories.length} รายการเรียบร้อย`)
 
-  // ============= สร้าง UserToken =============
-  // const userTokens = await createUserTokens(users)
-  // console.log(`✅ สร้าง UserToken ${userTokens.length} รายการเรียบร้อย`)
+  // // ============= สร้าง Like =============
+  // // const likes = await createLikes(users, feedItems)
+  // // console.log(`✅ สร้าง Like ${likes.length} รายการเรียบร้อย`)
 
-  console.log('✨ เสร็จสิ้นการ Seed ข้อมูล')
+  // // ============= สร้าง Comment =============
+  // // const comments = await createComments(users, feedItems)
+  // // console.log(`✅ สร้าง Comment ${comments.length} รายการเรียบร้อย`)
+
+  // // ============= สร้าง ReplyComment =============
+  // // const replyComments = await createReplyComments(users, comments)
+  // // console.log(`✅ สร้าง ReplyComment ${replyComments.length} รายการเรียบร้อย`)
+
+  // // ============= สร้าง StoryView =============
+  // // const storyViews = await createStoryViews(users, stories)
+  // // console.log(`✅ สร้าง StoryView ${storyViews.length} รายการเรียบร้อย`)
+
+  // // ============= สร้าง UserToken =============
+  // // const userTokens = await createUserTokens(users)
+  // // console.log(`✅ สร้าง UserToken ${userTokens.length} รายการเรียบร้อย`)
+
+  const rewards = await createRewardItems()
+  console.log(`✅ สร้าง Reward Items ${rewards.length} รายการเรียบร้อย`)
+
+  // console.log('✨ เสร็จสิ้นการ Seed ข้อมูล')
 }
 
 async function cleanupDB() {
@@ -1744,6 +1747,104 @@ function getTransactionDescription(type: string, amount: number): string {
   return (
     descriptions[type] || `Token transaction: ${amount > 0 ? '+' : ''}${amount}`
   )
+}
+
+async function createRewardItems() {
+  const rewardItems = [
+    {
+      name: 'Gift Card',
+      subtitle: '$10 Value',
+      description: 'บัตรของขวัญมูลค่า $10 สำหรับใช้ซื้อสินค้าออนไลน์',
+      category: 'voucher',
+      itemType: 'gift_card',
+      icon: 'Gift',
+      imageUrl: '/images/gift-card.png',
+      color: 'from-orange-400 to-red-500',
+      tokenCost: 500,
+      gachaCost: 50,
+      stock: null,
+      isActive: true,
+      rarity: 'common' as const,
+      gachaProbability: 0.4,
+      metadata: {
+        value: 10,
+        currency: 'USD',
+      },
+    },
+    {
+      name: 'Day Off',
+      subtitle: 'Paid Leave',
+      description: 'วันหยุดพิเศษ 1 วัน (Paid Leave)',
+      category: 'leave',
+      itemType: 'day_off',
+      icon: 'Sun',
+      color: 'from-yellow-400 to-orange-500',
+      tokenCost: 1000,
+      gachaCost: 50,
+      stock: null,
+      isActive: true,
+      rarity: 'uncommon' as const,
+      gachaProbability: 0.3,
+      metadata: {
+        days: 1,
+        type: 'paid',
+      },
+    },
+    {
+      name: 'Smartwatch',
+      subtitle: 'Apple Watch',
+      description: 'Apple Watch Series 9 สีดำ',
+      category: 'gadget',
+      itemType: 'smartwatch',
+      icon: 'Watch',
+      imageUrl: '/images/smartwatch.png',
+      color: 'from-gray-700 to-gray-900',
+      tokenCost: 20000,
+      gachaCost: 50,
+      stock: 5,
+      isActive: true,
+      rarity: 'rare' as const,
+      gachaProbability: 0.05,
+      metadata: {
+        brand: 'Apple',
+        model: 'Series 9',
+        color: 'Black',
+      },
+    },
+    {
+      name: 'Electric Scooter',
+      subtitle: 'E-Scooter',
+      description: 'สกูตเตอร์ไฟฟ้า Xiaomi Mi Electric Scooter Pro 2',
+      category: 'vehicle',
+      itemType: 'scooter',
+      icon: 'Zap',
+      imageUrl: '/images/electric-scooter.png',
+      color: 'from-purple-500 to-indigo-600',
+      tokenCost: 15000,
+      gachaCost: 50,
+      stock: 3,
+      isActive: true,
+      rarity: 'epic' as const,
+      gachaProbability: 0.02,
+      metadata: {
+        brand: 'Xiaomi',
+        model: 'Mi Electric Scooter Pro 2',
+        maxSpeed: 25,
+        range: 45,
+      },
+    },
+  ]
+
+  const createdRewards = []
+
+  for (const reward of rewardItems) {
+    const created = await prisma.rewardItem.create({
+      data: reward,
+    })
+    createdRewards.push(created)
+  }
+
+  return createdRewards
 }
 
 main()
