@@ -46,6 +46,7 @@ import {
   CheckCircle,
   Clock,
   Clock3,
+  Coins,
   Edit3,
   FileText,
   MessageSquare,
@@ -496,7 +497,7 @@ export default function QuestDetail({
                       )}
 
                       {/* AI Analysis Results */}
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="grid grid-cols-3 gap-4 mb-4">
                         <div className="bg-secondary/20 p-3 rounded-lg">
                           <div className="text-xs text-muted-foreground">
                             Score
@@ -512,6 +513,16 @@ export default function QuestDetail({
                           </div>
                           <div className="text-xl font-bold text-yellow-400">
                             {submission.xpEarned} XP
+                          </div>
+                        </div>
+
+                        <div className="bg-secondary/20 p-3 rounded-lg">
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                            <Coins className="h-3 w-3" />
+                            <span>Token</span>
+                          </div>
+                          <div className="text-xl font-bold text-green-400">
+                            {submission.tokensEarned || 0}
                           </div>
                         </div>
                       </div>
@@ -857,12 +868,12 @@ export default function QuestDetail({
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-secondary/20 p-3 rounded-lg">
+                  {/* <div className="bg-secondary/20 p-3 rounded-lg">
                     <div className="text-xs text-muted-foreground">Score</div>
                     <div className="text-xl font-bold">
                       {questSubmission.data.submission.score}/100
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="bg-secondary/20 p-3 rounded-lg">
                     <div className="text-xs text-muted-foreground">
@@ -870,6 +881,16 @@ export default function QuestDetail({
                     </div>
                     <div className="text-xl font-bold text-yellow-400">
                       {questSubmission.data.submission.xpEarned} XP
+                    </div>
+                  </div>
+
+                  <div className="bg-secondary/20 p-3 rounded-lg">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                      <Coins className="h-3 w-3" />
+                      <span>Token</span>
+                    </div>
+                    <div className="text-xl font-bold text-green-400">
+                      {questSubmission.data.userToken?.tokensEarned || 0}
                     </div>
                   </div>
                 </div>
@@ -948,41 +969,6 @@ export default function QuestDetail({
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        {/* Success Dialog */}
-        {/* <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-          <DialogContent className="sm:max-w-md text-center">
-            <div className="flex flex-col items-center py-4">
-              <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
-                <Check className="h-8 w-8 text-green-500" />
-              </div>
-
-              <DialogHeader className="text-center mb-6">
-                <DialogTitle className="text-xl font-bold">
-                  Quest Completed!
-                </DialogTitle>
-                <DialogDescription className="text-muted-foreground mt-1">
-                  Your submission has been successfully processed
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="flex items-center justify-center w-full mb-4">
-                <div className="flex items-center bg-secondary/30 px-6 py-3 rounded-lg">
-                  <Award className="h-6 w-6 mr-2 text-yellow-400" />
-                  <span className="text-lg font-bold text-yellow-400">
-                    +{questSubmission.data?.aiAnalysis.xpEarned}
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                onClick={handleSuccessClose}
-                className="ai-gradient-bg w-full">
-                Back to Quests
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog> */}
       </div>
     </ErrorBoundary>
   )

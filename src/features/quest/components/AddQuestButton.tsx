@@ -4,6 +4,7 @@
 import { useState } from 'react'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { Badge } from '@src/components/ui/badge'
@@ -20,44 +21,19 @@ import { useNotification } from '@src/components/ui/notification-system'
 import { Progress } from '@src/components/ui/progress'
 import { useQuestNotifications } from '@src/features/quest/hooks/useQuestNotifications'
 import {
-  Award,
   Camera,
   Check,
+  Coins,
   Edit3,
   Plus,
   Send,
   Sparkles,
   Upload,
   X,
+  Zap,
 } from 'lucide-react'
 
 import { useSelfSubmitQuest, useUpdateQuestSubmission } from '../hooks/api'
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
-
-// src/features/quest/components/AddQuestButton.tsx
 
 // src/features/quest/components/AddQuestButton.tsx
 
@@ -92,16 +68,7 @@ const AddQuestButton = () => {
     if (!file) return
 
     if (file.size > MAX_SIZE_BYTES) {
-      // แจ้งเตือน
-      // addNotification({
-      //   type: 'error',
-      //   title: 'ไฟล์ใหญ่เกินไป',
-      //   message: `ขนาดไฟล์ต้องไม่เกิน ${MAX_SIZE_MB}MB`,
-      //   duration: 3000,
-      // })
       alert(`ไฟล์มีขนาดเกิน ${MAX_SIZE_MB}MB กรุณาเลือกไฟล์ที่เล็กกว่านี้`)
-
-      // รีเซ็ต input เพื่อให้สามารถเลือกไฟล์เดิมได้อีกครั้ง
       e.target.value = ''
       return
     }
@@ -115,13 +82,9 @@ const AddQuestButton = () => {
     if (!uploadedFile && !description) return
 
     try {
-      // เริ่มต้นจาก 0%
       setAiAnalysisProgress(0)
-
-      // ปิด modal หลัก
       setShowModal(false)
 
-      // จำลองการอัพเดท progress
       const interval = setInterval(() => {
         setAiAnalysisProgress((prev) => {
           const newProgress = prev + Math.random() * 10
@@ -129,22 +92,18 @@ const AddQuestButton = () => {
         })
       }, 300)
 
-      // ส่งงานไปยัง backend
       const result = await selfSubmitQuest.mutateAsync({
         mediaFile: uploadedFile || undefined,
         description: description || undefined,
       })
 
-      // เสร็จสิ้นการประมวลผล
       clearInterval(interval)
       setAiAnalysisProgress(100)
 
-      // ตั้งค่า editable summary จากผลการวิเคราะห์ AI
       if (result?.submission?.mediaTranscript) {
         setEditableSummary(result.submission.mediaTranscript)
       }
 
-      // แสดง notifications
       if (result?.characterUpdate) {
         handleQuestSubmissionNotifications({
           xpEarned: result.submission.xpEarned,
@@ -153,7 +112,6 @@ const AddQuestButton = () => {
         })
       }
 
-      // แสดง AI Result Dialog หลังจากเสร็จสิ้น
       setTimeout(() => {
         setShowAIResult(true)
       }, 500)
@@ -184,7 +142,6 @@ const AddQuestButton = () => {
     }
 
     try {
-      // เรียกใช้ mutation สำหรับอัพเดทเนื้อหาโพสต์
       await updateSummary.mutateAsync({
         questId: selfSubmitQuest.data.quest.id.toString(),
         submissionId: selfSubmitQuest.data.submission.id,
@@ -198,10 +155,7 @@ const AddQuestButton = () => {
         duration: 3000,
       })
 
-      // ปิด AI result dialog
       setShowAIResult(false)
-
-      // แสดง success dialog
       setShowSuccessDialog(true)
     } catch (error) {
       addNotification({
@@ -212,10 +166,10 @@ const AddQuestButton = () => {
       })
     }
   }
+
   const handleSuccessClose = () => {
     setShowSuccessDialog(false)
     resetForm()
-    // นำผู้ใช้ไปยังหน้า Feed
     router.push('/feed')
   }
 
@@ -225,6 +179,7 @@ const AddQuestButton = () => {
     setDescription('')
     setEditableSummary('')
   }
+
   return (
     <>
       {/* ปุ่มลอย - Fixed Version */}
@@ -255,26 +210,6 @@ const AddQuestButton = () => {
             className="absolute w-2 h-2 bg-cyan-400 rounded-full shadow-lg"
             style={{ transform: 'translateX(30px)' }}></div>
         </div>
-
-        {/* Achievement badges */}
-        {/* <div
-          className="absolute -top-8 -left-8 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full animate-bounce shadow-lg"
-          style={{ animationDelay: "0.3s" }}
-        >
-          +XP
-        </div> */}
-        {/* <div
-          className="absolute -top-6 -right-10 bg-purple-500 text-white text-xs px-2 py-1 rounded-full animate-bounce shadow-lg"
-          style={{ animationDelay: "0.7s" }}
-        >
-          Quest!
-        </div> */}
-        {/* <div
-          className="absolute -bottom-8 -left-6 bg-green-500 text-white text-xs px-2 py-1 rounded-full animate-bounce shadow-lg"
-          style={{ animationDelay: "1s" }}
-        >
-          Level Up
-        </div> */}
 
         {/* Main button */}
         <Button
@@ -427,14 +362,6 @@ const AddQuestButton = () => {
           </div>
 
           <DialogFooter>
-            {/* <Button
-              variant="outline"
-              onClick={() => {
-                resetForm()
-                setShowModal(false)
-              }}>
-              ยกเลิก
-            </Button> */}
             <Button
               className="ai-gradient-bg w-full"
               disabled={
@@ -475,7 +402,7 @@ const AddQuestButton = () => {
             <ul className="text-xs text-muted-foreground space-y-1">
               <li>• AI จะตรวจสอบข้อมูลของคุณ</li>
               <li>• ผลงานที่คุณส่งจะถูกประเมินโดย AI</li>
-              <li>• AI จะคำนวน คำนวน XP และบันทึกข้อมูล</li>
+              <li>• AI จะคำนวน XP และ Token ตามผลงาน</li>
               <li>• ผลงานของคุณจะปรากฏในฟีดกิจกรรมทันที</li>
               <hr />
               <li>• สามารถแก้ไขข้อความได้ หากผิดพลาด</li>
@@ -531,7 +458,7 @@ const AddQuestButton = () => {
                 {aiAnalysisProgress > 80 && (
                   <div className="flex items-center">
                     <Check className="h-3 w-3 mr-1 text-green-400" />
-                    <span>คำนวน XP และบันทึกข้อมูล</span>
+                    <span>คำนวน XP และ Token</span>
                   </div>
                 )}
                 {aiAnalysisProgress > 97 && (
@@ -546,7 +473,7 @@ const AddQuestButton = () => {
         </DialogContent>
       </Dialog>
 
-      {/* AI Result Dialog */}
+      {/* AI Result Dialog - แก้ไขส่วนนี้ */}
       <Dialog
         open={showAIResult}
         onOpenChange={(open) => {
@@ -590,24 +517,53 @@ const AddQuestButton = () => {
                 </div>
               )}
 
-              {/* Results */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-secondary/20 p-3 rounded-lg">
-                  <div className="text-xs text-muted-foreground">Score</div>
+              {/* Results - เพิ่ม Token Display */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* <div className="bg-secondary/20 p-3 rounded-lg">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                    <Award className="h-3 w-3" />
+                    <span>Score</span>
+                  </div>
                   <div className="text-xl font-bold">
                     {selfSubmitQuest.data.submission?.score || 0}/100
+                  </div>
+                </div> */}
+
+                <div className="bg-secondary/20 p-3 rounded-lg">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                    <Zap className="h-3 w-3" />
+                    <span>XP ที่ได้รับ</span>
+                  </div>
+                  <div className="text-xl font-bold text-yellow-400">
+                    {selfSubmitQuest.data.submission?.xpEarned || 0}
                   </div>
                 </div>
 
                 <div className="bg-secondary/20 p-3 rounded-lg">
-                  <div className="text-xs text-muted-foreground">
-                    XP ที่ได้รับ
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                    <Coins className="h-3 w-3" />
+                    <span>Token ที่ได้รับ</span>
                   </div>
-                  <div className="text-xl font-bold text-yellow-400">
-                    {selfSubmitQuest.data.submission?.xpEarned || 0} XP
+                  <div className="text-xl font-bold text-green-400">
+                    {selfSubmitQuest.data.userToken?.tokensEarned || 0}
                   </div>
                 </div>
               </div>
+
+              {/* Current Balance */}
+              {/* {selfSubmitQuest.data.userToken && (
+                <div className="p-3 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      ยอด Token สะสม:
+                    </span>
+                    <span className="text-lg font-semibold flex items-center gap-1">
+                      <Coins className="h-4 w-4 text-amber-500" />
+                      {selfSubmitQuest.data.userToken.currentTokens} 
+                    </span>
+                  </div>
+                </div>
+              )} */}
 
               {/* Feedback */}
               <div>

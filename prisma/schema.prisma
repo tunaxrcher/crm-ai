@@ -17,7 +17,6 @@ model User {
   bio               String?                @db.Text
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
-  assignedQuests    AssignedQuest[]
   character         Character?
   achievements      CharacterAchievement[]
   comments          Comment[]
@@ -266,6 +265,7 @@ model Quest {
   updatedAt        DateTime          @updatedAt
   baseTokenReward  Int               @default(10)
   maxTokenReward   Int?
+  jobClassId       Int?
   tokenMultiplier  Float             @default(1)
   assignedQuests   AssignedQuest[]
   questSubmissions QuestSubmission[]
@@ -279,15 +279,12 @@ model AssignedQuest {
   status      EnumQuestStatus  @default(active)
   questId     Int
   characterId Int
-  userId      Int
   character   Character        @relation(fields: [characterId], references: [id])
   quest       Quest            @relation(fields: [questId], references: [id])
-  user        User             @relation(fields: [userId], references: [id])
   submission  QuestSubmission?
 
   // @@unique([questId, characterId])
   @@index([characterId], map: "AssignedQuest_characterId_fkey")
-  @@index([userId], map: "AssignedQuest_userId_fkey")
 }
 
 model QuestSubmission {
@@ -302,6 +299,9 @@ model QuestSubmission {
   ratingVIT              Int?
   ratingINT              Int?
   xpEarned               Int
+  tokensEarned           Int           @default(0)     // จำนวน token ที่ได้รับ
+  tokenMultiplier        Float         @default(1)     // ตัวคูณที่ใช้
+  bonusTokens            Int           @default(0)     // token โบนัส
   feedback               String?       @db.Text
   score                  Int?
   submittedAt            DateTime      @default(now())

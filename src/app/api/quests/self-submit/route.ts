@@ -2,46 +2,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { questSubmissionService } from '@src/features/quest/services/server'
-import { getServerSession } from '@src/lib/auth'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export async function POST(req: NextRequest) {
-  try {
-    // ตรวจสอบ authentication
-    const session = await getServerSession()
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log(`[API] Submit Quest`)
 
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { message: 'Unauthorized: Please log in' },
-        { status: 401 }
-      )
-    }
+  const formData = await request.formData()
 
-    const userId = +session.user.id
-    const formData = await req.formData()
+  // รับไฟล์และข้อมูลจาก request
+  const mediaFile = formData.get('mediaFile') as File | null
+  const description = formData.get('description') as string | null
 
-    // รับไฟล์และข้อมูลจาก request
-    const mediaFile = formData.get('mediaFile') as File | null
-    const description = formData.get('description') as string | null
+  // ส่งข้อมูลไปยังเซอร์วิส
+  const result = await questSubmissionService.selfSubmitQuest(
+    mediaFile || undefined,
+    description || undefined
+  )
 
-    // ส่งข้อมูลไปยังเซอร์วิส
-    const result = await questSubmissionService.selfSubmitQuest(
-      userId,
-      mediaFile || undefined,
-      description || undefined
-    )
-
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error('Error in self-submit quest API:', error)
-
-    return NextResponse.json(
-      {
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to process quest submission',
-      },
-      { status: 500 }
-    )
-  }
-}
+  return NextResponse.json(result)
+})

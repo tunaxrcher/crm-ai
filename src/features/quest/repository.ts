@@ -1,4 +1,9 @@
-import { EnumMediaType, Quest, QuestSubmission } from '@prisma/client'
+import {
+  AssignedQuest,
+  EnumMediaType,
+  Quest,
+  QuestSubmission,
+} from '@prisma/client'
 import { BaseRepository } from '@src/lib/repository/baseRepository'
 
 import { AssignedQuestWithDetails } from './types'
@@ -44,7 +49,7 @@ export class QuestRepository extends BaseRepository<Quest> {
     })
   }
 
-  async create(data: Omit<Quest, 'id' | 'createdAt' | 'updatedAt'>) {
+  async create(data: any) {
     return this.prisma.quest.create({
       data,
     })
@@ -229,6 +234,50 @@ export class QuestRepository extends BaseRepository<Quest> {
 }
 export const questRepository = new QuestRepository()
 
+export class AssignedQuestRepository extends BaseRepository<AssignedQuest> {
+  private static instance: AssignedQuestRepository
+
+  public static getInstance() {
+    if (!AssignedQuestRepository.instance) {
+      AssignedQuestRepository.instance = new AssignedQuestRepository()
+    }
+    return AssignedQuestRepository.instance
+  }
+
+  async findAll() {
+    return this.prisma.assignedQuest.findMany()
+  }
+
+  async findById(id: number) {
+    return this.prisma.assignedQuest.findUnique({
+      where: { id },
+    })
+  }
+
+  async create(data: any) {
+    return this.prisma.assignedQuest.create({
+      data,
+    })
+  }
+
+  async update(
+    id: number,
+    data: Partial<Omit<AssignedQuest, 'id' | 'createdAt' | 'updatedAt'>>
+  ) {
+    return this.prisma.assignedQuest.update({
+      where: { id },
+      data,
+    })
+  }
+
+  async delete(id: number) {
+    return this.prisma.assignedQuest.delete({
+      where: { id },
+    })
+  }
+}
+export const assignedQuestRepository = new AssignedQuestRepository()
+
 export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
   private static instance: QuestSubmissionRepository
 
@@ -353,6 +402,144 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
     } catch (error) {
       console.error('Error creating quest submission:', error)
       throw new Error('Failed to create quest submission')
+    }
+  }
+
+  // บันทึก quest submission พร้อมระบบ token
+  async createQuestSubmissionWithToken(data: {
+    questId: number
+    questXpEarned: number
+    characterId: number
+    mediaType: string
+    mediaUrl?: string
+    description?: string
+    aiAnalysis: AIAnalysisResult
+    mediaAnalysis?: MediaAnalysisResult | ImageAnalysisResult
+    tokenReward: {
+      tokensEarned: number
+      tokenMultiplier: number
+      bonusTokens: number
+    }
+  }) {
+    try {
+      // ใช้ transaction เพื่อความถูกต้องของข้อมูล
+      const result = await this.prisma.$transaction(async (tx) => {
+        // 1. ค้นหา AssignedQuest
+        const assignedQuest = await tx.assignedQuest.findFirst({
+          where: {
+            questId: data.questId,
+            characterId: data.characterId,
+            status: 'active',
+          },
+          orderBy: {
+            assignedAt: 'desc',
+          },
+        })
+
+        if (!assignedQuest) {
+          throw new Error('No active assigned quest found')
+        }
+
+        // 2. ดึงข้อมูล character และ user
+        const character = await tx.character.findUnique({
+          where: { id: data.characterId },
+          include: { user: true }
+        })
+
+        if (!character) {
+          throw new Error('Character not found')
+        }
+
+        // 3. สร้าง Quest Submission
+        const submission = await tx.questSubmission.create({
+          data: {
+            character: { connect: { id: data.characterId } },
+            quest: { connect: { id: data.questId } },
+            assignedQuest: { connect: { id: assignedQuest.id } },
+            mediaType: data.mediaType as any,
+            mediaUrl: data.mediaUrl,
+            description: data.description,
+            tags: data.aiAnalysis.tags,
+            ratingAGI: data.aiAnalysis.ratings.agi,
+            ratingSTR: data.aiAnalysis.ratings.str,
+            ratingDEX: data.aiAnalysis.ratings.dex,
+            ratingVIT: data.aiAnalysis.ratings.vit,
+            ratingINT: data.aiAnalysis.ratings.int,
+            xpEarned: data.questXpEarned,
+            tokensEarned: data.tokenReward.tokensEarned,
+            tokenMultiplier: data.tokenReward.tokenMultiplier,
+            bonusTokens: data.tokenReward.bonusTokens,
+            feedback: data.aiAnalysis.feedback,
+            score: data.aiAnalysis.score,
+            mediaTranscript: data.mediaType === 'video' && data.mediaAnalysis && 'transcript' in data.mediaAnalysis 
+              ? data.mediaAnalysis.transcript : undefined,
+            mediaRevisedTranscript: data.mediaType === 'video' && data.mediaAnalysis && 'revised_transcript' in data.mediaAnalysis
+              ? data.mediaAnalysis.revised_transcript : undefined,
+            mediaAnalysis: data.mediaAnalysis?.summary,
+            submittedAt: new Date(),
+          },
+        })
+
+        // 4. อัพเดท UserToken
+        let userToken = await tx.userToken.findUnique({
+          where: { userId: character.userId }
+        })
+
+        if (!userToken) {
+          // สร้าง UserToken ถ้ายังไม่มี
+          userToken = await tx.userToken.create({
+            data: {
+              userId: character.userId,
+              currentTokens: data.tokenReward.tokensEarned,
+              totalEarnedTokens: data.tokenReward.tokensEarned,
+              totalSpentTokens: 0
+            }
+          })
+        } else {
+          // อัพเดท tokens
+          userToken = await tx.userToken.update({
+            where: { userId: character.userId },
+            data: {
+              currentTokens: { increment: data.tokenReward.tokensEarned },
+              totalEarnedTokens: { increment: data.tokenReward.tokensEarned }
+            }
+          })
+        }
+
+        // 5. สร้าง QuestToken record
+        await tx.questToken.create({
+          data: {
+            userId: character.userId,
+            questId: data.questId,
+            characterId: data.characterId,
+            tokensEarned: data.tokenReward.tokensEarned - data.tokenReward.bonusTokens,
+            bonusTokens: data.tokenReward.bonusTokens,
+            multiplier: data.tokenReward.tokenMultiplier,
+            completedAt: new Date()
+          }
+        })
+
+        // 6. สร้าง TokenTransaction
+        await tx.tokenTransaction.create({
+          data: {
+            userId: character.userId,
+            amount: data.tokenReward.tokensEarned,
+            type: 'quest_completion',
+            description: `Completed quest and earned ${data.tokenReward.tokensEarned} tokens`,
+            referenceId: submission.id,
+            referenceType: 'quest_submission',
+            balanceBefore: userToken.currentTokens - data.tokenReward.tokensEarned,
+            balanceAfter: userToken.currentTokens
+          }
+        })
+
+        return { submission, userToken }
+      })
+
+      return result
+    } catch (error) {
+      console.error('Error creating quest submission with token:', error)
+      throw new Error('Failed to create quest submission with token reward')
     }
   }
 

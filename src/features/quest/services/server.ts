@@ -1,6 +1,8 @@
 // src/features/quest/services/server.ts
+import { characterRepository } from '@src/features/character/repository'
 import { characterService } from '@src/features/character/services/server'
 import { storyService } from '@src/features/feed/services/server'
+import { tokenCalculationService } from '@src/features/token/services/tokenCalculationService'
 import { getServerSession } from '@src/lib/auth'
 import { prisma } from '@src/lib/db'
 import { openaiService } from '@src/lib/services/openaiService'
@@ -12,6 +14,7 @@ import OpenAI from 'openai'
 import {
   QuestRepository,
   QuestSubmissionRepository,
+  assignedQuestRepository,
   questRepository,
   questSubmissionRepository,
 } from '../repository'
@@ -276,7 +279,6 @@ export class QuestService extends BaseService {
           data: {
             questId: quest.id,
             characterId: characterId,
-            userId: userId,
             status: 'active',
             assignedAt: new Date(),
             expiresAt: expiresAt,
@@ -335,7 +337,6 @@ export class QuestService extends BaseService {
           data: {
             questId: quest.id,
             characterId: characterId,
-            userId: userId,
             status: 'active',
             assignedAt: new Date(),
             expiresAt: expiresAt,
@@ -390,7 +391,6 @@ export class QuestService extends BaseService {
           data: {
             questId: quest.id,
             characterId: characterId,
-            userId: userId,
             status: 'active',
             assignedAt: new Date(),
             expiresAt: expiresAt,
@@ -571,7 +571,6 @@ export class QuestService extends BaseService {
     }
   }
 }
-
 export const questService = QuestService.getInstance()
 
 export class QuestSubmissionService extends BaseService {
@@ -636,9 +635,25 @@ export class QuestSubmissionService extends BaseService {
   //       )
   //     if (!quest || !character) throw new Error('Quest or character not found')
 
-  //     // 2. อัพโหลดไฟล์ไป S3 (ถ้ามี)
+  //     // 2. ตรวจสอบว่ามี active assigned quest หรือไม่
+  //     const assignedQuest = await prisma.assignedQuest.findFirst({
+  //       where: {
+  //         questId,
+  //         characterId,
+  //         status: 'active',
+  //       },
+  //       orderBy: {
+  //         assignedAt: 'desc',
+  //       },
+  //     })
+
+  //     if (!assignedQuest)
+  //       throw new Error('No active assigned quest found for this user')
+
+  //     // 2.1 อัพโหลดไฟล์ไป S3 (ถ้ามี)
   //     let mediaUrl: string | undefined
   //     let mediaType: 'image' | 'video' | 'text' = 'text'
+  //     let thumbnailUrl: string | undefined
 
   //     if (mediaFile) {
   //       const uploadResult = await s3UploadService.uploadFile(mediaFile)
@@ -648,6 +663,19 @@ export class QuestSubmissionService extends BaseService {
 
   //       mediaUrl = uploadResult.url
   //       mediaType = this.getMediaType(mediaFile)
+
+  //       // ถ้าเป็นวิดีโอ ให้สร้าง thumbnail
+  //       if (mediaType === 'video') {
+  //         try {
+  //           // สร้างและอัปโหลด thumbnail
+  //           thumbnailUrl =
+  //             await videoThumbnailService.generateAndUploadThumbnail(mediaFile)
+  //           console.log('Generated video thumbnail:', thumbnailUrl)
+  //         } catch (thumbnailError) {
+  //           console.error('Failed to generate thumbnail:', thumbnailError)
+  //           // ไม่ให้การสร้าง thumbnail ล้มเหลวส่งผลต่อการส่ง quest
+  //         }
+  //       }
   //     }
 
   //     // 3. วิเคราะห์สื่อ (วิดีโอหรือรูปภาพ)
@@ -679,7 +707,7 @@ export class QuestSubmissionService extends BaseService {
   //       // 4. เตรียมข้อมูลสำหรับ AI analysis
   //       const aiPrompt: OpenAIPrompt = {
   //         questTitle: quest.title,
-  //         questDescription: quest.description,
+  //         questDescription: quest.description || '',
   //         questRequirements: [], // ในอนาคตอาจเพิ่ม requirements ใน quest schema
   //         mediaUrl,
   //         userDescription: description,
@@ -728,12 +756,13 @@ export class QuestSubmissionService extends BaseService {
   //           mediaUrl
   //         )
 
-  //       // 10. สร้าง story (เพิ่มขั้นตอนนี้)
+  //       // 10. สร้าง story (เพิ่ม thumbnailUrl)
   //       const story = await storyService.createStory({
   //         userId: character.userId,
   //         content: `ทำเควส "${quest.title}" สำเร็จ`,
   //         type: mediaType,
   //         mediaUrl,
+  //         thumbnailUrl, // เพิ่ม thumbnailUrl
   //         text: submission.mediaRevisedTranscript || description,
   //         expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
   //       })
@@ -760,9 +789,10 @@ export class QuestSubmissionService extends BaseService {
   //         aiAnalysis,
   //         submission,
   //         mediaType,
+  //         thumbnailUrl, // เพิ่ม thumbnailUrl ในข้อมูลที่ส่งกลับ
   //         characterUpdate: characterUpdateResult,
   //         feedItem,
-  //         story, // เพิ่ม story ในข้อมูลที่ส่งกลับ
+  //         story,
   //       }
   //     }
   //   } catch (error) {
@@ -772,6 +802,8 @@ export class QuestSubmissionService extends BaseService {
   //     )
   //   }
   // }
+  // src/features/quest/services/server.ts - แก้ไขเมธอด submitQuest
+
   async submitQuest(
     questId: number,
     characterId: number,
@@ -819,13 +851,11 @@ export class QuestSubmissionService extends BaseService {
         // ถ้าเป็นวิดีโอ ให้สร้าง thumbnail
         if (mediaType === 'video') {
           try {
-            // สร้างและอัปโหลด thumbnail
             thumbnailUrl =
               await videoThumbnailService.generateAndUploadThumbnail(mediaFile)
             console.log('Generated video thumbnail:', thumbnailUrl)
           } catch (thumbnailError) {
             console.error('Failed to generate thumbnail:', thumbnailError)
-            // ไม่ให้การสร้าง thumbnail ล้มเหลวส่งผลต่อการส่ง quest
           }
         }
       }
@@ -841,7 +871,6 @@ export class QuestSubmissionService extends BaseService {
             console.log('Video analysis completed:', mediaAnalysis)
           } catch (videoError) {
             console.error('Video analysis failed:', videoError)
-            // ไม่ให้ video analysis ล้มเหลวส่งผลต่อการ submit ทั้งหมด
           }
         } else if (mediaType === 'image') {
           console.log('Analyzing image content...')
@@ -850,102 +879,120 @@ export class QuestSubmissionService extends BaseService {
             console.log('Image analysis completed:', mediaAnalysis)
           } catch (imageError) {
             console.error('Image analysis failed:', imageError)
-            // ไม่ให้ image analysis ล้มเหลวส่งผลต่อการ submit ทั้งหมด
           }
-        } else {
-          console.log('Unknown media type, skipping analysis')
         }
+      }
 
-        // 4. เตรียมข้อมูลสำหรับ AI analysis
-        const aiPrompt: OpenAIPrompt = {
-          questTitle: quest.title,
-          questDescription: quest.description || '',
-          questRequirements: [], // ในอนาคตอาจเพิ่ม requirements ใน quest schema
-          mediaUrl,
-          userDescription: description,
-        }
+      // 4. เตรียมข้อมูลสำหรับ AI analysis
+      const aiPrompt: OpenAIPrompt = {
+        questTitle: quest.title,
+        questDescription: quest.description || '',
+        questRequirements: [],
+        mediaUrl,
+        userDescription: description,
+      }
 
-        // 5. ส่งข้อมูลให้ AI วิเคราะห์ (รวมกับข้อมูลวิดีโอ)
-        const aiAnalysis = await openaiService.analyzeQuestSubmission(
-          aiPrompt,
-          mediaAnalysis
-        )
+      // 5. ส่งข้อมูลให้ AI วิเคราะห์
+      const aiAnalysis = await openaiService.analyzeQuestSubmission(
+        aiPrompt,
+        mediaAnalysis
+      )
 
-        // 6. บันทึก quest submission (รวม media analysis)
-        const submission =
-          await questSubmissionRepository.createQuestSubmission({
-            questId,
-            questXpEarned: quest.xpReward,
-            characterId,
-            mediaType,
-            mediaUrl,
-            description,
-            aiAnalysis,
-            mediaAnalysis,
-          })
+      // 6. คำนวณ Token Reward
+      const tokenCalculation =
+        await tokenCalculationService.calculateTokenReward({
+          quest,
+          character,
+          aiScore: aiAnalysis.score,
+          ratings: aiAnalysis.ratings,
+        })
+      console.log('Token calculation result:', tokenCalculation)
 
-        // 7. อัพเดทสถานะ assigned quest
-        await questSubmissionRepository.updateAssignedQuestStatus(
+      // 7. บันทึก quest submission พร้อม token reward
+      const { submission, userToken } =
+        await questSubmissionRepository.createQuestSubmissionWithToken({
           questId,
-          characterId
-        )
-
-        // 8. อัพเดท character XP
-        const characterUpdateResult = await characterService.addXP(
-          quest.xpReward
-        )
-
-        // 9. สร้าง feed item
-        const feedItem =
-          await questSubmissionRepository.createQuestCompletionFeedItem(
-            character.userId,
-            'quest_completion',
-            submission.mediaRevisedTranscript,
-            mediaType,
-            quest.title,
-            quest.xpReward,
-            submission.id,
-            mediaUrl
-          )
-
-        // 10. สร้าง story (เพิ่ม thumbnailUrl)
-        const story = await storyService.createStory({
-          userId: character.userId,
-          content: `ทำเควส "${quest.title}" สำเร็จ`,
-          type: mediaType,
+          questXpEarned: quest.xpReward,
+          characterId,
+          mediaType,
           mediaUrl,
-          thumbnailUrl, // เพิ่ม thumbnailUrl
-          text: submission.mediaRevisedTranscript || description,
-          expiresInHours: 24, // story หมดอายุใน 24 ชั่วโมง
+          description,
+          aiAnalysis,
+          mediaAnalysis,
+          tokenReward: {
+            tokensEarned: tokenCalculation.finalTokens,
+            tokenMultiplier:
+              tokenCalculation.performanceMultiplier *
+              tokenCalculation.characterBoostMultiplier *
+              tokenCalculation.eventMultiplier,
+            bonusTokens: tokenCalculation.bonusTokens,
+          },
         })
 
-        let successMessage = 'Quest completed successfully!'
+      // 8. อัพเดทสถานะ assigned quest
+      await questSubmissionRepository.updateAssignedQuestStatus(
+        questId,
+        characterId
+      )
 
-        if (characterUpdateResult.leveledUp) {
-          successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s)!`
-        }
+      // 9. อัพเดท character XP
+      const characterUpdateResult = await characterService.addXP(quest.xpReward)
 
-        if (mediaAnalysis) {
-          if (mediaType === 'video') {
-            successMessage +=
-              ' Video content was analyzed and included in evaluation.'
-          } else if (mediaType === 'image') {
-            successMessage +=
-              ' Image content was analyzed and included in evaluation.'
-          }
-        }
+      // 10. อัพเดท Quest Streak
+      await tokenCalculationService.updateQuestStreak(character.userId)
 
-        return {
-          success: true,
-          message: successMessage,
-          aiAnalysis,
-          submission,
+      // 11. สร้าง feed item (รวม token ที่ได้)
+      const feedContent = `ทำเควส "${quest.title}" สำเร็จและได้รับ ${quest.xpReward} XP และ ${tokenCalculation.finalTokens} Tokens!`
+
+      const feedItem =
+        await questSubmissionRepository.createQuestCompletionFeedItem(
+          character.userId,
+          'quest_completion',
+          submission.mediaRevisedTranscript || feedContent,
           mediaType,
-          thumbnailUrl, // เพิ่ม thumbnailUrl ในข้อมูลที่ส่งกลับ
-          characterUpdate: characterUpdateResult,
-          feedItem,
-          story,
-        }
+          quest.title,
+          quest.xpReward,
+          submission.id,
+          mediaUrl
+        )
+
+      // 12. สร้าง story
+      const story = await storyService.createStory({
+        userId: character.userId,
+        content: feedContent,
+        type: mediaType,
+        mediaUrl,
+        thumbnailUrl,
+        text: submission.mediaRevisedTranscript || description,
+        expiresInHours: 24,
+      })
+
+      let successMessage = `Quest completed! You earned ${quest.xpReward} XP and ${tokenCalculation.finalTokens} tokens!`
+
+      if (characterUpdateResult.leveledUp) {
+        successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s), ${quest.xpReward} XP and ${tokenCalculation.finalTokens} tokens!`
+      }
+
+      // เพิ่มข้อมูล bonus ที่ได้รับ
+      if (tokenCalculation.appliedBonuses.length > 0) {
+        successMessage += ` Bonuses: ${tokenCalculation.appliedBonuses.join(', ')}`
+      }
+
+      return {
+        success: true,
+        message: successMessage,
+        aiAnalysis,
+        submission,
+        mediaType,
+        thumbnailUrl,
+        characterUpdate: characterUpdateResult,
+        feedItem,
+        story,
+        tokenReward: tokenCalculation,
+        userToken: {
+          currentTokens: userToken.currentTokens,
+          tokensEarned: tokenCalculation.finalTokens,
+        },
       }
     } catch (error) {
       console.error('Quest submission error:', error)
@@ -1058,30 +1105,19 @@ export class QuestSubmissionService extends BaseService {
     }
   }
 
-  async selfSubmitQuest(
-    userId: number,
-    mediaFile?: File,
-    description?: string
-  ) {
+  async selfSubmitQuest(mediaFile?: File, description?: string) {
     try {
-      // 1. ดึงข้อมูล character ของ user
-      const character = await prisma.character.findUnique({
-        where: { userId },
-        select: {
-          id: true,
-          userId: true,
-          name: true,
-          level: true,
-        },
-      })
+      const session = await getServerSession()
+      const userId = +session.user.id
 
+      // 1. ดึงข้อมูล character ของ user
+      const character = await characterRepository.findByUserId(userId)
       if (!character) throw new Error('Character not found for this user')
 
       // 2. อัพโหลดไฟล์ไป S3 (ถ้ามี)
       let mediaUrl: string | undefined
       let mediaType: 'image' | 'video' | 'text' = 'text'
       let thumbnailUrl: string | undefined
-
       if (mediaFile) {
         const uploadResult = await s3UploadService.uploadFile(mediaFile)
 
@@ -1105,7 +1141,6 @@ export class QuestSubmissionService extends BaseService {
 
       // 3. วิเคราะห์สื่อ (วิดีโอหรือรูปภาพ)
       let mediaAnalysis: any = undefined
-
       if (mediaFile && mediaUrl) {
         if (mediaType === 'video') {
           console.log('Analyzing video content...')
@@ -1133,33 +1168,28 @@ export class QuestSubmissionService extends BaseService {
         character.level
       )
 
-      // 5. สร้างเควสใหม่ในฐานข้อมูล
-      const newQuest = await prisma.quest.create({
-        data: {
-          title: questInfo.title,
-          description: questInfo.description,
-          type: 'self', // ตั้งเป็น daily โดยค่าเริ่มต้น
-          difficultyLevel: questInfo.difficultyLevel,
-          xpReward: questInfo.xpReward,
-          baseTokenReward: Math.floor(questInfo.xpReward / 10), // กำหนด token reward เป็น 1/10 ของ XP
-          isActive: true,
-        },
+      // 5. สร้างเควสใหม่
+      const newQuest = await questRepository.create({
+        title: questInfo.title,
+        description: questInfo.description,
+        type: 'self',
+        difficultyLevel: questInfo.difficultyLevel,
+        xpReward: questInfo.xpReward,
+        baseTokenReward: Math.floor(questInfo.xpReward / 100),
+        isActive: true,
+        jobClassId: character.jobClassId,
       })
 
       // 6. สร้าง AssignedQuest ให้กับผู้ใช้
       const now = new Date()
       const expiresAt = new Date(now)
       expiresAt.setHours(23, 59, 59, 999) // หมดอายุตอนสิ้นวัน
-
-      const assignedQuest = await prisma.assignedQuest.create({
-        data: {
-          questId: newQuest.id,
-          characterId: character.id,
-          userId: userId,
-          assignedAt: now,
-          expiresAt: expiresAt,
-          status: 'active',
-        },
+      const assignedQuest = await assignedQuestRepository.create({
+        questId: newQuest.id,
+        characterId: character.id,
+        assignedAt: now,
+        expiresAt: expiresAt,
+        status: 'active',
       })
 
       // 7. เตรียมข้อมูลสำหรับ AI analysis
@@ -1177,30 +1207,51 @@ export class QuestSubmissionService extends BaseService {
         mediaAnalysis
       )
 
-      // 9. บันทึก quest submission
-      const submission = await questSubmissionRepository.createQuestSubmission({
-        questId: newQuest.id,
-        questXpEarned: newQuest.xpReward,
-        characterId: character.id,
-        mediaType,
-        mediaUrl,
-        description,
-        aiAnalysis,
-        mediaAnalysis,
-      })
+      // 9. คำนวณ Token Reward
+      const tokenCalculation =
+        await tokenCalculationService.calculateTokenReward({
+          quest: newQuest,
+          character,
+          aiScore: aiAnalysis.score,
+          ratings: aiAnalysis.ratings,
+        })
 
-      // 10. อัพเดทสถานะ assigned quest
+      // 10. บันทึก quest submission พร้อม token
+      const { submission, userToken } =
+        await questSubmissionRepository.createQuestSubmissionWithToken({
+          questId: newQuest.id,
+          questXpEarned: newQuest.xpReward,
+          characterId: character.id,
+          mediaType,
+          mediaUrl,
+          description,
+          aiAnalysis,
+          mediaAnalysis,
+          tokenReward: {
+            tokensEarned: tokenCalculation.finalTokens,
+            tokenMultiplier:
+              tokenCalculation.performanceMultiplier *
+              tokenCalculation.characterBoostMultiplier *
+              tokenCalculation.eventMultiplier,
+            bonusTokens: tokenCalculation.bonusTokens,
+          },
+        })
+
+      // 11. อัพเดทสถานะ assigned quest
       await questSubmissionRepository.updateAssignedQuestStatus(
         newQuest.id,
         character.id
       )
 
-      // 11. อัพเดท character XP
+      // 12. อัพเดท character XP
       const characterUpdateResult = await characterService.addXP(
         newQuest.xpReward
       )
 
-      // 12. สร้าง feed item
+      // 13. อัพเดท Quest Streak
+      await tokenCalculationService.updateQuestStreak(character.userId)
+
+      // 14. สร้าง feed item
       const feedItem =
         await questSubmissionRepository.createQuestCompletionFeedItem(
           character.userId,
@@ -1213,7 +1264,7 @@ export class QuestSubmissionService extends BaseService {
           mediaUrl
         )
 
-      // 13. สร้าง story
+      // 15. สร้าง story
       const story = await storyService.createStory({
         userId: character.userId,
         content: `ทำเควส "${newQuest.title}" สำเร็จ`,
@@ -1224,14 +1275,25 @@ export class QuestSubmissionService extends BaseService {
         expiresInHours: 24,
       })
 
+      let successMessage = `Quest created and completed! You earned ${newQuest.xpReward} XP and ${tokenCalculation.finalTokens} tokens!`
+
+      if (tokenCalculation.appliedBonuses.length > 0) {
+        successMessage += ` Bonuses: ${tokenCalculation.appliedBonuses.join(', ')}`
+      }
+
       return {
         success: true,
-        message: 'Quest created and completed successfully!',
+        message: successMessage,
         quest: newQuest,
         submission,
         characterUpdate: characterUpdateResult,
         feedItem,
         story,
+        tokenReward: tokenCalculation,
+        userToken: {
+          currentTokens: userToken.currentTokens,
+          tokensEarned: tokenCalculation.finalTokens,
+        },
       }
     } catch (error) {
       console.error('Self-submit quest error:', error)
@@ -1276,7 +1338,6 @@ export class QuestSubmissionService extends BaseService {
           "xpReward": 150 // XP ที่ควรได้รับ (อยู่ระหว่าง 100-500 ขึ้นอยู่กับความยาก)
         }
       `
-
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       })

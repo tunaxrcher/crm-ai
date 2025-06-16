@@ -86,11 +86,10 @@ class OpenAIService {
       const transcription = await this.openai.audio.transcriptions.create({
         file: videoFile,
         model: 'whisper-1',
-        language: 'th', // รองรับภาษาไทย - ลบออกหากต้องการให้ auto-detect
         response_format: 'text',
         temperature: 0.2, // ลดความคลาดเคลื่อน
         prompt:
-          'นี่คือการบันทึกเสียงของการทำงาน การอธิบายงาน หรือการนำเสนอผลงาน', // ให้ context ช่วย
+          'นี่คือการบันทึกเสียงของการทำงาน การอธิบายงาน หรือการนำเสนอผลงาน',
       })
 
       console.log('Whisper transcription completed successfully')
@@ -99,10 +98,8 @@ class OpenAIService {
         transcription.substring(0, 100) + '...'
       )
 
-      // ตรวจสอบผลลัพธ์
-      if (!transcription || transcription.trim().length === 0) {
+      if (!transcription || transcription.trim().length === 0)
         throw new Error('Empty transcription result')
-      }
 
       return transcription.trim()
     } catch (error) {
