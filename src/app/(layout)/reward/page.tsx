@@ -214,18 +214,16 @@ export default function RewardPage() {
             </div>
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/95 backdrop-blur-2xl rounded-3xl px-6 py-4 shadow-2xl border border-white/30">
+              <div className="relativ backdrop-blur-2xl rounded-3xl px-6 py-4 shadow-2xl border border-white/30">
                 <div className="flex items-center">
                   <div className="w-10 h-10 bg-gradient-to-br from-green-400 via-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
                     <Coins className="h-5 w-5 text-white drop-shadow-sm" />
                   </div>
                   <div>
-                    <div className="text-2xl font-black text-gray-900">
+                    <div className="text-2xl font-black">
                       {userTokens.toLocaleString()}
                     </div>
-                    <div className="text-xs text-gray-500 -mt-1 font-medium">
-                      Tokens
-                    </div>
+                    <div className="text-xs -mt-1 font-medium">Tokens</div>
                   </div>
                 </div>
               </div>
@@ -247,8 +245,8 @@ export default function RewardPage() {
                   <Image
                     src="/images/gacha-machine.webp"
                     alt="Futuristic Gacha Machine"
-                    width={220}
-                    height={330}
+                    width={300}
+                    height={300}
                     className="relative drop-shadow-2xl hover:scale-105 transition-transform duration-700 filter hover:brightness-110"
                     priority
                   />
@@ -260,7 +258,7 @@ export default function RewardPage() {
                 <div className="relative group/btn1 w-full">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 to-blue-600/30 rounded-3xl blur-xl group-hover/btn1:blur-2xl transition-all duration-300"></div>
                   <Button
-                    className="relative w-full font-bold py-5 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 border border-blue-400/30 hover:scale-[1.02]"
+                    className="relative w-full font-white text-white py-6 text-xl rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-700 border border-blue-400/40 hover:scale-[1.03] bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                     disabled={
                       userTokens < 50 || isGachaPlaying || gachaPull.isPending
                     }
@@ -275,7 +273,7 @@ export default function RewardPage() {
                 <div className="relative group/btn2 w-full">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-indigo-600/30 rounded-3xl blur-xl group-hover/btn2:blur-2xl transition-all duration-300"></div>
                   <Button
-                    className="relative w-full font-bold py-5 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 border border-purple-400/30 hover:scale-[1.02]"
+                    className="relative w-full font-white text-white py-6 text-xl rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-700 border border-purple-400/40 hover:scale-[1.03] bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
                     disabled={
                       userTokens < 500 || isGachaPlaying || gachaPull.isPending
                     }
@@ -465,7 +463,7 @@ export default function RewardPage() {
             <Button
               onClick={confirmDialog.onConfirm}
               disabled={gachaPull.isPending || purchaseReward.isPending}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
               {gachaPull.isPending || purchaseReward.isPending ? (
                 <span className="flex items-center">
                   <svg

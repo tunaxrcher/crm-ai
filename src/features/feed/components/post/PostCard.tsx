@@ -33,6 +33,7 @@ interface PostCardProps {
   commentInput: string
   onCommentInputChange: (value: string) => void
   handleAddComment: () => void
+  handleCharacterClick: (e: React.MouseEvent, character: any) => void
 }
 
 export const PostCard = function PostCard({
@@ -43,6 +44,7 @@ export const PostCard = function PostCard({
   commentInput,
   onCommentInputChange,
   handleAddComment,
+  handleCharacterClick,
 }: PostCardProps) {
   const { type, user, content } = item
   // สร้าง ref สำหรับวิดีโอโดยใช้ custom hook
@@ -102,6 +104,7 @@ export const PostCard = function PostCard({
           <div className="flex items-center">
             <Link
               href={`/profile/${user.character?.id}`}
+              onClick={(e) => handleCharacterClick(e, user.character)}
               className="relative w-10 h-10 mr-3">
               {/* ภาพโปรไฟล์แบบ bg cover */}
               <div className="w-10 h-10 rounded-full overflow-hidden ai-gradient-bg relative">

@@ -1,7 +1,8 @@
 'use client'
 
-import { Dispatch, SetStateAction, useCallback } from 'react'
+import { Dispatch, SetStateAction, useCallback, useState } from 'react'
 
+import CharacterDialog from '@src/features/character/components/CharacterDialog'
 import { FeedItemUI } from '@src/features/feed/types'
 
 import { PostCard } from './PostCard'
@@ -25,6 +26,15 @@ export default function PostList({
   setCommentInputs,
   handleAddComment,
 }: PostListProps) {
+  const [selectedCharacter, setSelectedCharacter] = useState<any>(null)
+  const [showCharacterDialog, setShowCharacterDialog] = useState(false)
+
+  const handleCharacterClick = (e: React.MouseEvent, character: any) => {
+    e.preventDefault() // ป้องกันการ navigate
+    setSelectedCharacter(character)
+    setShowCharacterDialog(true)
+  }
+
   // Memoize handler functions
   const handleCommentInputChange = useCallback(
     (feedItemId: string, value: string) => {
@@ -66,8 +76,19 @@ export default function PostList({
             handleCommentInputChange(item.id.toString(), value)
           }
           handleAddComment={createCommentHandler(item.id.toString())}
+          handleCharacterClick={handleCharacterClick}
         />
       ))}
+
+      {/* Character Dialog */}
+      <CharacterDialog
+        isOpen={showCharacterDialog}
+        onClose={() => {
+          setShowCharacterDialog(false)
+          setSelectedCharacter(null)
+        }}
+        character={selectedCharacter}
+      />
     </>
   )
 }

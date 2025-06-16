@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await rewardService.pullGacha(pullCount)
-    
+
     return NextResponse.json(result)
   } catch (error) {
     console.error('Gacha pull error:', error)

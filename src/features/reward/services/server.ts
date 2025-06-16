@@ -333,7 +333,7 @@ export class RewardService extends BaseService {
     )
 
     // โอกาสไม่ได้รางวัล
-    const noRewardProbability = Math.max(0.3 - pityBonus, 0.1) // min 10% no reward
+    const noRewardProbability = Math.max(0.5 - pityBonus, 0.2) // min 10% no reward
 
     // สุ่มเลข
     const random = Math.random() * (totalProbability + noRewardProbability)

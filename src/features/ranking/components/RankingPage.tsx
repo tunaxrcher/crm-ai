@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@src/components/ui/select'
 import { Tabs, TabsList, TabsTrigger } from '@src/components/ui/tabs'
+import CharacterDialog from '@src/features/character/components/CharacterDialog'
 import { withErrorHandling } from '@src/hooks'
 import {
   Award,
@@ -30,7 +31,6 @@ import {
   Star,
   TrendingUp,
   Trophy,
-  User,
 } from 'lucide-react'
 
 import { useJobClasses, useRankings } from '../hooks/api'
@@ -40,44 +40,11 @@ import { CharacterClass, RankingPeriod } from '../types'
 
 // src/features/ranking/components/RankingPage.tsx
 
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
 function RankingPageComponent() {
   const router = useRouter()
+  const [selectedCharacter, setSelectedCharacter] = useState<any>(null)
+  const [showCharacterDialog, setShowCharacterDialog] = useState(false)
+
   const [period, setPeriod] = useState<RankingPeriod>('all-time')
   const [selectedClass, setSelectedClass] = useState<CharacterClass>('all')
   const [imageError, setImageError] = useState(false)
@@ -93,6 +60,13 @@ function RankingPageComponent() {
   } = useRankings(period, selectedClass)
 
   const { showError } = useError()
+
+  const handleCharacterClick = (e: React.MouseEvent, character: any) => {
+    console.log(character)
+    // e.preventDefault() // ป้องกันการ navigate
+    // setSelectedCharacter(character)
+    // setShowCharacterDialog(true)
+  }
 
   // Get position badge
   const getPositionBadge = (position: number) => {
@@ -259,7 +233,7 @@ function RankingPageComponent() {
 
             <div
               className="relative cursor-pointer mx-auto mb-2"
-              onClick={() => handleViewCharacter(topUser.id)}>
+              onClick={(e) => handleCharacterClick(e, topUser)}>
               <div className="relative inline-block">
                 <div className="w-28 h-28 rounded-full overflow-hidden ai-gradient-border border-4 mx-auto">
                   <Avatar className="w-full h-full">
@@ -318,7 +292,7 @@ function RankingPageComponent() {
       {currentUser && currentUser.position !== 1 && (
         <Card
           className={`mb-6 border border-blue-500/30 relative cursor-pointer`}
-          onClick={() => handleViewCharacter(currentUser.id)}>
+          onClick={(e) => handleCharacterClick(e, currentUser)}>
           <CardContent className="p-4">
             {getPositionBadge(currentUser.position)}
 
@@ -378,7 +352,7 @@ function RankingPageComponent() {
                 ? 'bg-blue-500/10 border border-blue-500/30'
                 : 'bg-secondary/20'
             } p-3 cursor-pointer`}
-            onClick={() => handleViewCharacter(user.id)}>
+            onClick={(e) => handleCharacterClick(e, user)}>
             {getPositionBadge(user.position)}
 
             <div className="flex items-center ml-6">
@@ -428,6 +402,16 @@ function RankingPageComponent() {
           </div>
         ))}
       </div>
+
+      {/* Character Dialog */}
+      <CharacterDialog
+        isOpen={showCharacterDialog}
+        onClose={() => {
+          setShowCharacterDialog(false)
+          setSelectedCharacter(null)
+        }}
+        character={selectedCharacter}
+      />
     </div>
   )
 }
