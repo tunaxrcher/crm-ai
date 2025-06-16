@@ -1046,7 +1046,6 @@ async function assignQuests(characters: any[], quests: any[], users: any[]) {
         data: {
           questId: quest.id,
           characterId: character.id,
-          userId: character.userId,
           assignedAt,
           expiresAt,
           status,
