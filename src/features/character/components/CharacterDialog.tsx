@@ -27,6 +27,8 @@ import {
   Zap,
 } from 'lucide-react'
 
+// src/features/feed/components/CharacterDialog.tsx
+
 interface CharacterDialogProps {
   isOpen: boolean
   onClose: () => void
