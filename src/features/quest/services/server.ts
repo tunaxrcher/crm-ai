@@ -1199,7 +1199,7 @@ export class QuestSubmissionService extends BaseService {
           "title": "ชื่อภารกิจที่สั้นและกระชับ",
           "description": "คำอธิบายภารกิจโดยละเอียดที่สอดคล้องกับสิ่งที่ผู้ใช้ทำ",
           "difficultyLevel": 3, // 1-5 โดย 1 = ง่ายมาก, 5 = ยากมาก
-          "xpReward": 150 // XP ที่ควรได้รับ (อยู่ระหว่าง 100-500 ขึ้นอยู่กับความยาก)
+          "xpReward": 150 // XP ที่ควรได้รับ (อยู่ระหว่าง 50-150 ขึ้นอยู่กับความยาก)
         }
       `
       const openai = new OpenAI({
