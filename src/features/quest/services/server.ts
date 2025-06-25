@@ -749,6 +749,7 @@ export class QuestSubmissionService extends BaseService {
       console.log('Token calculation result:', tokenCalculation)
 
       // 7. บันทึก quest submission พร้อม token reward
+      const finalTokens = Math.floor(tokenCalculation.finalTokens / 10)
       const { submission, userToken } =
         await questSubmissionRepository.createQuestSubmissionWithToken({
           questId,
@@ -760,7 +761,7 @@ export class QuestSubmissionService extends BaseService {
           aiAnalysis,
           mediaAnalysis,
           tokenReward: {
-            tokensEarned: tokenCalculation.finalTokens,
+            tokensEarned: finalTokens, //tokenCalculation.finalTokens,
             tokenMultiplier:
               tokenCalculation.performanceMultiplier *
               tokenCalculation.characterBoostMultiplier *
@@ -782,7 +783,7 @@ export class QuestSubmissionService extends BaseService {
       await tokenCalculationService.updateQuestStreak(character.userId)
 
       // 11. สร้าง feed item (รวม token ที่ได้)
-      const feedContent = `ทำเควส "${quest.title}" สำเร็จและได้รับ ${quest.xpReward} XP และ ${tokenCalculation.finalTokens} Tokens!`
+      const feedContent = `ทำเควส "${quest.title}" สำเร็จและได้รับ ${quest.xpReward} XP และ ${finalTokens} Tokens!`
 
       const feedItem =
         await questSubmissionRepository.createQuestCompletionFeedItem(
@@ -807,10 +808,10 @@ export class QuestSubmissionService extends BaseService {
         expiresInHours: 24,
       })
 
-      let successMessage = `Quest completed! You earned ${quest.xpReward} XP and ${tokenCalculation.finalTokens} tokens!`
+      let successMessage = `Quest completed! You earned ${quest.xpReward} XP and ${finalTokens} tokens!`
 
       if (characterUpdateResult.leveledUp) {
-        successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s), ${quest.xpReward} XP and ${tokenCalculation.finalTokens} tokens!`
+        successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s), ${quest.xpReward} XP and ${finalTokens} tokens!`
       }
 
       // เพิ่มข้อมูล bonus ที่ได้รับ
@@ -831,7 +832,7 @@ export class QuestSubmissionService extends BaseService {
         tokenReward: tokenCalculation,
         userToken: {
           currentTokens: userToken.currentTokens,
-          tokensEarned: tokenCalculation.finalTokens,
+          tokensEarned: finalTokens,
         },
       }
     } catch (error) {
@@ -1199,7 +1200,7 @@ export class QuestSubmissionService extends BaseService {
           "title": "ชื่อภารกิจที่สั้นและกระชับ",
           "description": "คำอธิบายภารกิจโดยละเอียดที่สอดคล้องกับสิ่งที่ผู้ใช้ทำ",
           "difficultyLevel": 3, // 1-5 โดย 1 = ง่ายมาก, 5 = ยากมาก
-          "xpReward": 150 // XP ที่ควรได้รับ (อยู่ระหว่าง 50-150 ขึ้นอยู่กับความยาก)
+          "xpReward": 150 // XP ที่ควรได้รับ (อยู่ระหว่าง 100 ถึง 1500(สูงสุด) ขึ้นอยู่กับความยาก)
         }
       `
       const openai = new OpenAI({
