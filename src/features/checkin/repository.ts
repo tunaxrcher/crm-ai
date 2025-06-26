@@ -1,4 +1,5 @@
 import { prisma } from '@src/lib/db'
+
 import type { CheckinCheckout, WorkLocation } from './types'
 
 export class CheckinRepository {
@@ -37,7 +38,9 @@ export class CheckinRepository {
   }
 
   // ดึงข้อมูล checkin ที่ยังไม่ได้ checkout ของ user
-  static async getActiveCheckin(userId: number): Promise<CheckinCheckout | null> {
+  static async getActiveCheckin(
+    userId: number
+  ): Promise<CheckinCheckout | null> {
     const character = await this.getCharacterWithWorkTime(userId)
     if (!character) return null
 
@@ -151,7 +154,7 @@ export class CheckinRepository {
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    
+
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
@@ -192,4 +195,4 @@ export class CheckinRepository {
       },
     })
   }
-} 
+}

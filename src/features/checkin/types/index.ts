@@ -26,8 +26,8 @@ export interface CheckinCheckout {
   checkoutLat: number | null
   checkoutLng: number | null
   totalHours: number | null
-  lateLevel: number | null    // ระดับการมาสาย 0-4
-  lateMinutes: number | null  // จำนวนนาทีที่มาสาย
+  lateLevel: number | null // ระดับการมาสาย 0-4
+  lateMinutes: number | null // จำนวนนาทีที่มาสาย
   notes: string | null
   createdAt: Date
   updatedAt: Date
@@ -81,4 +81,4 @@ export interface CheckoutResponse {
   success: boolean
   message: string
   data?: CheckinCheckout
-} 
+}

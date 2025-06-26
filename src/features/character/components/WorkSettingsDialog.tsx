@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useEffect, useState } from 'react'
+
+import { Button } from '@src/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -20,9 +21,9 @@ import {
   FormMessage,
 } from '@src/components/ui/form'
 import { Input } from '@src/components/ui/input'
-import { Button } from '@src/components/ui/button'
-import { Settings, Clock, DollarSign, Loader2 } from 'lucide-react'
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { Clock, DollarSign, Loader2, Settings } from 'lucide-react'
+import { useForm } from 'react-hook-form'
 
 interface WorkSettings {
   workStartTime: string | null
@@ -108,9 +109,9 @@ export function WorkSettingsDialog({ children }: WorkSettingsDialogProps) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>ตั้งค่าเวลาทำงานและเงินเดือน</DialogTitle>
+          <DialogTitle>เวลาทำงานและเงินเดือน</DialogTitle>
           <DialogDescription>
-            กำหนดเวลาเข้า-ออกงานและเงินเดือนของคุณ
+            เวลาเข้า-ออกงานและเงินเดือนของคุณ
           </DialogDescription>
         </DialogHeader>
 
@@ -181,29 +182,27 @@ export function WorkSettingsDialog({ children }: WorkSettingsDialogProps) {
                       placeholder="25000"
                       {...field}
                       value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
                     />
                   </FormControl>
-                  <FormDescription>
-                    เงินเดือนของคุณ (บาท/เดือน)
-                  </FormDescription>
+                  <FormDescription>เงินเดือนของคุณ (บาท/เดือน)</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className="flex justify-end gap-2">
+            {/* <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
-              >
+                onClick={() => setOpen(false)}>
                 ยกเลิก
               </Button>
-              <Button
-                type="submit"
-                disabled={updateSettings.isPending}
-              >
+              <Button type="submit" disabled={updateSettings.isPending}>
                 {updateSettings.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -213,10 +212,10 @@ export function WorkSettingsDialog({ children }: WorkSettingsDialogProps) {
                   'บันทึก'
                 )}
               </Button>
-            </div>
+            </div> */}
           </form>
         </Form>
       </DialogContent>
     </Dialog>
   )
-} 
+}

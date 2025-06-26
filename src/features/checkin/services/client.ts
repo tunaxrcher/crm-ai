@@ -1,16 +1,30 @@
 import { BaseService } from '@src/lib/services/client/baseService'
+
 import type {
+  CheckinCheckout,
   CheckinRequest,
-  CheckoutRequest,
   CheckinResponse,
-  CheckoutResponse,
   CheckinStatus,
+  CheckoutRequest,
+  CheckoutResponse,
   LocationCheckResult,
   WorkLocation,
-  CheckinCheckout,
 } from '../types'
 
-class CheckinClient extends BaseService {
+export class CheckinService extends BaseService {
+  private static instance: CheckinService
+
+  constructor() {
+    super()
+  }
+
+  public static getInstance() {
+    if (!CheckinService.instance) {
+      CheckinService.instance = new CheckinService()
+    }
+    return CheckinService.instance
+  }
+
   // ดึงข้อมูลสถานที่ทำงาน
   async getWorkLocations(): Promise<WorkLocation[]> {
     const response = await this.get<{ success: boolean; data: WorkLocation[] }>(
@@ -21,10 +35,10 @@ class CheckinClient extends BaseService {
 
   // ตรวจสอบ location
   async checkLocation(lat: number, lng: number): Promise<LocationCheckResult> {
-    const response = await this.post<{ success: boolean; data: LocationCheckResult }>(
-      '/api/checkin/check-location',
-      { lat, lng }
-    )
+    const response = await this.post<{
+      success: boolean
+      data: LocationCheckResult
+    }>('/api/checkin/check-location', { lat, lng })
     return response.data
   }
 
@@ -48,19 +62,21 @@ class CheckinClient extends BaseService {
 
   // ดึงประวัติ checkin/checkout
   async getHistory(limit: number = 30): Promise<CheckinCheckout[]> {
-    const response = await this.get<{ success: boolean; data: CheckinCheckout[] }>(
-      `/api/checkin?limit=${limit}`
-    )
+    const response = await this.get<{
+      success: boolean
+      data: CheckinCheckout[]
+    }>(`/api/checkin?limit=${limit}`)
     return response.data
   }
 
   // ดึง checkin/checkout ของวันนี้
   async getTodayCheckins(): Promise<CheckinCheckout[]> {
-    const response = await this.get<{ success: boolean; data: CheckinCheckout[] }>(
-      '/api/checkin?today=true'
-    )
+    const response = await this.get<{
+      success: boolean
+      data: CheckinCheckout[]
+    }>('/api/checkin?today=true')
     return response.data
   }
 }
 
-export const checkinClient = new CheckinClient() 
+export const checkinService = CheckinService.getInstance()

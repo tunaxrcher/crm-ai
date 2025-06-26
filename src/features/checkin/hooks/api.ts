@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { checkinClient } from '../services/client'
+
+import { checkinService } from '../services/client'
 import type { CheckinRequest, CheckoutRequest } from '../types'
 
 // Query keys
@@ -7,7 +8,8 @@ export const checkinQueryKeys = {
   all: ['checkin'] as const,
   status: () => [...checkinQueryKeys.all, 'status'] as const,
   workLocations: () => [...checkinQueryKeys.all, 'work-locations'] as const,
-  history: (limit?: number) => [...checkinQueryKeys.all, 'history', limit] as const,
+  history: (limit?: number) =>
+    [...checkinQueryKeys.all, 'history', limit] as const,
   today: () => [...checkinQueryKeys.all, 'today'] as const,
 }
 
@@ -15,7 +17,7 @@ export const checkinQueryKeys = {
 export function useWorkLocations() {
   return useQuery({
     queryKey: checkinQueryKeys.workLocations(),
-    queryFn: () => checkinClient.getWorkLocations(),
+    queryFn: () => checkinService.getWorkLocations(),
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
@@ -24,7 +26,7 @@ export function useWorkLocations() {
 export function useCheckinStatus() {
   return useQuery({
     queryKey: checkinQueryKeys.status(),
-    queryFn: () => checkinClient.getStatus(),
+    queryFn: () => checkinService.getStatus(),
     refetchInterval: 1000 * 60, // Refetch every minute
   })
 }
@@ -33,16 +35,16 @@ export function useCheckinStatus() {
 export function useCheckLocation() {
   return useMutation({
     mutationFn: ({ lat, lng }: { lat: number; lng: number }) =>
-      checkinClient.checkLocation(lat, lng),
+      checkinService.checkLocation(lat, lng),
   })
 }
 
 // Hook สำหรับ checkin
 export function useCheckin() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: (request: CheckinRequest) => checkinClient.checkin(request),
+    mutationFn: (request: CheckinRequest) => checkinService.checkin(request),
     onSuccess: () => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: checkinQueryKeys.status() })
@@ -55,9 +57,9 @@ export function useCheckin() {
 // Hook สำหรับ checkout
 export function useCheckout() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: (request: CheckoutRequest) => checkinClient.checkout(request),
+    mutationFn: (request: CheckoutRequest) => checkinService.checkout(request),
     onSuccess: () => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: checkinQueryKeys.status() })
@@ -71,7 +73,7 @@ export function useCheckout() {
 export function useCheckinHistory(limit: number = 30) {
   return useQuery({
     queryKey: checkinQueryKeys.history(limit),
-    queryFn: () => checkinClient.getHistory(limit),
+    queryFn: () => checkinService.getHistory(limit),
   })
 }
 
@@ -79,7 +81,7 @@ export function useCheckinHistory(limit: number = 30) {
 export function useTodayCheckins() {
   return useQuery({
     queryKey: checkinQueryKeys.today(),
-    queryFn: () => checkinClient.getTodayCheckins(),
+    queryFn: () => checkinService.getTodayCheckins(),
     refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
   })
-} 
+}

@@ -49,6 +49,18 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
 
   const isDev = process.env.NODE_ENV === 'development'
 
+  // คำนวณ step ที่จะแสดง
+  const isLocationChecked = userLocation && checkLocation.data
+  const isOffsite = checkLocation.data && !checkLocation.data.isInWorkLocation
+  const canShowPhotoStep =
+    isLocationChecked && (!isOffsite || hasProvidedReason)
+
+  useEffect(() => {
+    if (isOffsite && !hasProvidedReason && offsiteReasonRef.current) {
+      offsiteReasonRef.current.focus()
+    }
+  }, [isOffsite, hasProvidedReason])
+
   // ตรวจสอบว่า checkout วันนี้แล้วหรือยัง
   const completedToday = todayCheckins?.find((c) => c.checkoutAt !== null)
   if (completedToday) {
@@ -57,7 +69,7 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
         <Alert className="border-green-700 bg-green-400 text-white">
           <AlertDescription>
             <div className="space-y-2">
-              <p className="font-medium">คุณได้ทำการ Check-out วันนี้แล้ว</p>
+              <p className="font-medium">คุณได้ Check-out วันนี้แล้ว</p>
               <div className="text-sm space-y-1">
                 <p className="flex items-center gap-2">
                   <Clock className="h-3 w-3" />
@@ -105,18 +117,6 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
   const canCheckout = status.canCheckout
   const workingHours = status.workingHours || 0
   const remainingHours = status.minimumHoursRequired - workingHours
-
-  // คำนวณ step ที่จะแสดง
-  const isLocationChecked = userLocation && checkLocation.data
-  const isOffsite = checkLocation.data && !checkLocation.data.isInWorkLocation
-  const canShowPhotoStep =
-    isLocationChecked && (!isOffsite || hasProvidedReason)
-
-  useEffect(() => {
-    if (isOffsite && !hasProvidedReason && offsiteReasonRef.current) {
-      offsiteReasonRef.current.focus()
-    }
-  }, [isOffsite, hasProvidedReason])
 
   // Get current location and check
   const handleCheckLocation = async () => {

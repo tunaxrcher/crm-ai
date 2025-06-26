@@ -82,7 +82,7 @@ export function CheckinSection({ status }: CheckinSectionProps) {
         <Alert className="border-green-700 bg-green-400 text-white">
           <AlertDescription>
             <div className="space-y-2">
-              <p className="font-medium">คุณได้ทำการ Check-in วันนี้แล้ว</p>
+              <p className="font-medium">คุณได้ Check-in วันนี้แล้ว</p>
               <div className="text-sm space-y-1">
                 <p className="flex items-center gap-2">
                   <Clock className="h-3 w-3" />

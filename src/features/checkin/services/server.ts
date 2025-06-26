@@ -1,16 +1,15 @@
-import 'server-only'
-
 import { getServerSession } from '@src/lib/auth'
-import { BaseService } from '@src/lib/services/server/baseService'
 import { s3UploadService } from '@src/lib/services/s3UploadService'
+import { BaseService } from '@src/lib/services/server/baseService'
+import 'server-only'
 
 import { CheckinRepository } from '../repository'
 import type {
   CheckinRequest,
-  CheckoutRequest,
   CheckinResponse,
-  CheckoutResponse,
   CheckinStatus,
+  CheckoutRequest,
+  CheckoutResponse,
   LocationCheckResult,
   WorkLocation,
 } from '../types'
@@ -40,24 +39,27 @@ export class CheckinService extends BaseService {
     lng2: number
   ): number {
     const toRad = (deg: number) => (deg * Math.PI) / 180
-    
+
     const dLat = toRad(lat2 - lat1)
     const dLng = toRad(lng2 - lng1)
-    
+
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(toRad(lat1)) *
         Math.cos(toRad(lat2)) *
         Math.sin(dLng / 2) *
         Math.sin(dLng / 2)
-    
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    
+
     return CheckinService.EARTH_RADIUS_METERS * c
   }
 
   // Helper method to parse time string "HH:MM" to date
-  private parseWorkTime(timeStr: string | null | undefined, baseDate: Date): Date | null {
+  private parseWorkTime(
+    timeStr: string | null | undefined,
+    baseDate: Date
+  ): Date | null {
     if (!timeStr) return null
     const [hours, minutes] = timeStr.split(':').map(Number)
     const date = new Date(baseDate)
@@ -66,54 +68,69 @@ export class CheckinService extends BaseService {
   }
 
   // ตรวจสอบว่าเป็นกะข้ามวัน (Night Shift) หรือไม่
-  private isNightShift(workStartTime: string | null | undefined, workEndTime: string | null | undefined): boolean {
+  private isNightShift(
+    workStartTime: string | null | undefined,
+    workEndTime: string | null | undefined
+  ): boolean {
     if (!workStartTime || !workEndTime) return false
-    
+
     const [startHour] = workStartTime.split(':').map(Number)
     const [endHour] = workEndTime.split(':').map(Number)
-    
+
     // ถ้าเวลาเลิกงาน < เวลาเข้างาน แสดงว่าข้ามวัน
     return endHour < startHour
   }
 
   // คำนวณเวลาเข้างานจริงสำหรับกะข้ามวัน
-  private getActualWorkStartTime(workStartTime: string, checkinDate: Date, isNightShift: boolean): Date {
+  private getActualWorkStartTime(
+    workStartTime: string,
+    checkinDate: Date,
+    isNightShift: boolean
+  ): Date {
     const workStart = this.parseWorkTime(workStartTime, checkinDate)
     if (!workStart) return checkinDate
-    
+
     if (isNightShift) {
       const checkinHour = checkinDate.getHours()
       const [startHour] = workStartTime.split(':').map(Number)
-      
+
       // ถ้า checkin หลังเที่ยงคืน แต่ก่อนเวลาเลิกงาน ให้ถือว่าเวลาเข้างานคือเมื่อวาน
       if (checkinHour < 12 && startHour > 12) {
         workStart.setDate(workStart.getDate() - 1)
       }
     }
-    
+
     return workStart
   }
 
   // คำนวณเวลาเลิกงานจริงสำหรับกะข้ามวัน
-  private getActualWorkEndTime(workEndTime: string, baseDate: Date, isNightShift: boolean): Date {
+  private getActualWorkEndTime(
+    workEndTime: string,
+    baseDate: Date,
+    isNightShift: boolean
+  ): Date {
     const workEnd = this.parseWorkTime(workEndTime, baseDate)
     if (!workEnd) return baseDate
-    
+
     if (isNightShift) {
       const [endHour] = workEndTime.split(':').map(Number)
       const baseHour = baseDate.getHours()
-      
+
       // ถ้าเวลาเลิกงานเป็นช่วงเช้า และตอนนี้เป็นช่วงบ่าย/เย็น ให้เลิกงานวันพรุ่งนี้
       if (endHour < 12 && baseHour > 12) {
         workEnd.setDate(workEnd.getDate() + 1)
       }
     }
-    
+
     return workEnd
   }
 
   // คำนวณระดับการมาสาย
-  private calculateLateLevel(checkinTime: Date, workStartTime: string | null | undefined, workEndTime: string | null | undefined): { level: number; minutes: number } {
+  private calculateLateLevel(
+    checkinTime: Date,
+    workStartTime: string | null | undefined,
+    workEndTime: string | null | undefined
+  ): { level: number; minutes: number } {
     if (!workStartTime) {
       // ถ้าไม่ได้ตั้งเวลาทำงาน ถือว่าไม่สาย
       return { level: 0, minutes: 0 }
@@ -121,9 +138,13 @@ export class CheckinService extends BaseService {
 
     // ตรวจสอบว่าเป็นกะข้ามวันหรือไม่
     const isNightShift = this.isNightShift(workStartTime, workEndTime)
-    
+
     // คำนวณเวลาเข้างานจริง
-    const workStart = this.getActualWorkStartTime(workStartTime, checkinTime, isNightShift)
+    const workStart = this.getActualWorkStartTime(
+      workStartTime,
+      checkinTime,
+      isNightShift
+    )
 
     const diffMs = checkinTime.getTime() - workStart.getTime()
     const diffMinutes = Math.floor(diffMs / (1000 * 60))
@@ -154,7 +175,7 @@ export class CheckinService extends BaseService {
     userLng: number
   ): Promise<LocationCheckResult> {
     const workLocations = await CheckinRepository.getActiveWorkLocations()
-    
+
     let nearestLocation: WorkLocation | null = null
     let minDistance: number | null = null
     let isInWorkLocation = false
@@ -192,10 +213,14 @@ export class CheckinService extends BaseService {
   }
 
   // ดึงสถานะ checkin ปัจจุบัน
-  async getCheckinStatus(userId: number): Promise<CheckinStatus> {
+  async getCheckinStatus(): Promise<CheckinStatus> {
+    const session = await getServerSession()
+
+    const userId = parseInt(session.user.id)
+
     const activeCheckin = await CheckinRepository.getActiveCheckin(userId)
     const character = await CheckinRepository.getCharacterWithWorkTime(userId)
-    
+
     let canCheckout = false
     let workingHours: number | null = null
     let minimumHoursRequired = 8 // default
@@ -211,19 +236,30 @@ export class CheckinService extends BaseService {
       const char = character as any
       if (char.workStartTime && char.workEndTime) {
         // ตรวจสอบว่าเป็นกะข้ามวันหรือไม่
-        const isNightShift = this.isNightShift(char.workStartTime, char.workEndTime)
-        
+        const isNightShift = this.isNightShift(
+          char.workStartTime,
+          char.workEndTime
+        )
+
         // คำนวณเวลาเลิกงานจริง (ใช้เวลา checkin เป็น base)
-        const workEnd = this.getActualWorkEndTime(char.workEndTime, checkinTime, isNightShift)
-        
+        const workEnd = this.getActualWorkEndTime(
+          char.workEndTime,
+          checkinTime,
+          isNightShift
+        )
+
         if (workEnd) {
           // ตรวจสอบว่าถึงเวลาออกงานหรือยัง
           if (now >= workEnd) {
             canCheckout = true
           }
-          
+
           // คำนวณชั่วโมงทำงานที่ต้องการ
-          const workStart = this.getActualWorkStartTime(char.workStartTime, checkinTime, isNightShift)
+          const workStart = this.getActualWorkStartTime(
+            char.workStartTime,
+            checkinTime,
+            isNightShift
+          )
           const requiredMs = workEnd.getTime() - workStart.getTime()
           minimumHoursRequired = requiredMs / (1000 * 60 * 60)
         }
@@ -245,32 +281,38 @@ export class CheckinService extends BaseService {
 
   // ตรวจสอบว่าเป็น checkin ของกะเดียวกันหรือไม่ (รองรับกะข้ามวัน)
   private isSameShift(
-    existingCheckinTime: Date, 
-    newCheckinTime: Date, 
+    existingCheckinTime: Date,
+    newCheckinTime: Date,
     workStartTime: string | null | undefined,
     workEndTime: string | null | undefined
   ): boolean {
     // ถ้าไม่มีเวลาทำงานกำหนด ใช้วิธีเช็ควันเดียวกัน
     if (!workStartTime || !workEndTime) {
-      return existingCheckinTime.toDateString() === newCheckinTime.toDateString()
+      return (
+        existingCheckinTime.toDateString() === newCheckinTime.toDateString()
+      )
     }
-    
+
     const isNightShift = this.isNightShift(workStartTime, workEndTime)
-    
+
     if (!isNightShift) {
       // กะปกติ - เช็ควันเดียวกัน
-      return existingCheckinTime.toDateString() === newCheckinTime.toDateString()
+      return (
+        existingCheckinTime.toDateString() === newCheckinTime.toDateString()
+      )
     }
-    
+
     // กะข้ามวัน - ต้องคำนวณว่าอยู่ในกะเดียวกันหรือไม่
     // ตัวอย่าง: กะ 17:00 - 08:00
-    // - ถ้า checkin ครั้งแรก 26/12 เวลา 17:30 
+    // - ถ้า checkin ครั้งแรก 26/12 เวลา 17:30
     // - และพยายาม checkin อีกครั้ง 27/12 เวลา 01:00
     // - ถือว่าเป็นกะเดียวกัน (ห่างกันไม่เกิน 24 ชม.)
-    
-    const timeDiff = Math.abs(newCheckinTime.getTime() - existingCheckinTime.getTime())
+
+    const timeDiff = Math.abs(
+      newCheckinTime.getTime() - existingCheckinTime.getTime()
+    )
     const hoursDiff = timeDiff / (1000 * 60 * 60)
-    
+
     return hoursDiff < 24
   }
 
@@ -290,8 +332,15 @@ export class CheckinService extends BaseService {
         // ตรวจสอบว่าเป็น checkin ของกะเดียวกันหรือไม่
         const checkinDate = new Date(activeCheckin.checkinAt)
         const today = new Date()
-        
-        if (this.isSameShift(checkinDate, today, char?.workStartTime, char?.workEndTime)) {
+
+        if (
+          this.isSameShift(
+            checkinDate,
+            today,
+            char?.workStartTime,
+            char?.workEndTime
+          )
+        ) {
           return {
             success: false,
             message: 'คุณมีการ check-in ที่ยังไม่ได้ check-out อยู่',
@@ -304,7 +353,9 @@ export class CheckinService extends BaseService {
       const todayCheckins = await CheckinRepository.getTodayCheckins(userId)
       if (todayCheckins && todayCheckins.length > 0) {
         // ตรวจสอบว่ามี checkin ที่ checkout แล้วหรือยัง
-        const completedCheckin = todayCheckins.find((c: any) => c.checkoutAt !== null)
+        const completedCheckin = todayCheckins.find(
+          (c: any) => c.checkoutAt !== null
+        )
         if (completedCheckin) {
           return {
             success: false,
@@ -315,7 +366,11 @@ export class CheckinService extends BaseService {
 
       // คำนวณระดับการมาสาย
       const checkinTime = new Date()
-      const lateInfo = this.calculateLateLevel(checkinTime, char?.workStartTime, char?.workEndTime)
+      const lateInfo = this.calculateLateLevel(
+        checkinTime,
+        char?.workStartTime,
+        char?.workEndTime
+      )
 
       // อัพโหลดรูปภาพ
       const photoBuffer = Buffer.from(request.photoBase64, 'base64')
@@ -347,7 +402,7 @@ export class CheckinService extends BaseService {
           ` (สาย ${lateInfo.minutes} นาที - เตือนเบื้องต้น)`,
           ` (สาย ${lateInfo.minutes} นาที - ถูกตัดคะแนน)`,
           ` (สาย ${lateInfo.minutes} นาที - ผิดวินัยเบา)`,
-          ` (สาย ${lateInfo.minutes} นาที - ผิดวินัยร้ายแรง โปรดชี้แจง)`
+          ` (สาย ${lateInfo.minutes} นาที - ผิดวินัยร้ายแรง โปรดชี้แจง)`,
         ]
         message += lateMessages[lateInfo.level]
       }
@@ -367,11 +422,11 @@ export class CheckinService extends BaseService {
   }
 
   // Checkout
-  async checkout(
-    userId: number,
-    request: CheckoutRequest
-  ): Promise<CheckoutResponse> {
+  async checkout(request: CheckoutRequest): Promise<CheckoutResponse> {
     try {
+      const session = await getServerSession()
+      const userId = +session.user.id
+
       // ตรวจสอบ active checkin
       const activeCheckin = await CheckinRepository.getActiveCheckin(userId)
       if (!activeCheckin) {
@@ -402,11 +457,18 @@ export class CheckinService extends BaseService {
       const char = character as any
       if (char.workStartTime && char.workEndTime) {
         // มีการตั้งเวลาทำงาน - ตรวจสอบว่าถึงเวลาเลิกงานหรือยัง
-        const isNightShift = this.isNightShift(char.workStartTime, char.workEndTime)
-        
+        const isNightShift = this.isNightShift(
+          char.workStartTime,
+          char.workEndTime
+        )
+
         // คำนวณเวลาเลิกงานจริง (ใช้เวลา checkin เป็น base)
-        const workEnd = this.getActualWorkEndTime(char.workEndTime, checkinTime, isNightShift)
-        
+        const workEnd = this.getActualWorkEndTime(
+          char.workEndTime,
+          checkinTime,
+          isNightShift
+        )
+
         if (workEnd && now < workEnd) {
           const remainingMs = workEnd.getTime() - now.getTime()
           const remainingHours = remainingMs / (1000 * 60 * 60)
@@ -428,13 +490,16 @@ export class CheckinService extends BaseService {
       )
 
       // อัพเดท checkout
-      const checkout = await CheckinRepository.updateCheckout(activeCheckin.id, {
-        checkoutPhotoUrl: photoResult.url,
-        checkoutLat: request.lat,
-        checkoutLng: request.lng,
-        totalHours: workingHours,
-        notes: request.notes,
-      })
+      const checkout = await CheckinRepository.updateCheckout(
+        activeCheckin.id,
+        {
+          checkoutPhotoUrl: photoResult.url,
+          checkoutLat: request.lat,
+          checkoutLng: request.lng,
+          totalHours: workingHours,
+          notes: request.notes,
+        }
+      )
 
       return {
         success: true,
@@ -467,4 +532,4 @@ export class CheckinService extends BaseService {
 }
 
 // Export singleton instance
-export const checkinService = CheckinService.getInstance() 
+export const checkinService = CheckinService.getInstance()

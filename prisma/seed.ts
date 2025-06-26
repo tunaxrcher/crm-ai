@@ -99,10 +99,12 @@ async function main() {
 
   // const rewards = await createRewardItems()
   // console.log(`✅ สร้าง Reward Items ${rewards.length} รายการเรียบร้อย`)
-  
+
   // ============= สร้าง WorkLocation =============
   const workLocations = await createWorkLocations()
-  console.log(`✅ สร้าง Work Locations ${workLocations.length} สถานที่เรียบร้อย`)
+  console.log(
+    `✅ สร้าง Work Locations ${workLocations.length} สถานที่เรียบร้อย`
+  )
 
   // console.log('✨ เสร็จสิ้นการ Seed ข้อมูล')
 }

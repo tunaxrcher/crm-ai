@@ -1,12 +1,13 @@
 'use client'
 
-import { Card } from '@src/components/ui/card'
 import { Badge } from '@src/components/ui/badge'
+import { Card } from '@src/components/ui/card'
 import { Skeleton } from '@src/components/ui/skeleton'
-import { useCheckinHistory } from '../hooks/api'
-import { Calendar, Clock, MapPin, Camera, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
+import { AlertCircle, Calendar, Camera, Clock, MapPin } from 'lucide-react'
+
+import { useCheckinHistory } from '../hooks/api'
 
 export function CheckinHistory() {
   const { data: history, isLoading, error } = useCheckinHistory(30)
@@ -34,7 +35,9 @@ export function CheckinHistory() {
   if (!history || history.length === 0) {
     return (
       <Card className="p-6 text-center">
-        <p className="text-muted-foreground">ยังไม่มีประวัติการ Check-in/Check-out</p>
+        <p className="text-muted-foreground">
+          ยังไม่มีประวัติการ Check-in/Check-out
+        </p>
       </Card>
     )
   }
@@ -53,25 +56,34 @@ export function CheckinHistory() {
     return `${h} ชั่วโมง ${m} นาที`
   }
 
-  const getLateStatusBadge = (lateLevel: number | null, lateMinutes: number | null) => {
+  const getLateStatusBadge = (
+    lateLevel: number | null,
+    lateMinutes: number | null
+  ) => {
     if (lateLevel === null || lateLevel === 0) {
-      return <Badge variant="default" className="bg-green-500">ตรงเวลา</Badge>
+      return (
+        <Badge variant="default" className="bg-green-500">
+          ตรงเวลา
+        </Badge>
+      )
     }
 
-    const variants = ['default', 'secondary', 'default', 'destructive', 'destructive'] as const
+    const variants = [
+      'default',
+      'secondary',
+      'default',
+      'destructive',
+      'destructive',
+    ] as const
     const labels = [
       '',
       `สาย ${lateMinutes} นาที`,
       `สาย ${lateMinutes} นาที`,
       `สาย ${lateMinutes} นาที`,
-      `สาย ${lateMinutes} นาที`
+      `สาย ${lateMinutes} นาที`,
     ]
 
-    return (
-      <Badge variant={variants[lateLevel]}>
-        {labels[lateLevel]}
-      </Badge>
-    )
+    return <Badge variant={variants[lateLevel]}>{labels[lateLevel]}</Badge>
   }
 
   const getLateDescription = (lateLevel: number | null) => {
@@ -82,7 +94,7 @@ export function CheckinHistory() {
       'เตือนเบื้องต้น',
       'ถูกตัดคะแนน',
       'ผิดวินัยเบา',
-      'ผิดวินัยร้ายแรง'
+      'ผิดวินัยร้ายแรง',
     ]
 
     return descriptions[lateLevel]
@@ -102,7 +114,10 @@ export function CheckinHistory() {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant={record.checkinType === 'onsite' ? 'default' : 'secondary'}>
+                <Badge
+                  variant={
+                    record.checkinType === 'onsite' ? 'default' : 'secondary'
+                  }>
                   {record.checkinType === 'onsite' ? 'ในสถานที่' : 'นอกสถานที่'}
                 </Badge>
                 {getLateStatusBadge(record.lateLevel, record.lateMinutes)}
@@ -144,7 +159,9 @@ export function CheckinHistory() {
                   <Clock className="h-4 w-4" />
                   {record.checkoutAt ? (
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{formatTime(record.checkoutAt)}</span>
+                      <span className="font-medium">
+                        {formatTime(record.checkoutAt)}
+                      </span>
                       {record.notes?.includes('[AUTO CHECKOUT]') && (
                         <Badge variant="secondary" className="text-xs">
                           Auto
@@ -187,15 +204,15 @@ export function CheckinHistory() {
                     รูป Check-in
                   </p>
                   <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={record.checkinPhotoUrl} 
-                      alt="Check-in" 
+                    <img
+                      src={record.checkinPhotoUrl}
+                      alt="Check-in"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
               )}
-              
+
               {record.checkoutPhotoUrl && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -203,9 +220,9 @@ export function CheckinHistory() {
                     รูป Check-out
                   </p>
                   <div className="aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={record.checkoutPhotoUrl} 
-                      alt="Check-out" 
+                    <img
+                      src={record.checkoutPhotoUrl}
+                      alt="Check-out"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -218,7 +235,9 @@ export function CheckinHistory() {
               <div className="pt-2 border-t">
                 <p className="text-sm text-muted-foreground">หมายเหตุ</p>
                 <p className="text-sm mt-1">
-                  {record.notes.replace('[AUTO CHECKOUT] ', '').replace('[AUTO CHECKOUT]', '')}
+                  {record.notes
+                    .replace('[AUTO CHECKOUT] ', '')
+                    .replace('[AUTO CHECKOUT]', '')}
                 </p>
               </div>
             )}
@@ -227,4 +246,4 @@ export function CheckinHistory() {
       ))}
     </div>
   )
-} 
+}

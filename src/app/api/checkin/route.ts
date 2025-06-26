@@ -7,7 +7,7 @@ import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const POST = withErrorHandling(async (request: NextRequest) => {
   console.log('[API] Checkin')
-  
+
   const session = await getServerSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -32,7 +32,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 // GET endpoint สำหรับดูประวัติ checkin
 export const GET = withErrorHandling(async (request: NextRequest) => {
   console.log('[API] Get Checkin History')
-  
+
   const session = await getServerSession()
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
