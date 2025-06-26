@@ -97,8 +97,12 @@ async function main() {
   // // const userTokens = await createUserTokens(users)
   // // console.log(`✅ สร้าง UserToken ${userTokens.length} รายการเรียบร้อย`)
 
-  const rewards = await createRewardItems()
-  console.log(`✅ สร้าง Reward Items ${rewards.length} รายการเรียบร้อย`)
+  // const rewards = await createRewardItems()
+  // console.log(`✅ สร้าง Reward Items ${rewards.length} รายการเรียบร้อย`)
+  
+  // ============= สร้าง WorkLocation =============
+  const workLocations = await createWorkLocations()
+  console.log(`✅ สร้าง Work Locations ${workLocations.length} สถานที่เรียบร้อย`)
 
   // console.log('✨ เสร็จสิ้นการ Seed ข้อมูล')
 }
@@ -1855,3 +1859,27 @@ main()
     // ปิดการเชื่อมต่อกับ Prisma Client
     await prisma.$disconnect()
   })
+
+// ========== ฟังก์ชันสร้าง WorkLocation ==========
+async function createWorkLocations() {
+  const workLocations = [
+    {
+      name: 'evxautoimport',
+      address: 'WJPW+WQP ดอนกอย Vientiane, Laos',
+      latitude: 17.9373408,
+      longitude: 102.6469414,
+      radius: 100, // รัศมี 100 เมตร
+      isActive: true,
+    },
+  ]
+
+  const createdLocations = await Promise.all(
+    workLocations.map((location) =>
+      prisma.workLocation.create({
+        data: location,
+      })
+    )
+  )
+
+  return createdLocations
+}

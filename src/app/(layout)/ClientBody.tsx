@@ -16,7 +16,16 @@ import {
   XPGainedNotification,
 } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
-import { Activity, Gift, ScrollText, Trophy, User } from 'lucide-react'
+import { useCheckinStatus } from '@src/features/checkin/hooks/api'
+import {
+  Activity,
+  CheckCircle2,
+  Gift,
+  LogOut,
+  ScrollText,
+  Trophy,
+  User,
+} from 'lucide-react'
 
 // Client body wrapper without notification provider
 export default function ClientBody({
@@ -58,6 +67,9 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
 
   // Get character data
   const { character } = useCharacter()
+
+  // Get checkin status
+  const { data: checkinStatus } = useCheckinStatus()
 
   // Register animation effects
   useEffect(() => {
@@ -151,6 +163,23 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="flex items-center space-x-2">
+            {/* Checkin/Checkout Button */}
+            <Link
+              href="/checkin"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+              {checkinStatus?.hasActiveCheckin ? (
+                <>
+                  <LogOut className="h-4 w-4" />
+                  <span className="text-sm font-medium">เช็คเอ้าท์</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="text-sm font-medium">เช็คอิน</span>
+                </>
+              )}
+            </Link>
+
             <NotificationSheet />
             <ProfileSheet />
           </div>

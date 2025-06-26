@@ -102,6 +102,7 @@ model Character {
   rewardPurchases    RewardPurchase[]
   gachaHistories     GachaHistory[]
   rewardStats        UserRewardStats?
+  checkinCheckouts  CheckinCheckout[]
 
   @@index([jobClassId], map: "Character_jobClassId_fkey")
   @@index([jobLevelId], map: "Character_jobLevelId_fkey")
@@ -616,4 +617,50 @@ enum EnumRewardStatus {
   claimed
   expired
   cancelled
+}
+
+// Checkin-Checkout System
+model WorkLocation {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String   @db.Text
+  latitude  Float
+  longitude Float
+  radius    Float    @default(100) // radius in meters
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  checkinCheckouts CheckinCheckout[]
+}
+
+model CheckinCheckout {
+  id               Int             @id @default(autoincrement())
+  characterId      Int
+  workLocationId   Int?
+  checkinAt        DateTime        @default(now())
+  checkinPhotoUrl  String?
+  checkinLat       Float?
+  checkinLng       Float?
+  checkinType      EnumCheckinType @default(onsite)
+  checkoutAt       DateTime?
+  checkoutPhotoUrl String?
+  checkoutLat      Float?
+  checkoutLng      Float?
+  totalHours       Float? // คำนวณเมื่อ checkout
+  notes            String?         @db.Text
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  character         Character          @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  workLocation WorkLocation? @relation(fields: [workLocationId], references: [id])
+
+  @@index([characterId])
+  @@index([workLocationId])
+  @@index([checkinAt])
+}
+
+enum EnumCheckinType {
+  onsite // อยู่ในสถานที่ทำงาน
+  offsite // อยู่นอกสถานที่ทำงาน
 }
