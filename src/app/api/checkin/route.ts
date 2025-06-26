@@ -1,39 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@src/lib/auth'
+
 import { CheckinService } from '@src/features/checkin/services/server'
 import type { CheckinRequest } from '@src/features/checkin/types'
+import { authOptions } from '@src/lib/auth'
+import { getServerSession } from 'next-auth'
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json() as CheckinRequest
+    const body = (await req.json()) as CheckinRequest
 
     // Validate request
     if (!body.lat || !body.lng || !body.photoBase64 || !body.checkinType) {
-      return NextResponse.json(
-        { error: 'ข้อมูลไม่ครบถ้วน' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'ข้อมูลไม่ครบถ้วน' }, { status: 400 })
     }
 
-    const result = await CheckinService.checkin(
-      parseInt(session.user.id),
-      body
-    )
+    const result = await CheckinService.checkin(parseInt(session.user.id), body)
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: result.message }, { status: 400 })
     }
 
     return NextResponse.json(result)
@@ -51,10 +40,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(req.url)
@@ -79,4 +65,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

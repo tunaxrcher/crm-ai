@@ -2,10 +2,18 @@ import { prisma } from '@src/lib/db'
 import type { CheckinCheckout, WorkLocation } from './types'
 
 export class CheckinRepository {
-  // ดึงข้อมูล character พร้อมข้อมูลเวลาทำงาน
+  // ดึงข้อมูล character พร้อมเวลาทำงาน
   static async getCharacterWithWorkTime(userId: number) {
-    return await prisma.character.findUnique({
-      where: { userId },
+    return await prisma.character.findFirst({
+      where: {
+        userId,
+      },
+      select: {
+        id: true,
+        workStartTime: true,
+        workEndTime: true,
+        salary: true,
+      },
     })
   }
 
@@ -58,6 +66,8 @@ export class CheckinRepository {
     checkinLng: number
     checkinType: 'onsite' | 'offsite'
     notes?: string
+    lateLevel?: number
+    lateMinutes?: number
   }): Promise<CheckinCheckout> {
     const character = await this.getCharacterWithWorkTime(data.userId)
     if (!character) throw new Error('Character not found')
@@ -65,12 +75,15 @@ export class CheckinRepository {
     const checkin = await prisma.checkinCheckout.create({
       data: {
         characterId: character.id,
+        checkinAt: new Date(),
         workLocationId: data.workLocationId || null,
         checkinPhotoUrl: data.checkinPhotoUrl,
         checkinLat: data.checkinLat,
         checkinLng: data.checkinLng,
         checkinType: data.checkinType as any,
         notes: data.notes,
+        lateLevel: data.lateLevel || 0,
+        lateMinutes: data.lateMinutes || 0,
       } as any,
       include: {
         workLocation: true,
@@ -159,5 +172,24 @@ export class CheckinRepository {
     })
 
     return checkins as CheckinCheckout[]
+  }
+
+  // ดึง active checkin ทั้งหมด (ไม่จำกัดวัน) สำหรับแสดงประวัติ
+  static async getAllActiveCheckins(userId: number) {
+    const character = await this.getCharacterWithWorkTime(userId)
+    if (!character) return []
+
+    return await prisma.checkinCheckout.findMany({
+      where: {
+        characterId: character.id,
+        checkoutAt: null,
+      },
+      include: {
+        workLocation: true,
+      },
+      orderBy: {
+        checkinAt: 'desc',
+      },
+    })
   }
 } 

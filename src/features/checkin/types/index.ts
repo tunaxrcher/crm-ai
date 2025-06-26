@@ -14,7 +14,7 @@ export interface WorkLocation {
 // CheckinCheckout Types
 export interface CheckinCheckout {
   id: number
-  userId: number
+  characterId: number
   workLocationId: number | null
   checkinAt: Date
   checkinPhotoUrl: string | null
@@ -26,6 +26,8 @@ export interface CheckinCheckout {
   checkoutLat: number | null
   checkoutLng: number | null
   totalHours: number | null
+  lateLevel: number | null    // ระดับการมาสาย 0-4
+  lateMinutes: number | null  // จำนวนนาทีที่มาสาย
   notes: string | null
   createdAt: Date
   updatedAt: Date

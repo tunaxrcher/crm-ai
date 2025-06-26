@@ -10,12 +10,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@src/components/ui/tabs'
+import { WorkSettingsDialog } from '@src/features/character/components/WorkSettingsDialog'
+import { AutoCheckoutDevTools } from '@src/features/checkin/components/AutoCheckoutDevTools'
 import { CheckinHistory } from '@src/features/checkin/components/CheckinHistory'
 import { CheckinSection } from '@src/features/checkin/components/CheckinSection'
 import { CheckoutSection } from '@src/features/checkin/components/CheckoutSection'
 import { useCheckinStatus } from '@src/features/checkin/hooks/api'
-import { WorkSettingsDialog } from '@src/features/character/components/WorkSettingsDialog'
-import { CheckCircle2, Clock, LogOut, MapPin, Settings } from 'lucide-react'
+import { CheckCircle2, Clock, History, LogOut, Settings } from 'lucide-react'
 
 export default function CheckinPage() {
   const { data: status, isLoading, error } = useCheckinStatus()
@@ -82,60 +83,34 @@ export default function CheckinPage() {
         </div>
       </Card>
 
-      {/* Status Card */}
-      {status && status.hasActiveCheckin && status.currentCheckin && (
-        <Card className="p-6 bg-primary/5 border-primary/20">
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">สถานะปัจจุบัน</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">เวลา Check-in</p>
-                <p className="font-medium">
-                  {new Date(status.currentCheckin.checkinAt).toLocaleTimeString(
-                    'th-TH'
-                  )}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">ระยะเวลาทำงาน</p>
-                <p className="font-medium">
-                  {status.workingHours
-                    ? `${status.workingHours.toFixed(1)} ชั่วโมง`
-                    : '-'}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">สถานที่</p>
-                <p className="font-medium flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {status.currentCheckin.checkinType === 'onsite'
-                    ? status.currentCheckin.workLocation?.name ||
-                      'ในสถานที่ทำงาน'
-                    : 'นอกสถานที่ทำงาน'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
+      {/* Dev Tools - แสดงเฉพาะ dev mode */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mb-4">
+          <AutoCheckoutDevTools />
+        </div>
       )}
 
       {/* Main Content */}
       <Tabs defaultValue="checkin" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="checkin">
-            <CheckCircle2 className="h-4 w-4 mr-2" /> เช็คอิน
+          <TabsTrigger value="checkin" className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 mr-2" />
+            เช็คอิน
           </TabsTrigger>
-          <TabsTrigger value="checkout">
+          <TabsTrigger value="checkout" className="flex items-center gap-2">
             <LogOut className="h-4 w-4 mr-2" /> เช็คเอ้าท์
           </TabsTrigger>
-          <TabsTrigger value="history">ประวัติ</TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <History className="h-4 w-4" />
+            ประวัติ
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="checkin">
+        <TabsContent value="checkin" className="space-y-4">
           <CheckinSection status={status} />
         </TabsContent>
 
-        <TabsContent value="checkout">
+        <TabsContent value="checkout" className="space-y-4">
           <CheckoutSection status={status} />
         </TabsContent>
 

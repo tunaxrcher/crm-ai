@@ -638,29 +638,32 @@ model WorkLocation {
 }
 
 model CheckinCheckout {
-  id               Int             @id @default(autoincrement())
-  characterId      Int
-  workLocationId   Int?
-  checkinAt        DateTime        @default(now())
+  id               Int              @id @default(autoincrement())
+  checkinAt        DateTime
   checkinPhotoUrl  String?
-  checkinLat       Float?
-  checkinLng       Float?
-  checkinType      EnumCheckinType @default(onsite)
+  checkinLat       Float
+  checkinLng       Float
+  checkinType      EnumCheckinType  @default(onsite)
   checkoutAt       DateTime?
   checkoutPhotoUrl String?
   checkoutLat      Float?
   checkoutLng      Float?
-  totalHours       Float? // คำนวณเมื่อ checkout
-  notes            String?         @db.Text
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  totalHours       Float?
+  notes            String?          @db.Text
+  lateLevel        Int?             @default(0)  // 0-4: ระดับการมาสาย
+  lateMinutes      Int?             @default(0)  // จำนวนนาทีที่มาสาย
+  isAutoCheckout   Boolean          @default(false)  // ระบุว่าเป็น auto checkout
+  autoCheckoutAt   DateTime?        // เวลาที่ระบบทำ auto checkout
+  autoCheckoutNote String?          // หมายเหตุการ auto checkout
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  characterId      Int
+  workLocationId   Int?
+  character        Character        @relation(fields: [characterId], references: [id])
+  workLocation     WorkLocation?    @relation(fields: [workLocationId], references: [id])
 
-  character         Character          @relation(fields: [characterId], references: [id], onDelete: Cascade)
-  workLocation WorkLocation? @relation(fields: [workLocationId], references: [id])
-
-  @@index([characterId])
-  @@index([workLocationId])
-  @@index([checkinAt])
+  @@index([characterId], map: "CheckinCheckout_characterId_fkey")
+  @@index([workLocationId], map: "CheckinCheckout_workLocationId_fkey")
 }
 
 enum EnumCheckinType {

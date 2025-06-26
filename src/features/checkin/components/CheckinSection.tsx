@@ -20,6 +20,7 @@ import {
 import {
   useCheckLocation,
   useCheckin,
+  useCheckinHistory,
   useTodayCheckins,
   useWorkLocations,
 } from '../hooks/api'
@@ -48,6 +49,7 @@ export function CheckinSection({ status }: CheckinSectionProps) {
   const checkLocation = useCheckLocation()
   const checkin = useCheckin()
   const { data: todayCheckins } = useTodayCheckins()
+  const { data: history } = useCheckinHistory(7) // ดึงประวัติ 7 วันหลัง
 
   // Check if in development mode
   const isDevelopment = process.env.NODE_ENV === 'development'
@@ -57,6 +59,14 @@ export function CheckinSection({ status }: CheckinSectionProps) {
   const isOffsite = checkLocation.data && !checkLocation.data.isInWorkLocation
   const canShowPhotoStep =
     isLocationChecked && (!isOffsite || hasProvidedReason)
+
+  // ตรวจสอบว่ามี checkin วันเก่าที่ลืม checkout
+  const missedCheckouts =
+    history?.filter(
+      (record) =>
+        !record.checkoutAt &&
+        new Date(record.checkinAt).toDateString() !== new Date().toDateString()
+    ) || []
 
   useEffect(() => {
     if (isOffsite && !hasProvidedReason && offsiteReasonRef.current) {
@@ -69,13 +79,10 @@ export function CheckinSection({ status }: CheckinSectionProps) {
   if (completedToday) {
     return (
       <Card className="p-6">
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
+        <Alert className="border-green-700 bg-green-400 text-white">
           <AlertDescription>
             <div className="space-y-2">
-              <p className="font-medium">
-                คุณได้ทำการ Check-in และ Check-out วันนี้แล้ว
-              </p>
+              <p className="font-medium">คุณได้ทำการ Check-in วันนี้แล้ว</p>
               <div className="text-sm space-y-1">
                 <p className="flex items-center gap-2">
                   <Clock className="h-3 w-3" />
@@ -239,7 +246,13 @@ export function CheckinSection({ status }: CheckinSectionProps) {
       })
 
       if (result.success) {
-        alert('Check-in สำเร็จ!')
+        // แสดงข้อความตามระดับการมาสาย
+        if (result.message.includes('สาย')) {
+          // ถ้ามาสายจะมีข้อความพิเศษ
+          alert(result.message)
+        } else {
+          alert('Check-in สำเร็จ!')
+        }
         // Reset form
         setLocation(null)
         setPhotoData(null)
@@ -257,6 +270,38 @@ export function CheckinSection({ status }: CheckinSectionProps) {
 
   return (
     <div className="space-y-4">
+      {/* แจ้งเตือนถ้ามี checkin วันเก่าที่ลืม checkout */}
+      {missedCheckouts.length > 0 && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p className="font-medium text-orange-900">
+                คุณมี Check-in ที่ลืม Check-out จำนวน {missedCheckouts.length}{' '}
+                รายการ
+              </p>
+              <div className="text-sm text-orange-700">
+                {missedCheckouts.slice(0, 3).map((record) => (
+                  <p key={record.id} className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    {new Date(record.checkinAt).toLocaleDateString('th-TH')} -
+                    {new Date(record.checkinAt).toLocaleTimeString('th-TH')}
+                  </p>
+                ))}
+                {missedCheckouts.length > 3 && (
+                  <p className="text-xs mt-1">
+                    และอีก {missedCheckouts.length - 3} รายการ
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-orange-600 mt-2">
+                หมายเหตุ: คุณยังสามารถ Check-in วันนี้ได้ตามปกติ
+              </p>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Step 1: Location */}
       <Card className="p-6">
         <div className="space-y-4">

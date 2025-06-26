@@ -4,7 +4,7 @@ import { Card } from '@src/components/ui/card'
 import { Badge } from '@src/components/ui/badge'
 import { Skeleton } from '@src/components/ui/skeleton'
 import { useCheckinHistory } from '../hooks/api'
-import { Calendar, Clock, MapPin, Camera } from 'lucide-react'
+import { Calendar, Clock, MapPin, Camera, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 
@@ -34,7 +34,7 @@ export function CheckinHistory() {
   if (!history || history.length === 0) {
     return (
       <Card className="p-6 text-center">
-        <p className="text-muted-foreground">ยังไม่มีประวัติการ</p>
+        <p className="text-muted-foreground">ยังไม่มีประวัติการ Check-in/Check-out</p>
       </Card>
     )
   }
@@ -53,6 +53,41 @@ export function CheckinHistory() {
     return `${h} ชั่วโมง ${m} นาที`
   }
 
+  const getLateStatusBadge = (lateLevel: number | null, lateMinutes: number | null) => {
+    if (lateLevel === null || lateLevel === 0) {
+      return <Badge variant="default" className="bg-green-500">ตรงเวลา</Badge>
+    }
+
+    const variants = ['default', 'secondary', 'default', 'destructive', 'destructive'] as const
+    const labels = [
+      '',
+      `สาย ${lateMinutes} นาที`,
+      `สาย ${lateMinutes} นาที`,
+      `สาย ${lateMinutes} นาที`,
+      `สาย ${lateMinutes} นาที`
+    ]
+
+    return (
+      <Badge variant={variants[lateLevel]}>
+        {labels[lateLevel]}
+      </Badge>
+    )
+  }
+
+  const getLateDescription = (lateLevel: number | null) => {
+    if (lateLevel === null || lateLevel === 0) return null
+
+    const descriptions = [
+      '',
+      'เตือนเบื้องต้น',
+      'ถูกตัดคะแนน',
+      'ผิดวินัยเบา',
+      'ผิดวินัยร้ายแรง'
+    ]
+
+    return descriptions[lateLevel]
+  }
+
   return (
     <div className="space-y-4">
       {history.map((record) => (
@@ -66,10 +101,30 @@ export function CheckinHistory() {
                   {formatDate(record.checkinAt)}
                 </span>
               </div>
-              <Badge variant={record.checkinType === 'onsite' ? 'default' : 'secondary'}>
-                {record.checkinType === 'onsite' ? 'ในสถานที่' : 'นอกสถานที่'}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={record.checkinType === 'onsite' ? 'default' : 'secondary'}>
+                  {record.checkinType === 'onsite' ? 'ในสถานที่' : 'นอกสถานที่'}
+                </Badge>
+                {getLateStatusBadge(record.lateLevel, record.lateMinutes)}
+              </div>
             </div>
+
+            {/* Late Warning */}
+            {record.lateLevel && record.lateLevel > 0 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-orange-900">
+                    {getLateDescription(record.lateLevel)}
+                  </p>
+                  {record.lateLevel >= 4 && (
+                    <p className="text-orange-700 mt-1">
+                      กรุณาชี้แจงเหตุผลการมาสายกับหัวหน้างาน
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Time Details */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -85,10 +140,23 @@ export function CheckinHistory() {
               {/* Check-out */}
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Check-out</p>
-                <p className="font-medium flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  {record.checkoutAt ? formatTime(record.checkoutAt) : '-'}
-                </p>
+                  {record.checkoutAt ? (
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{formatTime(record.checkoutAt)}</span>
+                      {record.notes?.includes('[AUTO CHECKOUT]') && (
+                        <Badge variant="secondary" className="text-xs">
+                          Auto
+                        </Badge>
+                      )}
+                    </div>
+                  ) : (
+                    <Badge variant="destructive" className="text-xs">
+                      ลืม Checkout
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               {/* Duration */}
@@ -149,7 +217,9 @@ export function CheckinHistory() {
             {record.notes && (
               <div className="pt-2 border-t">
                 <p className="text-sm text-muted-foreground">หมายเหตุ</p>
-                <p className="text-sm mt-1">{record.notes}</p>
+                <p className="text-sm mt-1">
+                  {record.notes.replace('[AUTO CHECKOUT] ', '').replace('[AUTO CHECKOUT]', '')}
+                </p>
               </div>
             )}
           </div>
