@@ -11,12 +11,18 @@ import {
   Camera,
   CheckCircle,
   ChevronRight,
+  Clock,
   Loader2,
   MapPin,
   Navigation,
 } from 'lucide-react'
 
-import { useCheckLocation, useCheckin, useWorkLocations } from '../hooks/api'
+import {
+  useCheckLocation,
+  useCheckin,
+  useTodayCheckins,
+  useWorkLocations,
+} from '../hooks/api'
 import type { CheckinStatus } from '../types'
 
 interface CheckinSectionProps {
@@ -41,9 +47,63 @@ export function CheckinSection({ status }: CheckinSectionProps) {
   const { data: workLocations } = useWorkLocations()
   const checkLocation = useCheckLocation()
   const checkin = useCheckin()
+  const { data: todayCheckins } = useTodayCheckins()
 
   // Check if in development mode
   const isDevelopment = process.env.NODE_ENV === 'development'
+
+  // คำนวณ step ที่จะแสดง
+  const isLocationChecked = location && checkLocation.data
+  const isOffsite = checkLocation.data && !checkLocation.data.isInWorkLocation
+  const canShowPhotoStep =
+    isLocationChecked && (!isOffsite || hasProvidedReason)
+
+  useEffect(() => {
+    if (isOffsite && !hasProvidedReason && offsiteReasonRef.current) {
+      offsiteReasonRef.current.focus()
+    }
+  }, [isOffsite, hasProvidedReason])
+
+  // ตรวจสอบว่า checkin และ checkout วันนี้แล้วหรือยัง
+  const completedToday = todayCheckins?.find((c) => c.checkoutAt !== null)
+  if (completedToday) {
+    return (
+      <Card className="p-6">
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p className="font-medium">
+                คุณได้ทำการ Check-in และ Check-out วันนี้แล้ว
+              </p>
+              <div className="text-sm space-y-1">
+                <p className="flex items-center gap-2">
+                  <Clock className="h-3 w-3" />
+                  Check-in:{' '}
+                  {new Date(completedToday.checkinAt).toLocaleTimeString(
+                    'th-TH'
+                  )}
+                  {completedToday.checkinType === 'offsite' && ' (นอกสถานที่)'}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Clock className="h-3 w-3" />
+                  Check-out:{' '}
+                  {completedToday.checkoutAt &&
+                    new Date(completedToday.checkoutAt).toLocaleTimeString(
+                      'th-TH'
+                    )}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Clock className="h-3 w-3" />
+                  ระยะเวลาทำงาน: {completedToday.totalHours?.toFixed(1)} ชั่วโมง
+                </p>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </Card>
+    )
+  }
 
   // ตรวจสอบว่า checkin แล้วหรือยัง
   if (status?.hasActiveCheckin) {
@@ -62,12 +122,6 @@ export function CheckinSection({ status }: CheckinSectionProps) {
       </Card>
     )
   }
-
-  // คำนวณ step ที่จะแสดง
-  const isLocationChecked = location && checkLocation.data
-  const isOffsite = checkLocation.data && !checkLocation.data.isInWorkLocation
-  const canShowPhotoStep =
-    isLocationChecked && (!isOffsite || hasProvidedReason)
 
   // Get current location
   const getCurrentLocation = () => {
@@ -200,12 +254,6 @@ export function CheckinSection({ status }: CheckinSectionProps) {
       alert('เกิดข้อผิดพลาดในการ Check-in')
     }
   }
-
-  useEffect(() => {
-    if (isOffsite && !hasProvidedReason && offsiteReasonRef.current) {
-      offsiteReasonRef.current.focus()
-    }
-  }, [isOffsite, hasProvidedReason])
 
   return (
     <div className="space-y-4">

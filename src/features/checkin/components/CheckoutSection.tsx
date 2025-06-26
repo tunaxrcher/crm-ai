@@ -5,7 +5,7 @@ import { Card } from '@src/components/ui/card'
 import { Button } from '@src/components/ui/button'
 import { Alert, AlertDescription } from '@src/components/ui/alert'
 import { Textarea } from '@src/components/ui/textarea'
-import { useCheckout, useCheckLocation } from '../hooks/api'
+import { useCheckout, useCheckLocation, useTodayCheckins } from '../hooks/api'
 import type { CheckinStatus } from '../types'
 import { 
   LogOut,
@@ -40,8 +40,41 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
   
   const checkout = useCheckout()
   const checkLocation = useCheckLocation()
+  const { data: todayCheckins } = useTodayCheckins()
 
   const isDev = process.env.NODE_ENV === 'development'
+
+  // ตรวจสอบว่า checkout วันนี้แล้วหรือยัง
+  const completedToday = todayCheckins?.find(c => c.checkoutAt !== null)
+  if (completedToday) {
+    return (
+      <Card className="p-6">
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p className="font-medium">คุณได้ทำการ Check-out วันนี้แล้ว</p>
+              <div className="text-sm space-y-1">
+                <p className="flex items-center gap-2">
+                  <Clock className="h-3 w-3" />
+                  Check-in: {new Date(completedToday.checkinAt).toLocaleTimeString('th-TH')}
+                  {completedToday.checkinType === 'offsite' && ' (นอกสถานที่)'}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Clock className="h-3 w-3" />
+                  Check-out: {completedToday.checkoutAt && new Date(completedToday.checkoutAt).toLocaleTimeString('th-TH')}
+                </p>
+                <p className="flex items-center gap-2">
+                  <Clock className="h-3 w-3" />
+                  ระยะเวลาทำงาน: {completedToday.totalHours?.toFixed(1)} ชั่วโมง
+                </p>
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </Card>
+    )
+  }
 
   // ตรวจสอบว่ายังไม่ได้ checkin
   if (!status?.hasActiveCheckin || !status.currentCheckin) {

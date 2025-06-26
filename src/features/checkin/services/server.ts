@@ -152,6 +152,19 @@ export class CheckinService {
         }
       }
 
+      // ตรวจสอบว่า checkin วันนี้แล้วหรือยัง (รวมทั้งที่ checkout แล้ว)
+      const todayCheckins = await CheckinRepository.getTodayCheckins(userId)
+      if (todayCheckins && todayCheckins.length > 0) {
+        // ตรวจสอบว่ามี checkin ที่ checkout แล้วหรือยัง
+        const completedCheckin = todayCheckins.find(c => c.checkoutAt !== null)
+        if (completedCheckin) {
+          return {
+            success: false,
+            message: 'คุณได้ทำการ check-in และ check-out วันนี้แล้ว',
+          }
+        }
+      }
+
       // อัพโหลดรูปภาพ
       const photoBuffer = Buffer.from(request.photoBase64, 'base64')
       const photoResult = await s3UploadService.uploadBuffer(
