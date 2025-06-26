@@ -14,7 +14,8 @@ import { CheckinHistory } from '@src/features/checkin/components/CheckinHistory'
 import { CheckinSection } from '@src/features/checkin/components/CheckinSection'
 import { CheckoutSection } from '@src/features/checkin/components/CheckoutSection'
 import { useCheckinStatus } from '@src/features/checkin/hooks/api'
-import { CheckCircle2, Clock, LogOut, MapPin } from 'lucide-react'
+import { WorkSettingsDialog } from '@src/features/character/components/WorkSettingsDialog'
+import { CheckCircle2, Clock, LogOut, MapPin, Settings } from 'lucide-react'
 
 export default function CheckinPage() {
   const { data: status, isLoading, error } = useCheckinStatus()
@@ -54,11 +55,18 @@ export default function CheckinPage() {
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold ai-gradient-text">
-          ระบบ เช็คอิน/เช็คเอ้าท์
-        </h1>
-        <p className="text-muted-foreground">บันทึกเวลาเข้า-ออกงานของคุณ</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold ai-gradient-text">
+            ระบบ เช็คอิน/เช็คเอ้าท์
+          </h1>
+          <p className="text-muted-foreground">บันทึกเวลาเข้า-ออกงานของคุณ</p>
+        </div>
+        <WorkSettingsDialog>
+          <button className="p-2 hover:bg-secondary rounded-lg transition-colors">
+            <Settings className="h-5 w-5" />
+          </button>
+        </WorkSettingsDialog>
       </div>
 
       {/* Current Time */}

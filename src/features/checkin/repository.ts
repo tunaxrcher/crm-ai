@@ -2,6 +2,13 @@ import { prisma } from '@src/lib/db'
 import type { CheckinCheckout, WorkLocation } from './types'
 
 export class CheckinRepository {
+  // ดึงข้อมูล character พร้อมข้อมูลเวลาทำงาน
+  static async getCharacterWithWorkTime(userId: number) {
+    return await prisma.character.findUnique({
+      where: { userId },
+    })
+  }
+
   // ดึงข้อมูลสถานที่ทำงานทั้งหมดที่ active
   static async getActiveWorkLocations(): Promise<WorkLocation[]> {
     return await prisma.workLocation.findMany({
@@ -23,11 +30,14 @@ export class CheckinRepository {
 
   // ดึงข้อมูล checkin ที่ยังไม่ได้ checkout ของ user
   static async getActiveCheckin(userId: number): Promise<CheckinCheckout | null> {
+    const character = await this.getCharacterWithWorkTime(userId)
+    if (!character) return null
+
     const checkin = await prisma.checkinCheckout.findFirst({
       where: {
-        userId,
+        characterId: character.id,
         checkoutAt: null,
-      },
+      } as any,
       include: {
         workLocation: true,
       },
@@ -49,16 +59,19 @@ export class CheckinRepository {
     checkinType: 'onsite' | 'offsite'
     notes?: string
   }): Promise<CheckinCheckout> {
+    const character = await this.getCharacterWithWorkTime(data.userId)
+    if (!character) throw new Error('Character not found')
+
     const checkin = await prisma.checkinCheckout.create({
       data: {
-        userId: data.userId,
+        characterId: character.id,
         workLocationId: data.workLocationId || null,
         checkinPhotoUrl: data.checkinPhotoUrl,
         checkinLat: data.checkinLat,
         checkinLng: data.checkinLng,
         checkinType: data.checkinType as any,
         notes: data.notes,
-      },
+      } as any,
       include: {
         workLocation: true,
       },
@@ -101,8 +114,11 @@ export class CheckinRepository {
     userId: number,
     limit: number = 30
   ): Promise<CheckinCheckout[]> {
+    const character = await this.getCharacterWithWorkTime(userId)
+    if (!character) return []
+
     const history = await prisma.checkinCheckout.findMany({
-      where: { userId },
+      where: { characterId: character.id } as any,
       include: {
         workLocation: true,
       },
@@ -117,6 +133,9 @@ export class CheckinRepository {
 
   // ดึงข้อมูล checkin/checkout ของวันนี้
   static async getTodayCheckins(userId: number): Promise<CheckinCheckout[]> {
+    const character = await this.getCharacterWithWorkTime(userId)
+    if (!character) return []
+
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
@@ -125,12 +144,12 @@ export class CheckinRepository {
 
     const checkins = await prisma.checkinCheckout.findMany({
       where: {
-        userId,
+        characterId: character.id,
         checkinAt: {
           gte: today,
           lt: tomorrow,
         },
-      },
+      } as any,
       include: {
         workLocation: true,
       },

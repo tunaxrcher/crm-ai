@@ -34,7 +34,7 @@ export function CheckinHistory() {
   if (!history || history.length === 0) {
     return (
       <Card className="p-6 text-center">
-        <p className="text-muted-foreground">ยังไม่มีประวัติการ Check-in/Check-out</p>
+        <p className="text-muted-foreground">ยังไม่มีประวัติการ</p>
       </Card>
     )
   }

@@ -38,6 +38,15 @@ export class CheckinService {
     return this.EARTH_RADIUS_METERS * c
   }
 
+  // Helper method to parse time string "HH:MM" to date
+  private static parseWorkTime(timeStr: string | null | undefined, baseDate: Date): Date | null {
+    if (!timeStr) return null
+    const [hours, minutes] = timeStr.split(':').map(Number)
+    const date = new Date(baseDate)
+    date.setHours(hours, minutes, 0, 0)
+    return date
+  }
+
   // ตรวจสอบว่าอยู่ในพื้นที่ทำงานหรือไม่
   static async checkLocation(
     userLat: number,
@@ -84,19 +93,39 @@ export class CheckinService {
   // ดึงสถานะ checkin ปัจจุบัน
   static async getCheckinStatus(userId: number): Promise<CheckinStatus> {
     const activeCheckin = await CheckinRepository.getActiveCheckin(userId)
+    const character = await CheckinRepository.getCharacterWithWorkTime(userId)
     
     let canCheckout = false
     let workingHours: number | null = null
+    let minimumHoursRequired = 8 // default
 
-    if (activeCheckin) {
+    if (activeCheckin && character) {
       // คำนวณชั่วโมงการทำงาน
       const now = new Date()
       const checkinTime = new Date(activeCheckin.checkinAt)
       const diffMs = now.getTime() - checkinTime.getTime()
       workingHours = diffMs / (1000 * 60 * 60) // แปลงเป็นชั่วโมง
 
-      // ตรวจสอบว่าทำงานครบ 8 ชั่วโมงหรือยัง
-      canCheckout = workingHours >= this.MINIMUM_WORK_HOURS
+      // ถ้ามีเวลาเข้า-ออกงานที่กำหนด ให้ใช้เวลานั้น
+      const char = character as any
+      if (char.workStartTime && char.workEndTime) {
+        const workStart = this.parseWorkTime(char.workStartTime, now)
+        const workEnd = this.parseWorkTime(char.workEndTime, now)
+        
+        if (workStart && workEnd) {
+          // ตรวจสอบว่าถึงเวลาออกงานหรือยัง
+          if (now >= workEnd) {
+            canCheckout = true
+          }
+          
+          // คำนวณชั่วโมงทำงานที่ต้องการ
+          const requiredMs = workEnd.getTime() - workStart.getTime()
+          minimumHoursRequired = requiredMs / (1000 * 60 * 60)
+        }
+      } else {
+        // ถ้าไม่มีเวลากำหนด ใช้ 8 ชั่วโมงเหมือนเดิม
+        canCheckout = workingHours >= 8
+      }
     }
 
     return {
@@ -104,7 +133,7 @@ export class CheckinService {
       currentCheckin: activeCheckin,
       canCheckout,
       workingHours,
-      minimumHoursRequired: this.MINIMUM_WORK_HOURS,
+      minimumHoursRequired,
     }
   }
 
@@ -172,20 +201,44 @@ export class CheckinService {
         }
       }
 
+      // ลบการตรวจสอบ location ออก เพราะจะตรวจสอบใน frontend แทน
+      // Frontend จะส่ง notes มาพร้อมเหตุผลถ้า checkout นอกพื้นที่
+
+      const character = await CheckinRepository.getCharacterWithWorkTime(userId)
+      if (!character) {
+        return {
+          success: false,
+          message: 'ไม่พบข้อมูล character',
+        }
+      }
+
       // คำนวณชั่วโมงการทำงาน
       const now = new Date()
       const checkinTime = new Date(activeCheckin.checkinAt)
       const diffMs = now.getTime() - checkinTime.getTime()
       const workingHours = diffMs / (1000 * 60 * 60)
 
-      // ตรวจสอบชั่วโมงขั้นต่ำ
-      if (workingHours < this.MINIMUM_WORK_HOURS) {
-        const remainingHours = this.MINIMUM_WORK_HOURS - workingHours
-        return {
-          success: false,
-          message: `ยังไม่สามารถ check-out ได้ ต้องทำงานอีก ${remainingHours.toFixed(
-            1
-          )} ชั่วโมง`,
+      // ตรวจสอบเวลาทำงาน
+      const char = character as any
+      if (char.workStartTime && char.workEndTime) {
+        const workEnd = this.parseWorkTime(char.workEndTime, now)
+        
+        if (workEnd && now < workEnd) {
+          const remainingMs = workEnd.getTime() - now.getTime()
+          const remainingHours = remainingMs / (1000 * 60 * 60)
+          return {
+            success: false,
+            message: `ยังไม่ถึงเวลาเลิกงาน ต้องรออีก ${remainingHours.toFixed(1)} ชั่วโมง`,
+          }
+        }
+      } else {
+        // ถ้าไม่มีเวลากำหนด ใช้ 8 ชั่วโมงเหมือนเดิม
+        if (workingHours < 8) {
+          const remainingHours = 8 - workingHours
+          return {
+            success: false,
+            message: `ยังไม่สามารถ check-out ได้ ต้องทำงานอีก ${remainingHours.toFixed(1)} ชั่วโมง`,
+          }
         }
       }
 

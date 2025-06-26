@@ -23,6 +23,7 @@ import CharacterProfile from './CharacterProfile'
 import CharacterRadarChart from './CharacterRadarChart'
 import JobProgressionDialog from './JobProgressionDialog'
 import QuestStatistics from './QuestStatistics'
+import { WorkSettingsDialog } from './WorkSettingsDialog'
 
 export default function CharacterPageComponent() {
   // 🧠 ─── Context & Hook Data ───────────────────────────
@@ -180,6 +181,11 @@ export default function CharacterPageComponent() {
           />
 
           <AchievementSection achievements={character.achievements} />
+
+          {/* Work Settings */}
+          <div className="mt-4 flex justify-center">
+            <WorkSettingsDialog />
+          </div>
 
           {process.env.NODE_ENV === 'development' && (
             // {true && (

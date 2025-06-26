@@ -82,6 +82,9 @@ model Character {
   generatedPortraits Json?
   levelHistory       Json?
   personaTraits      String?                @db.Text
+  workStartTime      String?                // เวลาเข้างาน เช่น "09:00"
+  workEndTime        String?                // เวลาออกงาน เช่น "18:00"
+  salary             Float?                 // เงินเดือน
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   userId             Int                    @unique
