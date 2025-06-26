@@ -15,7 +15,7 @@ import {
   Clock,
   MapPin,
   CheckCircle,
-  XCircle,
+  ChevronRight,
   Navigation
 } from 'lucide-react'
 
@@ -23,18 +23,18 @@ interface CheckoutSectionProps {
   status: CheckinStatus | undefined
 }
 
-type CheckoutStep = 'location' | 'reason' | 'photo' | 'confirm'
-
 export function CheckoutSection({ status }: CheckoutSectionProps) {
-  const [step, setStep] = useState<CheckoutStep>('location')
   const [photoData, setPhotoData] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [offSiteReason, setOffSiteReason] = useState('')
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [isInWorkLocation, setIsInWorkLocation] = useState<boolean | null>(null)
+  const [hasProvidedReason, setHasProvidedReason] = useState(false)
+  const [isGettingLocation, setIsGettingLocation] = useState(false)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const offsiteReasonRef = useRef<HTMLTextAreaElement>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [isCameraActive, setIsCameraActive] = useState(false)
   
@@ -62,58 +62,42 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
   const workingHours = status.workingHours || 0
   const remainingHours = status.minimumHoursRequired - workingHours
 
-  // Get current location
-  const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('Geolocation not supported'))
-        return
-      }
+  // คำนวณ step ที่จะแสดง
+  const isLocationChecked = userLocation && checkLocation.data
+  const isOffsite = checkLocation.data && !checkLocation.data.isInWorkLocation
+  const canShowPhotoStep = isLocationChecked && (!isOffsite || hasProvidedReason)
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          })
-        },
-        (error) => {
-          reject(error)
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      )
-    })
-  }
-
-  // Check location step
+  // Get current location and check
   const handleCheckLocation = async () => {
-    try {
-      const location = await getCurrentLocation()
-      setUserLocation(location)
-      
-      // Check if in work location
-      const result = await checkLocation.mutateAsync({
-        lat: location.lat,
-        lng: location.lng
-      })
+    setIsGettingLocation(true)
 
-      setIsInWorkLocation(result.isInWorkLocation)
-      
-      if (result.isInWorkLocation) {
-        // ถ้าอยู่ในพื้นที่ ไปขั้นตอนถ่ายรูปเลย
-        setStep('photo')
-      } else {
-        // ถ้าไม่อยู่ในพื้นที่ ให้ระบุเหตุผล
-        setStep('reason')
-      }
-    } catch (error) {
-      console.error('Location error:', error)
-      alert('ไม่สามารถตรวจสอบตำแหน่งได้ กรุณาเปิด GPS')
+    if (!navigator.geolocation) {
+      alert('เบราว์เซอร์ของคุณไม่รองรับการระบุตำแหน่ง')
+      setIsGettingLocation(false)
+      return
     }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords
+        setUserLocation({ lat: latitude, lng: longitude })
+        
+        // Check if in work location
+        await checkLocation.mutateAsync({ lat: latitude, lng: longitude })
+        setIsInWorkLocation(checkLocation.data?.isInWorkLocation || false)
+        setIsGettingLocation(false)
+      },
+      (error) => {
+        console.error('Location error:', error)
+        alert('ไม่สามารถระบุตำแหน่งได้ กรุณาเปิด GPS และอนุญาตการเข้าถึงตำแหน่ง')
+        setIsGettingLocation(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    )
   }
 
   // Start camera
@@ -160,7 +144,6 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
         const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
         setPhotoData(dataUrl)
         stopCamera()
-        setStep('confirm')
       }
     }
   }
@@ -173,9 +156,8 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
 
   // Skip photo (dev only)
   const skipPhoto = () => {
-    // สร้าง dummy photo data
-    setPhotoData('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAr/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwABUP/9k=')
-    setStep('confirm')
+    const placeholderDataUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2NjY2NjYyIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM2NjY2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPkRldiAtIFBsYWNlaG9sZGVyIEltYWdlPC90ZXh0Pgo8L3N2Zz4='
+    setPhotoData(placeholderDataUrl)
   }
 
   // Handle checkout
@@ -192,8 +174,8 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
 
     try {
       // รวม notes กับ offSiteReason ถ้ามี
-      const finalNotes = !isInWorkLocation && offSiteReason 
-        ? `[นอกพื้นที่] ${offSiteReason}${notes ? '\n' + notes : ''}`
+      const finalNotes = isOffsite 
+        ? `เหตุผลที่ check-out นอกสถานที่: ${offSiteReason}${notes ? `\n\nหมายเหตุเพิ่มเติม: ${notes}` : ''}`
         : notes
 
       const result = await checkout.mutateAsync({
@@ -209,9 +191,9 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
         setPhotoData(null)
         setNotes('')
         setOffSiteReason('')
-        setStep('location')
         setUserLocation(null)
         setIsInWorkLocation(null)
+        setHasProvidedReason(false)
       } else {
         alert(result.message || 'เกิดข้อผิดพลาดในการ Check-out')
       }
@@ -221,38 +203,11 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
     }
   }
 
-  // Step indicator
-  const renderStepIndicator = () => {
-    const steps = [
-      { key: 'location', label: 'ตรวจสอบตำแหน่ง' },
-      { key: 'photo', label: 'ถ่ายรูป' },
-      { key: 'confirm', label: 'ยืนยัน' }
-    ]
-
-    return (
-      <div className="flex justify-between mb-6">
-        {steps.map((s, index) => (
-          <div key={s.key} className="flex items-center">
-            <div className={`
-              w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-              ${step === s.key || (step === 'reason' && s.key === 'location') 
-                ? 'bg-primary text-primary-foreground' 
-                : index < steps.findIndex(st => st.key === step)
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-500'
-              }
-            `}>
-              {index < steps.findIndex(st => st.key === step) ? '✓' : index + 1}
-            </div>
-            <span className="ml-2 text-sm hidden sm:inline">{s.label}</span>
-            {index < steps.length - 1 && (
-              <div className="w-8 sm:w-16 h-0.5 bg-gray-200 mx-2" />
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (isOffsite && !hasProvidedReason && offsiteReasonRef.current) {
+      offsiteReasonRef.current.focus()
+    }
+  }, [isOffsite, hasProvidedReason])
 
   return (
     <div className="space-y-4">
@@ -306,110 +261,116 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
             </AlertDescription>
           </Alert>
 
-          {/* Step Indicator */}
+          {/* Step 1: Check Location */}
           <Card className="p-6">
-            {renderStepIndicator()}
-
-            {/* Step 1: Check Location */}
-            {step === 'location' && (
-              <div className="space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
-                  <Navigation className="h-5 w-5" />
+                  <MapPin className="h-5 w-5" />
                   ขั้นตอนที่ 1: ตรวจสอบตำแหน่ง
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  ระบบจะตรวจสอบว่าคุณอยู่ในพื้นที่ทำงานหรือไม่
-                </p>
-                <Button 
-                  onClick={handleCheckLocation} 
-                  className="w-full"
-                  disabled={checkLocation.isPending}
-                >
-                  {checkLocation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      กำลังตรวจสอบตำแหน่ง...
-                    </>
-                  ) : (
-                    <>
-                      <MapPin className="mr-2 h-4 w-4" />
-                      ตรวจสอบตำแหน่ง
-                    </>
-                  )}
-                </Button>
+                {userLocation && <CheckCircle className="h-5 w-5 text-green-500" />}
               </div>
-            )}
 
-            {/* Step 1.5: Off-site Reason */}
-            {step === 'reason' && (
-              <div className="space-y-4">
-                <Alert className="border-yellow-200 bg-yellow-50">
-                  <XCircle className="h-4 w-4 text-yellow-600" />
+              <Button 
+                onClick={handleCheckLocation} 
+                className="w-full"
+                disabled={isGettingLocation}
+              >
+                {isGettingLocation ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    กำลังตรวจสอบตำแหน่ง...
+                  </>
+                ) : (
+                  <>
+                    <Navigation className="mr-2 h-4 w-4" />
+                    ระบุตำแหน่งปัจจุบัน
+                  </>
+                )}
+              </Button>
+
+              {/* Location Result */}
+              {checkLocation.data && (
+                <Alert className={checkLocation.data.isInWorkLocation ? '' : ''}>
+                  <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    คุณไม่ได้อยู่ในพื้นที่ทำงาน กรุณาระบุเหตุผล
+                    {checkLocation.data.isInWorkLocation ? (
+                      <>
+                        คุณอยู่ในพื้นที่ทำงาน: {checkLocation.data.nearestLocation?.name}
+                        <br />
+                        ระยะห่าง: {checkLocation.data.distance?.toFixed(0)} เมตร
+                      </>
+                    ) : (
+                      <>
+                        คุณอยู่นอกพื้นที่ทำงาน
+                        <br />
+                        สถานที่ทำงานที่ใกล้ที่สุด: {checkLocation.data.nearestLocation?.name}
+                        <br />
+                        ระยะห่าง: {checkLocation.data.distance?.toFixed(0)} เมตร
+                      </>
+                    )}
                   </AlertDescription>
                 </Alert>
-                <h3 className="font-semibold">ระบุเหตุผลที่ Check-out นอกสถานที่</h3>
+              )}
+            </div>
+          </Card>
+
+          {/* Offsite Reason - แสดงเฉพาะเมื่อตรวจสอบตำแหน่งแล้วและอยู่นอกสถานที่ */}
+          {isOffsite && !hasProvidedReason && (
+            <Card className="p-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold text-orange-700">
+                  กรุณาระบุเหตุผลที่ Check-out นอกสถานที่
+                </h3>
                 <Textarea
-                  placeholder="กรุณาระบุเหตุผล เช่น ทำงานนอกสถานที่, ไปประชุมข้างนอก..."
+                  ref={offsiteReasonRef}
+                  placeholder="ระบุเหตุผล เช่น ทำงานนอกสถานที่, ไปประชุมข้างนอก..."
                   value={offSiteReason}
                   onChange={(e) => setOffSiteReason(e.target.value)}
                   rows={3}
-                  className="w-full"
+                  className="focus:border-warning-400"
                 />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setStep('photo')}
-                    disabled={!offSiteReason.trim()}
-                    className="flex-1"
-                  >
-                    ถัดไป
-                  </Button>
-                  <Button
-                    onClick={() => setStep('location')}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    ย้อนกลับ
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setHasProvidedReason(true)}
+                  disabled={!offSiteReason.trim()}
+                  className="w-full"
+                >
+                  ถัดไป
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
-            )}
+            </Card>
+          )}
 
-            {/* Step 2: Take Photo */}
-            {step === 'photo' && (
+          {/* Step 2: Take Photo - แสดงเมื่อผ่านขั้นตอนแรกแล้ว */}
+          {canShowPhotoStep && (
+            <Card className="p-6">
               <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Camera className="h-5 w-5" />
-                  ขั้นตอนที่ 2: ถ่ายรูป
-                </h3>
-                
-                {isInWorkLocation !== null && (
-                  <Alert className={isInWorkLocation ? "border-green-200 bg-green-50" : "border-yellow-200 bg-yellow-50"}>
-                    {isInWorkLocation ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-yellow-600" />
-                    )}
-                    <AlertDescription>
-                      {isInWorkLocation 
-                        ? "คุณอยู่ในพื้นที่ทำงาน"
-                        : "คุณอยู่นอกพื้นที่ทำงาน (ได้ระบุเหตุผลแล้ว)"}
-                    </AlertDescription>
-                  </Alert>
-                )}
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Camera className="h-5 w-5" />
+                    ขั้นตอนที่ 2: ถ่ายรูป
+                  </h3>
+                  {photoData && <CheckCircle className="h-5 w-5 text-green-500" />}
+                </div>
 
                 {!photoData && !isCameraActive && (
-                  <div className="space-y-2">
-                    <Button onClick={startCamera} className="w-full">
-                      <Camera className="mr-2 h-4 w-4" />
-                      เปิดกล้อง
+                  <Button onClick={startCamera} className="w-full">
+                    <Camera className="mr-2 h-4 w-4" />
+                    เปิดกล้อง
+                  </Button>
+                )}
+
+                {/* Dev mode: Skip photo button */}
+                {isDev && !photoData && !isCameraActive && (
+                  <div className="mt-2 space-y-2">
+                    <div className="text-xs text-muted-foreground text-center">
+                      Development Mode
+                    </div>
+                    <Button onClick={skipPhoto} variant="outline" className="w-full">
+                      ข้ามการถ่ายรูป (Dev Mode)
                     </Button>
-                    {isDev && (
-                      <Button onClick={skipPhoto} variant="outline" className="w-full">
-                        ข้ามการถ่ายรูป (Dev Mode)
-                      </Button>
-                    )}
                   </div>
                 )}
 
@@ -436,32 +397,9 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
                   </div>
                 )}
 
-                <canvas ref={canvasRef} className="hidden" />
-              </div>
-            )}
-
-            {/* Step 3: Confirm */}
-            {step === 'confirm' && (
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  ขั้นตอนที่ 3: ยืนยันการ Check-out
-                </h3>
-
-                {/* Location Status */}
-                <Alert className={isInWorkLocation ? "border-green-200 bg-green-50" : "border-yellow-200 bg-yellow-50"}>
-                  <MapPin className="h-4 w-4" />
-                  <AlertDescription>
-                    {isInWorkLocation 
-                      ? "Check-out ในพื้นที่ทำงาน"
-                      : `Check-out นอกพื้นที่: ${offSiteReason}`}
-                  </AlertDescription>
-                </Alert>
-
                 {/* Photo Preview */}
                 {photoData && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">รูปถ่าย Check-out</p>
+                  <div className="space-y-4">
                     <div className="relative aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
                       <img 
                         src={photoData} 
@@ -469,54 +407,53 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <Button onClick={() => { setStep('photo'); retakePhoto(); }} variant="outline" size="sm" className="w-full">
+                    <Button onClick={retakePhoto} variant="outline" className="w-full">
                       ถ่ายใหม่
                     </Button>
                   </div>
                 )}
 
-                {/* Additional Notes */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">หมายเหตุเพิ่มเติม (ไม่บังคับ)</h4>
-                  <Textarea
-                    placeholder="เพิ่มหมายเหตุ..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={2}
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={checkout.isPending}
-                    className="flex-1"
-                  >
-                    {checkout.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        กำลัง Check-out...
-                      </>
-                    ) : (
-                      <>
-                        <LogOut className="mr-2 h-4 w-4" />
-                        ยืนยัน Check-out
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => setStep('photo')}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={checkout.isPending}
-                  >
-                    ย้อนกลับ
-                  </Button>
-                </div>
+                <canvas ref={canvasRef} className="hidden" />
               </div>
-            )}
-          </Card>
+            </Card>
+          )}
+
+          {/* Step 3: Notes (Optional) - แสดงเมื่อถ่ายรูปแล้ว */}
+          {photoData && (
+            <Card className="p-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold">หมายเหตุเพิ่มเติม (ไม่บังคับ)</h3>
+                <Textarea
+                  placeholder="เพิ่มหมายเหตุ..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+            </Card>
+          )}
+
+          {/* Submit Button - แสดงเมื่อทำครบทุกขั้นตอนแล้ว */}
+          {photoData && (
+            <Button
+              onClick={handleCheckout}
+              disabled={checkout.isPending}
+              size="lg"
+              className="w-full"
+            >
+              {checkout.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  กำลัง Check-out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  ยืนยัน Check-out
+                </>
+              )}
+            </Button>
+          )}
         </>
       )}
     </div>
