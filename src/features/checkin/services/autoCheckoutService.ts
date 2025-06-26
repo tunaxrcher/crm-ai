@@ -1,7 +1,13 @@
+import 'server-only'
+
 import { prisma } from '@src/lib/db'
+import { BaseService } from '@src/lib/services/server/baseService'
+
 import { CheckinRepository } from '../repository'
 
-export class AutoCheckoutService {
+export class AutoCheckoutService extends BaseService {
+  private static instance: AutoCheckoutService
+  
   // Config สำหรับ auto checkout
   private static readonly AUTO_CHECKOUT_CONFIG = {
     bufferHours: 2, // checkout หลังเวลาเลิกงาน 2 ชั่วโมง
@@ -9,8 +15,20 @@ export class AutoCheckoutService {
     fallbackTime: '00:00', // ถ้าไม่มีเวลาเลิกงาน ให้ checkout เที่ยงคืน
   }
 
+  constructor() {
+    super()
+  }
+
+  public static getInstance() {
+    if (!AutoCheckoutService.instance) {
+      AutoCheckoutService.instance = new AutoCheckoutService()
+    }
+
+    return AutoCheckoutService.instance
+  }
+
   // Process auto checkout สำหรับ checkin ที่ค้างอยู่
-  static async processAutoCheckouts(): Promise<number> {
+  async processAutoCheckouts(): Promise<number> {
     try {
       console.log('[AutoCheckout] Starting auto checkout process...')
       
@@ -54,7 +72,7 @@ export class AutoCheckoutService {
   }
 
   // ตรวจสอบว่าควร auto checkout หรือไม่
-  private static shouldAutoCheckout(checkin: any, character: any): boolean {
+  private shouldAutoCheckout(checkin: any, character: any): boolean {
     const now = new Date()
     const checkinTime = new Date(checkin.checkinAt)
     
@@ -62,8 +80,8 @@ export class AutoCheckoutService {
     const hoursWorked = (now.getTime() - checkinTime.getTime()) / (1000 * 60 * 60)
     
     // เช็คว่าทำงานเกิน max hours หรือไม่
-    if (hoursWorked >= this.AUTO_CHECKOUT_CONFIG.maxWorkHours) {
-      console.log(`[AutoCheckout] Character ${character.id} worked ${hoursWorked.toFixed(2)} hours (max: ${this.AUTO_CHECKOUT_CONFIG.maxWorkHours})`)
+    if (hoursWorked >= AutoCheckoutService.AUTO_CHECKOUT_CONFIG.maxWorkHours) {
+      console.log(`[AutoCheckout] Character ${character.id} worked ${hoursWorked.toFixed(2)} hours (max: ${AutoCheckoutService.AUTO_CHECKOUT_CONFIG.maxWorkHours})`)
       return true
     }
 
@@ -91,7 +109,7 @@ export class AutoCheckoutService {
   }
 
   // คำนวณเวลาที่ควร auto checkout
-  private static calculateAutoCheckoutTime(checkin: any, character: any): Date {
+  private calculateAutoCheckoutTime(checkin: any, character: any): Date {
     const checkinTime = new Date(checkin.checkinAt)
     
     // ถ้ามีเวลาเลิกงาน
@@ -106,7 +124,7 @@ export class AutoCheckoutService {
       }
       
       // เพิ่ม buffer hours
-      checkoutTime.setHours(checkoutTime.getHours() + this.AUTO_CHECKOUT_CONFIG.bufferHours)
+      checkoutTime.setHours(checkoutTime.getHours() + AutoCheckoutService.AUTO_CHECKOUT_CONFIG.bufferHours)
       
       return checkoutTime
     }
@@ -120,7 +138,7 @@ export class AutoCheckoutService {
   }
 
   // ทำการ auto checkout
-  private static async performAutoCheckout(checkin: any): Promise<void> {
+  private async performAutoCheckout(checkin: any): Promise<void> {
     const checkoutTime = this.calculateCheckoutTime(checkin, checkin.character)
     const totalHours = (checkoutTime.getTime() - new Date(checkin.checkinAt).getTime()) / (1000 * 60 * 60)
     
@@ -147,7 +165,7 @@ export class AutoCheckoutService {
   }
 
   // คำนวณเวลา checkout จริง
-  private static calculateCheckoutTime(checkin: any, character: any): Date {
+  private calculateCheckoutTime(checkin: any, character: any): Date {
     const now = new Date()
     const checkinTime = new Date(checkin.checkinAt)
     
@@ -164,22 +182,22 @@ export class AutoCheckoutService {
   }
 
   // สร้างข้อความอธิบาย auto checkout
-  private static generateAutoCheckoutNote(checkin: any, character: any): string {
+  private generateAutoCheckoutNote(checkin: any, character: any): string {
     const hoursWorked = (new Date().getTime() - new Date(checkin.checkinAt).getTime()) / (1000 * 60 * 60)
     
-    if (hoursWorked >= this.AUTO_CHECKOUT_CONFIG.maxWorkHours) {
-      return `Auto checkout: ทำงานครบ ${this.AUTO_CHECKOUT_CONFIG.maxWorkHours} ชั่วโมง`
+    if (hoursWorked >= AutoCheckoutService.AUTO_CHECKOUT_CONFIG.maxWorkHours) {
+      return `Auto checkout: ทำงานครบ ${AutoCheckoutService.AUTO_CHECKOUT_CONFIG.maxWorkHours} ชั่วโมง`
     }
     
     if (character.workEndTime) {
-      return `Auto checkout: เลยเวลาเลิกงาน ${this.AUTO_CHECKOUT_CONFIG.bufferHours} ชั่วโมง`
+      return `Auto checkout: เลยเวลาเลิกงาน ${AutoCheckoutService.AUTO_CHECKOUT_CONFIG.bufferHours} ชั่วโมง`
     }
     
     return 'Auto checkout: ไม่มีการ checkout ภายในเวลาที่กำหนด'
   }
 
   // ตรวจสอบและแจ้งเตือนก่อน auto checkout
-  static async checkAndNotifyPendingAutoCheckouts(): Promise<void> {
+  async checkAndNotifyPendingAutoCheckouts(): Promise<void> {
     const now = new Date()
     const thirtyMinutesFromNow = new Date(now.getTime() + 30 * 60 * 1000)
     
@@ -213,4 +231,7 @@ export class AutoCheckoutService {
       }
     }
   }
-} 
+}
+
+// Export singleton instance
+export const autoCheckoutService = AutoCheckoutService.getInstance() 

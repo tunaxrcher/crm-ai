@@ -1,27 +1,21 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-import { CheckinService } from '@src/features/checkin/services/server'
-import { authOptions } from '@src/lib/auth'
-import { getServerSession } from 'next-auth'
+import { checkinService } from '@src/features/checkin/services/server'
+import { getServerSession } from '@src/lib/auth'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export async function GET() {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const workLocations = await CheckinService.getWorkLocations()
-
-    return NextResponse.json({
-      success: true,
-      data: workLocations,
-    })
-  } catch (error) {
-    console.error('Get work locations error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  console.log('[API] Get Work Locations')
+  
+  const session = await getServerSession()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-}
+
+  const workLocations = await checkinService.getWorkLocations()
+
+  return NextResponse.json({
+    success: true,
+    data: workLocations,
+  })
+})

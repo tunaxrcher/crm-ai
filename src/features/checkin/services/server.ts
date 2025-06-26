@@ -1,5 +1,10 @@
-import { CheckinRepository } from '../repository'
+import 'server-only'
+
+import { getServerSession } from '@src/lib/auth'
+import { BaseService } from '@src/lib/services/server/baseService'
 import { s3UploadService } from '@src/lib/services/s3UploadService'
+
+import { CheckinRepository } from '../repository'
 import type {
   CheckinRequest,
   CheckoutRequest,
@@ -10,12 +15,25 @@ import type {
   WorkLocation,
 } from '../types'
 
-export class CheckinService {
+export class CheckinService extends BaseService {
+  private static instance: CheckinService
   private static readonly MINIMUM_WORK_HOURS = 8 // ชั่วโมงขั้นต่ำก่อน checkout
   private static readonly EARTH_RADIUS_METERS = 6371000 // รัศมีโลกเป็นเมตร
 
+  constructor() {
+    super()
+  }
+
+  public static getInstance() {
+    if (!CheckinService.instance) {
+      CheckinService.instance = new CheckinService()
+    }
+
+    return CheckinService.instance
+  }
+
   // คำนวณระยะทางระหว่าง 2 จุดด้วยสูตร Haversine
-  private static calculateDistance(
+  private calculateDistance(
     lat1: number,
     lng1: number,
     lat2: number,
@@ -35,11 +53,11 @@ export class CheckinService {
     
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     
-    return this.EARTH_RADIUS_METERS * c
+    return CheckinService.EARTH_RADIUS_METERS * c
   }
 
   // Helper method to parse time string "HH:MM" to date
-  private static parseWorkTime(timeStr: string | null | undefined, baseDate: Date): Date | null {
+  private parseWorkTime(timeStr: string | null | undefined, baseDate: Date): Date | null {
     if (!timeStr) return null
     const [hours, minutes] = timeStr.split(':').map(Number)
     const date = new Date(baseDate)
@@ -48,7 +66,7 @@ export class CheckinService {
   }
 
   // ตรวจสอบว่าเป็นกะข้ามวัน (Night Shift) หรือไม่
-  private static isNightShift(workStartTime: string | null | undefined, workEndTime: string | null | undefined): boolean {
+  private isNightShift(workStartTime: string | null | undefined, workEndTime: string | null | undefined): boolean {
     if (!workStartTime || !workEndTime) return false
     
     const [startHour] = workStartTime.split(':').map(Number)
@@ -59,7 +77,7 @@ export class CheckinService {
   }
 
   // คำนวณเวลาเข้างานจริงสำหรับกะข้ามวัน
-  private static getActualWorkStartTime(workStartTime: string, checkinDate: Date, isNightShift: boolean): Date {
+  private getActualWorkStartTime(workStartTime: string, checkinDate: Date, isNightShift: boolean): Date {
     const workStart = this.parseWorkTime(workStartTime, checkinDate)
     if (!workStart) return checkinDate
     
@@ -77,7 +95,7 @@ export class CheckinService {
   }
 
   // คำนวณเวลาเลิกงานจริงสำหรับกะข้ามวัน
-  private static getActualWorkEndTime(workEndTime: string, baseDate: Date, isNightShift: boolean): Date {
+  private getActualWorkEndTime(workEndTime: string, baseDate: Date, isNightShift: boolean): Date {
     const workEnd = this.parseWorkTime(workEndTime, baseDate)
     if (!workEnd) return baseDate
     
@@ -95,7 +113,7 @@ export class CheckinService {
   }
 
   // คำนวณระดับการมาสาย
-  private static calculateLateLevel(checkinTime: Date, workStartTime: string | null | undefined, workEndTime: string | null | undefined): { level: number; minutes: number } {
+  private calculateLateLevel(checkinTime: Date, workStartTime: string | null | undefined, workEndTime: string | null | undefined): { level: number; minutes: number } {
     if (!workStartTime) {
       // ถ้าไม่ได้ตั้งเวลาทำงาน ถือว่าไม่สาย
       return { level: 0, minutes: 0 }
@@ -131,7 +149,7 @@ export class CheckinService {
   }
 
   // ตรวจสอบว่าอยู่ในพื้นที่ทำงานหรือไม่
-  static async checkLocation(
+  async checkLocation(
     userLat: number,
     userLng: number
   ): Promise<LocationCheckResult> {
@@ -174,7 +192,7 @@ export class CheckinService {
   }
 
   // ดึงสถานะ checkin ปัจจุบัน
-  static async getCheckinStatus(userId: number): Promise<CheckinStatus> {
+  async getCheckinStatus(userId: number): Promise<CheckinStatus> {
     const activeCheckin = await CheckinRepository.getActiveCheckin(userId)
     const character = await CheckinRepository.getCharacterWithWorkTime(userId)
     
@@ -195,7 +213,7 @@ export class CheckinService {
         // ตรวจสอบว่าเป็นกะข้ามวันหรือไม่
         const isNightShift = this.isNightShift(char.workStartTime, char.workEndTime)
         
-        // คำนวณเวลาเลิกงานจริง
+        // คำนวณเวลาเลิกงานจริง (ใช้เวลา checkin เป็น base)
         const workEnd = this.getActualWorkEndTime(char.workEndTime, checkinTime, isNightShift)
         
         if (workEnd) {
@@ -226,7 +244,7 @@ export class CheckinService {
   }
 
   // ตรวจสอบว่าเป็น checkin ของกะเดียวกันหรือไม่ (รองรับกะข้ามวัน)
-  private static isSameShift(
+  private isSameShift(
     existingCheckinTime: Date, 
     newCheckinTime: Date, 
     workStartTime: string | null | undefined,
@@ -257,7 +275,7 @@ export class CheckinService {
   }
 
   // Checkin
-  static async checkin(
+  async checkin(
     userId: number,
     request: CheckinRequest
   ): Promise<CheckinResponse> {
@@ -286,7 +304,7 @@ export class CheckinService {
       const todayCheckins = await CheckinRepository.getTodayCheckins(userId)
       if (todayCheckins && todayCheckins.length > 0) {
         // ตรวจสอบว่ามี checkin ที่ checkout แล้วหรือยัง
-        const completedCheckin = todayCheckins.find(c => c.checkoutAt !== null)
+        const completedCheckin = todayCheckins.find((c: any) => c.checkoutAt !== null)
         if (completedCheckin) {
           return {
             success: false,
@@ -349,7 +367,7 @@ export class CheckinService {
   }
 
   // Checkout
-  static async checkout(
+  async checkout(
     userId: number,
     request: CheckoutRequest
   ): Promise<CheckoutResponse> {
@@ -433,17 +451,20 @@ export class CheckinService {
   }
 
   // ดึงประวัติ checkin/checkout
-  static async getHistory(userId: number, limit: number = 30) {
+  async getHistory(userId: number, limit: number = 30) {
     return await CheckinRepository.getCheckinHistory(userId, limit)
   }
 
   // ดึง checkin/checkout ของวันนี้
-  static async getTodayCheckins(userId: number) {
+  async getTodayCheckins(userId: number) {
     return await CheckinRepository.getTodayCheckins(userId)
   }
 
   // ดึงสถานที่ทำงานทั้งหมด
-  static async getWorkLocations() {
+  async getWorkLocations() {
     return await CheckinRepository.getActiveWorkLocations()
   }
-} 
+}
+
+// Export singleton instance
+export const checkinService = CheckinService.getInstance() 

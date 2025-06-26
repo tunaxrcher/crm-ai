@@ -1,37 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { CheckinService } from '@src/features/checkin/services/server'
-import { authOptions } from '@src/lib/auth'
-import { getServerSession } from 'next-auth'
+import { checkinService } from '@src/features/checkin/services/server'
+import { getServerSession } from '@src/lib/auth'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log('[API] Check Location')
+  
+  const session = await getServerSession()
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-    const body = await req.json()
-    const { lat, lng } = body
+  const body = await request.json()
+  const { lat, lng } = body
 
-    if (!lat || !lng) {
-      return NextResponse.json(
-        { error: 'ต้องระบุพิกัด latitude และ longitude' },
-        { status: 400 }
-      )
-    }
-
-    const locationResult = await CheckinService.checkLocation(lat, lng)
-
-    return NextResponse.json({
-      success: true,
-      data: locationResult,
-    })
-  } catch (error) {
-    console.error('Check location error:', error)
+  if (!lat || !lng) {
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: 'ต้องระบุพิกัด latitude และ longitude' },
+      { status: 400 }
     )
   }
-}
+
+  const locationResult = await checkinService.checkLocation(lat, lng)
+
+  return NextResponse.json({
+    success: true,
+    data: locationResult,
+  })
+})
