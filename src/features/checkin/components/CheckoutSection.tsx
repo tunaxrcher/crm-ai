@@ -156,6 +156,27 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
   // Start camera
   const startCamera = async () => {
     try {
+      // ตรวจสอบว่าเป็น HTTPS หรือ localhost
+      const isSecureContext = window.isSecureContext
+      if (!isSecureContext) {
+        alert(
+          'ไม่สามารถเปิดกล้องได้: เว็บไซต์ต้องใช้ HTTPS เพื่อเข้าถึงกล้อง\n' +
+          'กรุณาติดต่อผู้ดูแลระบบเพื่อเปิดใช้งาน HTTPS'
+        )
+        console.error('Camera requires HTTPS or localhost')
+        return
+      }
+
+      // ตรวจสอบว่า browser รองรับ mediaDevices หรือไม่
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert(
+          'เบราว์เซอร์ของคุณไม่รองรับการเข้าถึงกล้อง\n' +
+          'กรุณาใช้ Chrome, Firefox, Safari หรือ Edge เวอร์ชันใหม่'
+        )
+        console.error('mediaDevices not supported')
+        return
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
         audio: false,
@@ -167,9 +188,29 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
 
       setStream(mediaStream)
       setIsCameraActive(true)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Camera error:', error)
-      alert('ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการเข้าถึงกล้อง')
+      
+      // แสดงข้อความ error ที่เฉพาะเจาะจงมากขึ้น
+      let errorMessage = 'ไม่สามารถเปิดกล้องได้\n'
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage += 'กรุณาอนุญาตการเข้าถึงกล้องในเบราว์เซอร์ของคุณ\n'
+        errorMessage += '1. คลิกที่ไอคอนกล้องใน address bar\n'
+        errorMessage += '2. เลือก "อนุญาต" หรือ "Allow"'
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage += 'ไม่พบกล้องในอุปกรณ์ของคุณ\n'
+        errorMessage += 'กรุณาตรวจสอบว่ากล้องทำงานปกติ'
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage += 'กล้องถูกใช้งานโดยแอปอื่น\n'
+        errorMessage += 'กรุณาปิดแอปอื่นที่ใช้กล้องแล้วลองใหม่'
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage += 'กล้องไม่รองรับการตั้งค่าที่ร้องขอ'
+      } else {
+        errorMessage += `Error: ${error.message || error.name || 'Unknown error'}`
+      }
+      
+      alert(errorMessage)
     }
   }
 
