@@ -205,6 +205,13 @@ export function CheckinSection({ status }: CheckinSectionProps) {
         audio: false,
       })
 
+      console.log('Got media stream:', mediaStream)
+      setStream(mediaStream)
+      
+      // Set camera active ทันทีหลังจากได้ stream
+      setIsCameraActive(true)
+      console.log('Camera active state set to true')
+
       if (videoRef.current) {
         // สำหรับ iOS Safari
         const video = videoRef.current
@@ -223,24 +230,24 @@ export function CheckinSection({ status }: CheckinSectionProps) {
         
         // Force video to play
         video.onloadedmetadata = () => {
+          console.log('Video metadata loaded')
           video.play()
             .then(() => {
               console.log('Video playing successfully')
-              setIsCameraActive(true)
             })
             .catch(err => {
               console.error('Video play failed:', err)
               // Try again after a small delay
               setTimeout(() => {
                 video.play()
-                  .then(() => setIsCameraActive(true))
+                  .then(() => console.log('Retry play success'))
                   .catch(e => console.error('Retry play failed:', e))
               }, 100)
             })
         }
+      } else {
+        console.error('Video ref is null')
       }
-
-      setStream(mediaStream)
     } catch (error: any) {
       console.error('Camera error:', error)
       
@@ -482,10 +489,44 @@ export function CheckinSection({ status }: CheckinSectionProps) {
             </div>
 
             {!photoData && !isCameraActive && (
-              <Button onClick={startCamera} className="w-full">
-                <Camera className="mr-2 h-4 w-4" />
-                เปิดกล้อง
-              </Button>
+              <>
+                <Button onClick={startCamera} className="w-full">
+                  <Camera className="mr-2 h-4 w-4" />
+                  เปิดกล้อง
+                </Button>
+                
+                {/* Alternative method for iOS Safari */}
+                {isIOSSafari() && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground text-center mb-2">
+                      หากปุ่มด้านบนไม่ทำงาน ลองใช้วิธีนี้:
+                    </p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      className="hidden"
+                      id="camera-input"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onloadend = () => {
+                            setPhotoData(reader.result as string)
+                          }
+                          reader.readAsDataURL(file)
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="camera-input"
+                      className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
+                      <Camera className="mr-2 h-4 w-4" />
+                      ถ่ายรูป (วิธีที่ 2)
+                    </label>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Debug button for iOS */}
@@ -503,6 +544,27 @@ export function CheckinSection({ status }: CheckinSectionProps) {
                   size="sm"
                   className="w-full">
                   Test Camera Access
+                </Button>
+              </div>
+            )}
+
+            {/* Debug info for iOS when camera should be active */}
+            {!photoData && isCameraActive && isIOSSafari() && (
+              <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
+                <p>Camera is active but video might not be visible.</p>
+                <p>Try tapping the black area above.</p>
+                <Button
+                  onClick={() => {
+                    if (videoRef.current) {
+                      videoRef.current.play()
+                        .then(() => alert('Video playing'))
+                        .catch(err => alert(`Play error: ${err.message}`))
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-2">
+                  Force Play Video
                 </Button>
               </div>
             )}
@@ -530,11 +592,12 @@ export function CheckinSection({ status }: CheckinSectionProps) {
             {/* Camera View */}
             {isCameraActive && (
               <div className="space-y-4">
-                <div className="relative aspect-[4/3] bg-black rounded-lg overflow-hidden" 
+                <div className="relative bg-black rounded-lg overflow-hidden" 
                   style={{ 
                     position: 'relative',
                     width: '100%',
-                    paddingBottom: '75%' // 4:3 aspect ratio
+                    height: '300px', // Fixed height แทน padding-bottom
+                    minHeight: '300px'
                   }}>
                   <video
                     ref={videoRef}
@@ -553,14 +616,23 @@ export function CheckinSection({ status }: CheckinSectionProps) {
                       // Fix สำหรับ iOS Safari
                       WebkitTransform: 'translateZ(0)',
                       transform: 'translateZ(0)',
-                      backgroundColor: 'black'
+                      backgroundColor: 'black',
+                      zIndex: 1
                     }}
                     onLoadedMetadata={(e) => {
                       // Force play on iOS
                       const video = e.target as HTMLVideoElement
+                      console.log('Video element in DOM, dimensions:', video.videoWidth, 'x', video.videoHeight)
                       video.play().catch(err => console.log('Video play error:', err))
                     }}
                   />
+                  {/* Loading indicator */}
+                  <div className="absolute inset-0 flex items-center justify-center text-white z-0">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-sm">กำลังโหลดกล้อง...</p>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={takePhoto} className="flex-1">

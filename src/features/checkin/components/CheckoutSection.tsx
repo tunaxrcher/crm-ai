@@ -496,10 +496,44 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
                 </div>
 
                 {!photoData && !isCameraActive && (
-                  <Button onClick={startCamera} className="w-full">
-                    <Camera className="mr-2 h-4 w-4" />
-                    เปิดกล้อง
-                  </Button>
+                  <>
+                    <Button onClick={startCamera} className="w-full">
+                      <Camera className="mr-2 h-4 w-4" />
+                      เปิดกล้อง
+                    </Button>
+                    
+                    {/* Alternative method for iOS Safari */}
+                    {isIOSSafari() && (
+                      <div className="mt-2">
+                        <p className="text-xs text-muted-foreground text-center mb-2">
+                          หากปุ่มด้านบนไม่ทำงาน ลองใช้วิธีนี้:
+                        </p>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="user"
+                          className="hidden"
+                          id="camera-input-checkout"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              const reader = new FileReader()
+                              reader.onloadend = () => {
+                                setPhotoData(reader.result as string)
+                              }
+                              reader.readAsDataURL(file)
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="camera-input-checkout"
+                          className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
+                          <Camera className="mr-2 h-4 w-4" />
+                          ถ่ายรูป (วิธีที่ 2)
+                        </label>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Dev mode: Skip photo button */}
