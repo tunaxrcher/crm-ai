@@ -206,48 +206,41 @@ export function CheckinSection({ status }: CheckinSectionProps) {
       })
 
       console.log('Got media stream:', mediaStream)
-      setStream(mediaStream)
       
-      // Set camera active ทันทีหลังจากได้ stream
-      setIsCameraActive(true)
-      console.log('Camera active state set to true')
-
       if (videoRef.current) {
-        // สำหรับ iOS Safari
         const video = videoRef.current
         
-        // Apply iOS specific fixes
-        if (isIOSSafari()) {
-          applyIOSFixes(video)
-        } else {
-          // Set attributes สำหรับ browsers อื่น
-          video.setAttribute('autoplay', 'true')
-          video.setAttribute('playsinline', 'true')
-          video.setAttribute('webkit-playsinline', 'true')
-        }
+        // Set basic attributes
+        video.setAttribute('autoplay', '')
+        video.setAttribute('playsinline', '')
+        video.setAttribute('muted', '')
         
+        // IMPORTANT: สำหรับ iOS Safari ต้อง set srcObject หลังจาก attributes
         video.srcObject = mediaStream
         
-        // Force video to play
-        video.onloadedmetadata = () => {
-          console.log('Video metadata loaded')
-          video.play()
-            .then(() => {
-              console.log('Video playing successfully')
-            })
-            .catch(err => {
-              console.error('Video play failed:', err)
-              // Try again after a small delay
-              setTimeout(() => {
-                video.play()
-                  .then(() => console.log('Retry play success'))
-                  .catch(e => console.error('Retry play failed:', e))
-              }, 100)
-            })
+        // สำหรับ iOS Safari ต้องรอให้ video พร้อมก่อน
+        if (isIOSSafari()) {
+          // รอ 100ms ก่อน play สำหรับ iOS
+          setTimeout(() => {
+            video.play()
+              .then(() => {
+                console.log('Video playing on iOS')
+                setIsCameraActive(true)
+              })
+              .catch(err => {
+                console.error('iOS play error:', err)
+                // ถ้า play ไม่ได้ ก็ยัง show video element
+                setIsCameraActive(true)
+              })
+          }, 100)
+        } else {
+          // Non-iOS browsers
+          setIsCameraActive(true)
+          video.play().catch(err => console.log('Play error:', err))
         }
-      } else {
-        console.error('Video ref is null')
       }
+      
+      setStream(mediaStream)
     } catch (error: any) {
       console.error('Camera error:', error)
       
@@ -594,45 +587,20 @@ export function CheckinSection({ status }: CheckinSectionProps) {
               <div className="space-y-4">
                 <div className="relative bg-black rounded-lg overflow-hidden" 
                   style={{ 
-                    position: 'relative',
                     width: '100%',
-                    height: '300px', // Fixed height แทน padding-bottom
-                    minHeight: '300px'
+                    height: '300px'
                   }}>
                   <video
                     ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    webkit-playsinline="true"
-                    className="absolute inset-0 w-full h-full object-cover"
+                    autoPlay={true}
+                    playsInline={true}
+                    muted={true}
                     style={{ 
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
                       width: '100%', 
                       height: '100%', 
-                      objectFit: 'cover',
-                      // Fix สำหรับ iOS Safari
-                      WebkitTransform: 'translateZ(0)',
-                      transform: 'translateZ(0)',
-                      backgroundColor: 'black',
-                      zIndex: 1
-                    }}
-                    onLoadedMetadata={(e) => {
-                      // Force play on iOS
-                      const video = e.target as HTMLVideoElement
-                      console.log('Video element in DOM, dimensions:', video.videoWidth, 'x', video.videoHeight)
-                      video.play().catch(err => console.log('Video play error:', err))
+                      objectFit: 'cover'
                     }}
                   />
-                  {/* Loading indicator */}
-                  <div className="absolute inset-0 flex items-center justify-center text-white z-0">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-sm">กำลังโหลดกล้อง...</p>
-                    </div>
-                  </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={takePhoto} className="flex-1">
