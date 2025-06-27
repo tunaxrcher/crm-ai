@@ -20,6 +20,7 @@ import {
 
 import { useCheckLocation, useCheckout, useTodayCheckins } from '../hooks/api'
 import type { CheckinStatus } from '../types'
+import { debugCameraIssue, isIOSSafari, applyIOSFixes } from '../utils/cameraDebug'
 
 interface CheckoutSectionProps {
   status: CheckinStatus | undefined
@@ -156,6 +157,12 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
   // Start camera
   const startCamera = async () => {
     try {
+      // Debug camera info (สำหรับ iOS)
+      if (isIOSSafari()) {
+        console.log('iOS Safari detected, applying special handling...')
+        debugCameraIssue()
+      }
+
       // ตรวจสอบว่าเป็น HTTPS หรือ localhost
       const isSecureContext = window.isSecureContext
       if (!isSecureContext) {
@@ -178,16 +185,51 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' },
+        video: { 
+          facingMode: 'user',
+          // เพิ่ม constraints สำหรับ iOS
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false,
       })
 
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
+        // สำหรับ iOS Safari
+        const video = videoRef.current
+        
+        // Apply iOS specific fixes
+        if (isIOSSafari()) {
+          applyIOSFixes(video)
+        } else {
+          // Set attributes สำหรับ browsers อื่น
+          video.setAttribute('autoplay', 'true')
+          video.setAttribute('playsinline', 'true')
+          video.setAttribute('webkit-playsinline', 'true')
+        }
+        
+        video.srcObject = mediaStream
+        
+        // Force video to play
+        video.onloadedmetadata = () => {
+          video.play()
+            .then(() => {
+              console.log('Video playing successfully')
+              setIsCameraActive(true)
+            })
+            .catch(err => {
+              console.error('Video play failed:', err)
+              // Try again after a small delay
+              setTimeout(() => {
+                video.play()
+                  .then(() => setIsCameraActive(true))
+                  .catch(e => console.error('Retry play failed:', e))
+              }, 100)
+            })
+        }
       }
 
       setStream(mediaStream)
-      setIsCameraActive(true)
     } catch (error: any) {
       console.error('Camera error:', error)
       
@@ -478,13 +520,36 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
                 {/* Camera View */}
                 {isCameraActive && (
                   <div className="space-y-4">
-                    <div className="relative aspect-[4/3] bg-black rounded-lg overflow-hidden">
+                    <div className="relative aspect-[4/3] bg-black rounded-lg overflow-hidden" 
+                      style={{ 
+                        position: 'relative',
+                        width: '100%',
+                        paddingBottom: '75%' // 4:3 aspect ratio
+                      }}>
                       <video
                         ref={videoRef}
                         autoPlay
                         playsInline
                         muted
-                        className="w-full h-full object-cover"
+                        webkit-playsinline="true"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{ 
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover',
+                          // Fix สำหรับ iOS Safari
+                          WebkitTransform: 'translateZ(0)',
+                          transform: 'translateZ(0)',
+                          backgroundColor: 'black'
+                        }}
+                        onLoadedMetadata={(e) => {
+                          // Force play on iOS
+                          const video = e.target as HTMLVideoElement
+                          video.play().catch(err => console.log('Video play error:', err))
+                        }}
                       />
                     </div>
                     <div className="flex gap-2">
