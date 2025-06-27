@@ -25,7 +25,6 @@ import {
   useWorkLocations,
 } from '../hooks/api'
 import type { CheckinStatus } from '../types'
-import { debugCameraIssue, isIOSSafari, applyIOSFixes, testCameraAccess } from '../utils/cameraDebug'
 
 interface CheckinSectionProps {
   status: CheckinStatus | undefined
@@ -40,10 +39,6 @@ export function CheckinSection({ status }: CheckinSectionProps) {
   const [isGettingLocation, setIsGettingLocation] = useState(false)
   const [offsiteReason, setOffsiteReason] = useState('')
   const [hasProvidedReason, setHasProvidedReason] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [stream, setStream] = useState<MediaStream | null>(null)
-  const [isCameraActive, setIsCameraActive] = useState(false)
   const offsiteReasonRef = useRef<HTMLTextAreaElement>(null)
 
   const { data: workLocations } = useWorkLocations()
@@ -165,141 +160,7 @@ export function CheckinSection({ status }: CheckinSectionProps) {
     )
   }
 
-  // Start camera
-  const startCamera = async () => {
-    try {
-      // Debug camera info (สำหรับ iOS)
-      if (isIOSSafari()) {
-        console.log('iOS Safari detected, applying special handling...')
-        debugCameraIssue()
-      }
 
-      // ตรวจสอบว่าเป็น HTTPS หรือ localhost
-      const isSecureContext = window.isSecureContext
-      if (!isSecureContext) {
-        alert(
-          'ไม่สามารถเปิดกล้องได้: เว็บไซต์ต้องใช้ HTTPS เพื่อเข้าถึงกล้อง\n' +
-          'กรุณาติดต่อผู้ดูแลระบบเพื่อเปิดใช้งาน HTTPS'
-        )
-        console.error('Camera requires HTTPS or localhost')
-        return
-      }
-
-      // ตรวจสอบว่า browser รองรับ mediaDevices หรือไม่
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert(
-          'เบราว์เซอร์ของคุณไม่รองรับการเข้าถึงกล้อง\n' +
-          'กรุณาใช้ Chrome, Firefox, Safari หรือ Edge เวอร์ชันใหม่'
-        )
-        console.error('mediaDevices not supported')
-        return
-      }
-
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'user',
-          // เพิ่ม constraints สำหรับ iOS
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false,
-      })
-
-      console.log('Got media stream:', mediaStream)
-      
-      if (videoRef.current) {
-        const video = videoRef.current
-        
-        // Set basic attributes
-        video.setAttribute('autoplay', '')
-        video.setAttribute('playsinline', '')
-        video.setAttribute('muted', '')
-        
-        // IMPORTANT: สำหรับ iOS Safari ต้อง set srcObject หลังจาก attributes
-        video.srcObject = mediaStream
-        
-        // สำหรับ iOS Safari ต้องรอให้ video พร้อมก่อน
-        if (isIOSSafari()) {
-          // รอ 100ms ก่อน play สำหรับ iOS
-          setTimeout(() => {
-            video.play()
-              .then(() => {
-                console.log('Video playing on iOS')
-                setIsCameraActive(true)
-              })
-              .catch(err => {
-                console.error('iOS play error:', err)
-                // ถ้า play ไม่ได้ ก็ยัง show video element
-                setIsCameraActive(true)
-              })
-          }, 100)
-        } else {
-          // Non-iOS browsers
-          setIsCameraActive(true)
-          video.play().catch(err => console.log('Play error:', err))
-        }
-      }
-      
-      setStream(mediaStream)
-    } catch (error: any) {
-      console.error('Camera error:', error)
-      
-      // แสดงข้อความ error ที่เฉพาะเจาะจงมากขึ้น
-      let errorMessage = 'ไม่สามารถเปิดกล้องได้\n'
-      
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        errorMessage += 'กรุณาอนุญาตการเข้าถึงกล้องในเบราว์เซอร์ของคุณ\n'
-        errorMessage += '1. คลิกที่ไอคอนกล้องใน address bar\n'
-        errorMessage += '2. เลือก "อนุญาต" หรือ "Allow"'
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        errorMessage += 'ไม่พบกล้องในอุปกรณ์ของคุณ\n'
-        errorMessage += 'กรุณาตรวจสอบว่ากล้องทำงานปกติ'
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        errorMessage += 'กล้องถูกใช้งานโดยแอปอื่น\n'
-        errorMessage += 'กรุณาปิดแอปอื่นที่ใช้กล้องแล้วลองใหม่'
-      } else if (error.name === 'OverconstrainedError') {
-        errorMessage += 'กล้องไม่รองรับการตั้งค่าที่ร้องขอ'
-      } else {
-        errorMessage += `Error: ${error.message || error.name || 'Unknown error'}`
-      }
-      
-      alert(errorMessage)
-    }
-  }
-
-  // Stop camera
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-      setStream(null)
-      setIsCameraActive(false)
-    }
-  }
-
-  // Take photo
-  const takePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      const context = canvas.getContext('2d')
-
-      if (context) {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        context.drawImage(video, 0, 0)
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-        setPhotoData(dataUrl)
-        stopCamera()
-      }
-    }
-  }
-
-  // Retake photo
-  const retakePhoto = () => {
-    setPhotoData(null)
-    startCamera()
-  }
 
   // Handle checkin
   const handleCheckin = async () => {
@@ -481,140 +342,35 @@ export function CheckinSection({ status }: CheckinSectionProps) {
               {photoData && <CheckCircle className="h-5 w-5 text-green-500" />}
             </div>
 
-            {!photoData && !isCameraActive && (
-              <>
-                <Button onClick={startCamera} className="w-full">
-                  <Camera className="mr-2 h-4 w-4" />
-                  เปิดกล้อง
-                </Button>
-                
-                {/* Alternative method for iOS Safari */}
-                {isIOSSafari() && (
-                  <div className="mt-2">
-                    <p className="text-xs text-muted-foreground text-center mb-2">
-                      หากปุ่มด้านบนไม่ทำงาน ลองใช้วิธีนี้:
-                    </p>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="user"
-                      className="hidden"
-                      id="camera-input"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          const reader = new FileReader()
-                          reader.onloadend = () => {
-                            setPhotoData(reader.result as string)
-                          }
-                          reader.readAsDataURL(file)
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor="camera-input"
-                      className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 cursor-pointer">
-                      <Camera className="mr-2 h-4 w-4" />
-                      ถ่ายรูป (วิธีที่ 2)
-                    </label>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Debug button for iOS */}
-            {!photoData && !isCameraActive && isIOSSafari() && (
-              <div className="mt-2 space-y-2">
-                <div className="text-xs text-muted-foreground text-center">
-                  iOS Safari Debug Mode
-                </div>
-                <Button
-                  onClick={async () => {
-                    const result = await testCameraAccess()
-                    alert(`Camera test result: ${result ? 'Success' : 'Failed'}`)
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="w-full">
-                  Test Camera Access
-                </Button>
-              </div>
-            )}
-
-            {/* Debug info for iOS when camera should be active */}
-            {!photoData && isCameraActive && isIOSSafari() && (
-              <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
-                <p>Camera is active but video might not be visible.</p>
-                <p>Try tapping the black area above.</p>
-                <Button
-                  onClick={() => {
-                    if (videoRef.current) {
-                      videoRef.current.play()
-                        .then(() => alert('Video playing'))
-                        .catch(err => alert(`Play error: ${err.message}`))
+            {!photoData && (
+              <div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  id="camera-input"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onloadend = () => {
+                        setPhotoData(reader.result as string)
+                      }
+                      reader.readAsDataURL(file)
                     }
                   }}
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-2">
-                  Force Play Video
-                </Button>
+                />
+                <label
+                  htmlFor="camera-input"
+                  className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 cursor-pointer">
+                  <Camera className="mr-2 h-4 w-4" />
+                  ถ่ายรูป
+                </label>
               </div>
             )}
 
-            {/* Dev mode: Skip photo button */}
-            {isDevelopment && !photoData && !isCameraActive && (
-              <div className="mt-2 space-y-2">
-                <div className="text-xs text-muted-foreground text-center">
-                  Development Mode
-                </div>
-                <Button
-                  onClick={() => {
-                    // Use placeholder image for development
-                    const placeholderDataUrl =
-                      'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2NjY2NjYyIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM2NjY2NjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiPkRldiAtIFBsYWNlaG9sZGVyIEltYWdlPC90ZXh0Pgo8L3N2Zz4='
-                    setPhotoData(placeholderDataUrl)
-                  }}
-                  variant="outline"
-                  className="w-full">
-                  ข้ามการถ่ายรูป (Dev Mode)
-                </Button>
-              </div>
-            )}
 
-            {/* Camera View */}
-            {isCameraActive && (
-              <div className="space-y-4">
-                <div className="relative bg-black rounded-lg overflow-hidden" 
-                  style={{ 
-                    width: '100%',
-                    height: '300px'
-                  }}>
-                  <video
-                    ref={videoRef}
-                    autoPlay={true}
-                    playsInline={true}
-                    muted={true}
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'cover'
-                    }}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={takePhoto} className="flex-1">
-                    ถ่ายรูป
-                  </Button>
-                  <Button
-                    onClick={stopCamera}
-                    variant="outline"
-                    className="flex-1">
-                    ยกเลิก
-                  </Button>
-                </div>
-              </div>
-            )}
 
             {/* Photo Preview */}
             {photoData && (
@@ -627,15 +383,13 @@ export function CheckinSection({ status }: CheckinSectionProps) {
                   />
                 </div>
                 <Button
-                  onClick={retakePhoto}
+                  onClick={() => setPhotoData(null)}
                   variant="outline"
                   className="w-full">
                   ถ่ายใหม่
                 </Button>
               </div>
             )}
-
-            <canvas ref={canvasRef} className="hidden" />
           </div>
         </Card>
       )}
