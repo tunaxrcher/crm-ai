@@ -34,7 +34,6 @@ model User {
   userToken         UserToken?
   userXeny          UserXeny?
   xenyTransactions  XenyTransaction[]
-  xenyPurchases     XenyPurchase[]
 }
 
 model JobClass {
@@ -109,7 +108,6 @@ model Character {
   gachaHistories     GachaHistory[]
   rewardStats        UserRewardStats?
   checkinCheckouts   CheckinCheckout[]
-  xenyPurchases      XenyPurchase[]
   tokenTransactions  TokenTransaction[]
   xenyTransactions   XenyTransaction[]
 
@@ -411,7 +409,7 @@ model QuestToken {
 model TokenTransaction {
   id            Int                      @id @default(autoincrement())
   userId        Int
-  characterId   Int
+  characterId   Int?
   amount        Int
   type          EnumTokenTransactionType
   description   String?
@@ -422,7 +420,7 @@ model TokenTransaction {
   createdAt     DateTime                 @default(now())
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  character Character? @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "TokenTransaction_userId_fkey")
   @@index([characterId], map: "TokenTransaction_characterId_fkey")
@@ -431,7 +429,7 @@ model TokenTransaction {
 model XenyTransaction {
   id            Int                     @id @default(autoincrement())
   userId        Int
-  characterId   Int
+  characterId   Int?
   amount        Int
   type          EnumXenyTransactionType
   description   String?
@@ -442,7 +440,7 @@ model XenyTransaction {
   createdAt     DateTime                @default(now())
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  character Character? @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "XenyTransaction_userId_fkey")
   @@index([characterId], map: "XenyTransaction_characterId_fkey")
@@ -718,53 +716,4 @@ model CheckinCheckout {
 enum EnumCheckinType {
   onsite // อยู่ในสถานที่ทำงาน
   offsite // อยู่นอกสถานที่ทำงาน
-}
-
-model XenyShopItem {
-  id                 Int                   @id @default(autoincrement())
-  name               String
-  description        String?               @db.Text
-  category           String
-  itemType           EnumXenyShopItemType
-  price              Int                   // ราคาเป็น Xeny
-  imageUrl           String?
-  metadata           Json?
-  stock              Int?
-  isActive           Boolean               @default(true)
-  validFrom          DateTime?
-  validUntil         DateTime?
-  minLevel           Int?
-  maxPurchasePerUser Int?
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-  purchases          XenyPurchase[]
-}
-
-model XenyPurchase {
-  id          Int                @id @default(autoincrement())
-  userId      Int
-  shopItemId  Int
-  quantity    Int                @default(1)
-  totalPrice  Int
-  status      EnumPurchaseStatus @default(pending)
-  appliedAt   DateTime?
-  expiresAt   DateTime?
-  purchasedAt DateTime           @default(now())
-  characterId Int
-  character   Character          @relation(fields: [characterId], references: [id])
-  shopItem    XenyShopItem       @relation(fields: [shopItemId], references: [id])
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([characterId], map: "XenyPurchase_characterId_fkey")
-  @@index([shopItemId], map: "XenyPurchase_shopItemId_fkey")
-  @@index([userId], map: "XenyPurchase_userId_fkey")
-}
-
-enum EnumXenyShopItemType {
-  special_item
-  exclusive_portrait
-  premium_title
-  rare_cosmetic
-  limited_edition
-  event_item
 }
