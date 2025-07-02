@@ -139,6 +139,7 @@ export class RewardService extends BaseService {
         await tx.tokenTransaction.create({
           data: {
             userId: character.userId,
+            characterId: character.id,
             amount: -reward.tokenCost,
             type: 'shop_purchase',
             description: `Purchased ${reward.name}`,
@@ -247,6 +248,66 @@ export class RewardService extends BaseService {
             })
             purchases.push(purchase)
 
+            // ตรวจสอบว่าเป็น itemType "xeny" หรือไม่
+            const rewardItem = purchase.rewardItem
+            if (rewardItem.itemType === 'xeny' && rewardItem.metadata) {
+              const metadata = rewardItem.metadata as any
+              const xenyAmount = metadata.value || 0
+
+              if (xenyAmount > 0) {
+                // สร้างหรืออัปเดต UserXeny
+                // @ts-ignore
+                let userXeny = await tx.userXeny.findUnique({
+                  where: { userId: character.userId },
+                })
+
+                if (!userXeny) {
+                  // @ts-ignore
+                  userXeny = await tx.userXeny.create({
+                    data: {
+                      userId: character.userId,
+                      currentXeny: xenyAmount,
+                      totalEarnedXeny: xenyAmount,
+                    },
+                  })
+                } else {
+                  // @ts-ignore
+                  userXeny = await tx.userXeny.update({
+                    where: { userId: character.userId },
+                    data: {
+                      currentXeny: { increment: xenyAmount },
+                      totalEarnedXeny: { increment: xenyAmount },
+                    },
+                  })
+                }
+
+                // สร้าง XenyTransaction
+                // @ts-ignore
+                await tx.xenyTransaction.create({
+                  data: {
+                    userId: character.userId,
+                    characterId: character.id,
+                    amount: xenyAmount,
+                    type: 'gacha_reward',
+                    description: `Received ${xenyAmount} Xeny from gacha`,
+                    referenceId: purchase.id,
+                    referenceType: 'gacha_reward',
+                    balanceBefore: userXeny.currentXeny - xenyAmount,
+                    balanceAfter: userXeny.currentXeny,
+                  },
+                })
+
+                // อัปเดต status เป็น claimed สำหรับ xeny rewards
+                await tx.rewardPurchase.update({
+                  where: { id: purchase.id },
+                  data: {
+                    status: 'claimed',
+                    claimedAt: new Date(),
+                  },
+                })
+              }
+            }
+
             // ลด stock ถ้ามี
             const reward = gachaRewards.find((r) => r.id === result.rewardId)
             if (reward && reward.stock !== null) {
@@ -290,6 +351,7 @@ export class RewardService extends BaseService {
         await tx.tokenTransaction.create({
           data: {
             userId: character.userId,
+            characterId: character.id,
             amount: -totalCost,
             type: 'shop_purchase',
             description: `Gacha ${pullCount}x pull`,

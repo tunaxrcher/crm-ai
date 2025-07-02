@@ -532,6 +532,7 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
         await tx.tokenTransaction.create({
           data: {
             userId: character.userId,
+            characterId: data.characterId,
             amount: data.tokenReward.tokensEarned,
             type: 'quest_completion',
             description: `Completed quest and earned ${data.tokenReward.tokensEarned} tokens`,
