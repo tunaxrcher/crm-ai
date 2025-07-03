@@ -1,8 +1,9 @@
 // src/features/feed/components/CharacterDialog.tsx
 'use client'
 
-import Image from 'next/image'
 import { useEffect, useState } from 'react'
+
+import Image from 'next/image'
 
 import {
   Dialog,
@@ -28,6 +29,8 @@ import {
   Wind,
   Zap,
 } from 'lucide-react'
+
+// src/features/feed/components/CharacterDialog.tsx
 
 // src/features/feed/components/CharacterDialog.tsx
 
@@ -199,7 +202,9 @@ export default function CharacterDialog({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">ได้รับไปทั้งหมดแล้ว</p>
+                <p className="text-sm text-muted-foreground">
+                  ได้รับไปทั้งหมดแล้ว
+                </p>
                 <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-500">
                   {tokenData?.totalEarnedTokens?.toLocaleString() || '0'}
                 </p>

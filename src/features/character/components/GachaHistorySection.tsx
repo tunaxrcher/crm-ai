@@ -1,28 +1,23 @@
 'use client'
 
 import { useState } from 'react'
+
 import Image from 'next/image'
-import { format } from 'date-fns'
-import { th } from 'date-fns/locale'
+
+import { Badge } from '@src/components/ui/badge'
+import { Button } from '@src/components/ui/button'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@src/components/ui/card'
-import { Badge } from '@src/components/ui/badge'
-import { Button } from '@src/components/ui/button'
 import { ScrollArea } from '@src/components/ui/scroll-area'
 import { Skeleton } from '@src/components/ui/skeleton'
 import { useGachaHistory } from '@src/features/reward/hooks/api'
-import { 
-  Sparkles, 
-  Coins, 
-  TrendingUp, 
-  Award,
-  X,
-  Gem
-} from 'lucide-react'
+import { format } from 'date-fns'
+import { th } from 'date-fns/locale'
+import { Award, Coins, Gem, Sparkles, TrendingUp, X } from 'lucide-react'
 
 // Map rarity to colors
 const rarityColors: Record<string, string> = {
@@ -74,8 +69,7 @@ export default function GachaHistorySection() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
+              onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? 'ย่อ' : 'ดูทั้งหมด'}
             </Button>
           )}
@@ -103,14 +97,18 @@ export default function GachaHistorySection() {
                 {stats.totalGachaWins.toLocaleString()} ครั้ง
               </div>
               <div className="text-xs text-gray-400">
-                ({((stats.totalGachaWins / stats.totalGachaPulls) * 100).toFixed(1)}%)
+                (
+                {((stats.totalGachaWins / stats.totalGachaPulls) * 100).toFixed(
+                  1
+                )}
+                %)
               </div>
             </div>
           </div>
         )}
 
         {/* History List */}
-        <ScrollArea className={isExpanded ? "h-[400px]" : ""}>
+        <ScrollArea className={isExpanded ? 'h-[400px]' : ''}>
           <div className="space-y-2">
             {displayHistory.length === 0 ? (
               <div className="text-center py-8 text-gray-400">
@@ -122,11 +120,10 @@ export default function GachaHistorySection() {
                 <div
                   key={item.id}
                   className={`relative group p-3 rounded-lg border transition-all duration-200 hover:scale-[1.02] ${
-                    item.isWin 
-                      ? 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30 hover:border-purple-500/50' 
+                    item.isWin
+                      ? 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30 hover:border-purple-500/50'
                       : 'bg-gray-800/50 border-gray-700/50 hover:border-gray-600/50'
-                  }`}
-                >
+                  }`}>
                   <div className="flex items-center gap-3">
                     {/* Result Icon/Image */}
                     <div className="relative">
@@ -141,7 +138,8 @@ export default function GachaHistorySection() {
                               className="rounded-lg object-contain"
                             />
                           ) : (
-                            <div className={`w-12 h-12 rounded-lg ${rarityColors[item.rewardItem.rarity] || 'bg-gray-500'} flex items-center justify-center`}>
+                            <div
+                              className={`w-12 h-12 rounded-lg ${rarityColors[item.rewardItem.rarity] || 'bg-gray-500'} flex items-center justify-center`}>
                               {item.rewardItem.itemType === 'xeny' ? (
                                 <Gem className="h-6 w-6 text-white" />
                               ) : (
@@ -150,9 +148,8 @@ export default function GachaHistorySection() {
                             </div>
                           )}
                           {/* Rarity indicator */}
-                          <Badge 
-                            className={`absolute -top-1 -right-1 text-[10px] px-1 py-0 ${rarityColors[item.rewardItem.rarity] || 'bg-gray-500'} text-white border-0`}
-                          >
+                          <Badge
+                            className={`absolute -top-1 -right-1 text-[10px] px-1 py-0 ${rarityColors[item.rewardItem.rarity] || 'bg-gray-500'} text-white border-0`}>
                             {item.rewardItem.rarity?.toUpperCase()}
                           </Badge>
                         </div>
@@ -166,14 +163,19 @@ export default function GachaHistorySection() {
                     {/* Content */}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`font-medium ${item.isWin ? 'text-white' : 'text-gray-400'}`}>
-                          {item.isWin && item.rewardItem ? item.rewardItem.name : 'ไม่ได้รางวัล'}
+                        <span
+                          className={`font-medium ${item.isWin ? 'text-white' : 'text-gray-400'}`}>
+                          {item.isWin && item.rewardItem
+                            ? item.rewardItem.name
+                            : 'ไม่ได้รางวัล'}
                         </span>
-                        {item.isWin && item.rewardItem?.itemType === 'xeny' && item.rewardItem.metadata && (
-                          <span className="text-purple-400 text-sm">
-                            +{item.rewardItem.metadata.value} Xeny
-                          </span>
-                        )}
+                        {item.isWin &&
+                          item.rewardItem?.itemType === 'xeny' &&
+                          item.rewardItem.metadata && (
+                            <span className="text-purple-400 text-sm">
+                              +{item.rewardItem.metadata.value} Xeny
+                            </span>
+                          )}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
                         <span className="flex items-center gap-1">
@@ -181,7 +183,11 @@ export default function GachaHistorySection() {
                           {item.tokenSpent} Tokens
                         </span>
                         <span>
-                          {format(new Date(item.createdAt), 'dd MMM yyyy HH:mm', { locale: th })}
+                          {format(
+                            new Date(item.createdAt),
+                            'dd MMM yyyy HH:mm',
+                            { locale: th }
+                          )}
                         </span>
                       </div>
                     </div>
@@ -212,4 +218,4 @@ export default function GachaHistorySection() {
       </CardContent>
     </Card>
   )
-} 
+}

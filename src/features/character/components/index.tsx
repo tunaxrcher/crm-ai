@@ -15,19 +15,18 @@ import {
 } from '@src/components/ui/card'
 import { useNotification } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
-import { AlertCircle } from 'lucide-react'
-
 import { TokenDisplay } from '@src/features/user/components/TokenDisplay'
 import { XenyDisplay } from '@src/features/xeny/components/XenyDisplay'
+import { AlertCircle } from 'lucide-react'
 
 import AchievementSection from './AchievementSection'
 import CharacterInfoSection from './CharacterInfoSection'
 import CharacterProfile from './CharacterProfile'
 import CharacterRadarChart from './CharacterRadarChart'
+import GachaHistorySection from './GachaHistorySection'
 import JobProgressionDialog from './JobProgressionDialog'
 import QuestStatistics from './QuestStatistics'
 import { WorkSettingsDialog } from './WorkSettingsDialog'
-import GachaHistorySection from './GachaHistorySection'
 
 export default function CharacterPageComponent() {
   // 🧠 ─── Context & Hook Data ───────────────────────────
@@ -171,7 +170,11 @@ export default function CharacterPageComponent() {
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-amber-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
               <div className="relative backdrop-blur-2xl rounded-2xl px-5 py-3 shadow-lg border border-white/30 bg-black/20">
-                <TokenDisplay showIcon={true} showLabel={false} className="text-white" />
+                <TokenDisplay
+                  showIcon={true}
+                  showLabel={false}
+                  className="text-white"
+                />
               </div>
             </div>
 
@@ -179,7 +182,11 @@ export default function CharacterPageComponent() {
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
               <div className="relative backdrop-blur-2xl rounded-2xl px-5 py-3 shadow-lg border border-white/30 bg-black/20">
-                <XenyDisplay showIcon={true} showLabel={false} className="text-white" />
+                <XenyDisplay
+                  showIcon={true}
+                  showLabel={false}
+                  className="text-white"
+                />
               </div>
             </div>
           </div>

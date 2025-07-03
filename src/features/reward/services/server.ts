@@ -393,7 +393,9 @@ export class RewardService extends BaseService {
 
     // 2. Validate ว่า total probability ไม่เกิน 1 (100%)
     if (totalRewardProbability > 1) {
-      console.warn(`Warning: Total gacha probability exceeds 100% (${(totalRewardProbability * 100).toFixed(2)}%)`)
+      console.warn(
+        `Warning: Total gacha probability exceeds 100% (${(totalRewardProbability * 100).toFixed(2)}%)`
+      )
     }
 
     // 3. คำนวณ base no reward probability อัตโนมัติ
@@ -416,7 +418,7 @@ export class RewardService extends BaseService {
         pityBonus: (pityBonus * 100).toFixed(2) + '%',
         finalNoReward: (noRewardProbability * 100).toFixed(2) + '%',
         luckyStreak,
-        random: random.toFixed(4)
+        random: random.toFixed(4),
       })
     }
 

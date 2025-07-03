@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { xenyService } from '@src/features/xeny/services/server'
 
 // GET - ดึงประวัติ Xeny transactions
@@ -19,9 +20,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to get transactions',
+        error:
+          error instanceof Error ? error.message : 'Failed to get transactions',
       },
       { status: 400 }
     )
   }
-} 
+}

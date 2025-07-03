@@ -67,7 +67,10 @@ export class XenyService extends BaseService {
   }
 
   // แลก Token เป็น Xeny
-  async exchangeTokenToXeny(tokenAmount: number, exchangeRate: number = 10): Promise<ExchangeResult> {
+  async exchangeTokenToXeny(
+    tokenAmount: number,
+    exchangeRate: number = 10
+  ): Promise<ExchangeResult> {
     const response = await this.post<any>('/api/xeny/exchange', {
       tokenAmount,
       exchangeRate,
@@ -83,4 +86,4 @@ export class XenyService extends BaseService {
   }
 }
 
-export const xenyService = XenyService.getInstance() 
+export const xenyService = XenyService.getInstance()

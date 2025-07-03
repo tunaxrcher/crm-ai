@@ -148,8 +148,6 @@ export function CheckoutSection({ status }: CheckoutSectionProps) {
     )
   }
 
-
-
   // Handle checkout
   const handleCheckout = async () => {
     if (!userLocation) {

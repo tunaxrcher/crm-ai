@@ -43,7 +43,7 @@ export class XenyService extends BaseService {
           totalSpentXeny: 0,
         },
       })
-      
+
       return {
         userXeny: newUserXeny,
         userToken: userToken || {
@@ -65,7 +65,13 @@ export class XenyService extends BaseService {
   }
 
   // เพิ่ม Xeny
-  async addXeny(amount: number, type: string, description?: string, referenceId?: number, referenceType?: string) {
+  async addXeny(
+    amount: number,
+    type: string,
+    description?: string,
+    referenceId?: number,
+    referenceType?: string
+  ) {
     const session = await getServerSession()
     const userId = +session.user.id
 
@@ -124,7 +130,13 @@ export class XenyService extends BaseService {
   }
 
   // ใช้ Xeny
-  async useXeny(amount: number, type: string, description?: string, referenceId?: number, referenceType?: string) {
+  async useXeny(
+    amount: number,
+    type: string,
+    description?: string,
+    referenceId?: number,
+    referenceType?: string
+  ) {
     const session = await getServerSession()
     const userId = +session.user.id
 
@@ -300,4 +312,4 @@ export class XenyService extends BaseService {
   }
 }
 
-export const xenyService = XenyService.getInstance() 
+export const xenyService = XenyService.getInstance()

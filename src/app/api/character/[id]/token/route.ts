@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { prisma } from '@src/lib/db'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const GET = withErrorHandling(
-  async (_request: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  async (
+    _request: NextRequest,
+    context: { params: Promise<{ id: string }> }
+  ) => {
     const { id } = await context.params
     const characterId = parseInt(id)
 
@@ -36,4 +40,4 @@ export const GET = withErrorHandling(
 
     return NextResponse.json(tokenData, { status: 200 })
   }
-) 
+)

@@ -73,7 +73,12 @@ export interface XenyPurchase {
   shopItem?: XenyShopItem
 }
 
-export type PurchaseStatus = 'pending' | 'completed' | 'cancelled' | 'refunded' | 'expired'
+export type PurchaseStatus =
+  | 'pending'
+  | 'completed'
+  | 'cancelled'
+  | 'refunded'
+  | 'expired'
 
 export interface ExchangeTokenToXenyRequest {
   tokenAmount: number
@@ -103,4 +108,4 @@ export interface GetXenyTransactionsResponse {
     total: number
     hasMore: boolean
   }
-} 
+}

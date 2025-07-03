@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { xenyService } from '@src/features/xeny/services/server'
 
 // POST - แลก Token เป็น Xeny
@@ -13,7 +14,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await xenyService.exchangeTokenToXeny(tokenAmount, exchangeRate)
+    const result = await xenyService.exchangeTokenToXeny(
+      tokenAmount,
+      exchangeRate
+    )
 
     return NextResponse.json({
       success: true,
@@ -25,9 +29,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to exchange tokens',
+        error:
+          error instanceof Error ? error.message : 'Failed to exchange tokens',
       },
       { status: 400 }
     )
   }
-} 
+}

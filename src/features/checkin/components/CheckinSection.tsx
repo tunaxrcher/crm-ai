@@ -160,8 +160,6 @@ export function CheckinSection({ status }: CheckinSectionProps) {
     )
   }
 
-
-
   // Handle checkin
   const handleCheckin = async () => {
     if (!location || !photoData) {
@@ -369,8 +367,6 @@ export function CheckinSection({ status }: CheckinSectionProps) {
                 </label>
               </div>
             )}
-
-
 
             {/* Photo Preview */}
             {photoData && (
