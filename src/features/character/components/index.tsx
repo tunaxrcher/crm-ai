@@ -17,6 +17,9 @@ import { useNotification } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
 import { AlertCircle } from 'lucide-react'
 
+import { TokenDisplay } from '@src/features/user/components/TokenDisplay'
+import { XenyDisplay } from '@src/features/xeny/components/XenyDisplay'
+
 import AchievementSection from './AchievementSection'
 import CharacterInfoSection from './CharacterInfoSection'
 import CharacterProfile from './CharacterProfile'
@@ -158,6 +161,27 @@ export default function CharacterPageComponent() {
           <h1 className="text-2xl font-bold ai-gradient-text">
             {character.jobClassName} (Job Class)
           </h1>
+        </div>
+
+        {/* Token and Xeny Display */}
+        <div className="relative z-10 px-8 mb-4">
+          <div className="flex justify-center gap-4">
+            {/* Token Card */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-amber-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative backdrop-blur-2xl rounded-2xl px-5 py-3 shadow-lg border border-white/30 bg-black/20">
+                <TokenDisplay showIcon={true} showLabel={false} className="text-white" />
+              </div>
+            </div>
+
+            {/* Xeny Card */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
+              <div className="relative backdrop-blur-2xl rounded-2xl px-5 py-3 shadow-lg border border-white/30 bg-black/20">
+                <XenyDisplay showIcon={true} showLabel={false} className="text-white" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Character Display with Radar Chart */}

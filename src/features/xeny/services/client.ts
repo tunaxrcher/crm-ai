@@ -10,6 +10,21 @@ interface UserXeny {
   updatedAt: string
 }
 
+interface UserToken {
+  id?: number
+  userId?: number
+  currentTokens: number
+  totalEarnedTokens: number
+  totalSpentTokens: number
+  createdAt?: string
+  updatedAt?: string
+}
+
+interface UserXenyResponse {
+  userXeny: UserXeny
+  userToken: UserToken
+}
+
 interface XenyTransaction {
   id: number
   userId: number
@@ -45,8 +60,8 @@ export class XenyService extends BaseService {
     return XenyService.instance
   }
 
-  // ดึงข้อมูล Xeny ของ user
-  async getUserXeny(): Promise<UserXeny> {
+  // ดึงข้อมูล Xeny และ Token ของ user
+  async getUserXeny(): Promise<UserXenyResponse> {
     const response = await this.get<any>('/api/xeny')
     return response.data
   }

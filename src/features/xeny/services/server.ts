@@ -21,14 +21,21 @@ export class XenyService extends BaseService {
     const session = await getServerSession()
     const userId = +session.user.id
 
-    // @ts-ignore
-    let userXeny = await prisma.userXeny.findUnique({
-      where: { userId },
-    })
+    // ดึง userXeny และ userToken พร้อมกัน
+    const [userXeny, userToken] = await Promise.all([
+      // @ts-ignore
+      prisma.userXeny.findUnique({
+        where: { userId },
+      }),
+      prisma.userToken.findUnique({
+        where: { userId },
+      }),
+    ])
 
+    // สร้าง userXeny ถ้ายังไม่มี
     if (!userXeny) {
       // @ts-ignore
-      userXeny = await prisma.userXeny.create({
+      const newUserXeny = await prisma.userXeny.create({
         data: {
           userId,
           currentXeny: 0,
@@ -36,9 +43,25 @@ export class XenyService extends BaseService {
           totalSpentXeny: 0,
         },
       })
+      
+      return {
+        userXeny: newUserXeny,
+        userToken: userToken || {
+          currentTokens: 0,
+          totalEarnedTokens: 0,
+          totalSpentTokens: 0,
+        },
+      }
     }
 
-    return userXeny
+    return {
+      userXeny,
+      userToken: userToken || {
+        currentTokens: 0,
+        totalEarnedTokens: 0,
+        totalSpentTokens: 0,
+      },
+    }
   }
 
   // เพิ่ม Xeny
