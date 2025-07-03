@@ -27,6 +27,7 @@ import CharacterRadarChart from './CharacterRadarChart'
 import JobProgressionDialog from './JobProgressionDialog'
 import QuestStatistics from './QuestStatistics'
 import { WorkSettingsDialog } from './WorkSettingsDialog'
+import GachaHistorySection from './GachaHistorySection'
 
 export default function CharacterPageComponent() {
   // 🧠 ─── Context & Hook Data ───────────────────────────
@@ -255,6 +256,8 @@ export default function CharacterPageComponent() {
           <hr />
 
           <QuestStatistics questStats={character.questStats} />
+
+          <GachaHistorySection />
 
           <JobProgressionDialog
             open={showProgressionDialog}
