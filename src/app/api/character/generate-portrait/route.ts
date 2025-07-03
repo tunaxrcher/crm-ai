@@ -20,10 +20,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   // ดึงข้อมูล character
   const userCharacter = await characterRepository.findByUserId(userId)
   if (!userCharacter) {
-    return NextResponse.json(
-      { error: 'Character not found' },
-      { status: 404 }
-    )
+    return NextResponse.json({ error: 'Character not found' }, { status: 404 })
   }
 
   // ตรวจสอบว่า character ถึง level ที่จะ unlock class level นี้แล้วหรือยัง

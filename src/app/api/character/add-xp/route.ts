@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { characterService } from '@src/features/character/services/server'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 

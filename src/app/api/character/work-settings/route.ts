@@ -24,10 +24,7 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   })
 
   if (!character) {
-    return NextResponse.json(
-      { error: 'Character not found' },
-      { status: 404 }
-    )
+    return NextResponse.json({ error: 'Character not found' }, { status: 404 })
   }
 
   return NextResponse.json({

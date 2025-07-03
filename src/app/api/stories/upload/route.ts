@@ -70,103 +70,103 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   const userId = parseInt(session.user.id)
 
-    // ดึงข้อมูล FormData
-    const formData = await request.formData()
-    const type = formData.get('type') as string
-    const expiresInHours =
-      parseInt(formData.get('expiresInHours') as string) || 24
+  // ดึงข้อมูล FormData
+  const formData = await request.formData()
+  const type = formData.get('type') as string
+  const expiresInHours =
+    parseInt(formData.get('expiresInHours') as string) || 24
 
-    // คำนวณเวลาหมดอายุ
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + expiresInHours)
+  // คำนวณเวลาหมดอายุ
+  const expiresAt = new Date()
+  expiresAt.setHours(expiresAt.getHours() + expiresInHours)
 
-    let mediaUrl = null
-    let thumbnailUrl = null
+  let mediaUrl = null
+  let thumbnailUrl = null
 
-    // จัดการไฟล์ media
-    const mediaFile = formData.get('media') as File
-    const thumbnailFile = formData.get('thumbnail') as File
+  // จัดการไฟล์ media
+  const mediaFile = formData.get('media') as File
+  const thumbnailFile = formData.get('thumbnail') as File
 
-    if (mediaFile) {
-      // อัปโหลดไฟล์ media ไป S3
-      const uploadResult = await s3UploadService.uploadFile(mediaFile)
+  if (mediaFile) {
+    // อัปโหลดไฟล์ media ไป S3
+    const uploadResult = await s3UploadService.uploadFile(mediaFile)
 
-      if (!uploadResult.success) {
-        return NextResponse.json(
-          { error: 'Failed to upload media file' },
-          { status: 500 }
+    if (!uploadResult.success) {
+      return NextResponse.json(
+        { error: 'Failed to upload media file' },
+        { status: 500 }
+      )
+    }
+
+    mediaUrl = uploadResult.url
+
+    // ถ้าเป็นวิดีโอและไม่มี thumbnail ที่ส่งมา ให้สร้าง thumbnail
+    if (type === 'video' && !thumbnailFile) {
+      try {
+        // อัปโหลดไฟล์วิดีโอไปยังโฟลเดอร์ชั่วคราว
+        const tempDir = path.join(process.cwd(), 'tmp')
+        await mkdir(tempDir, { recursive: true })
+
+        const videoBuffer = Buffer.from(await mediaFile.arrayBuffer())
+        const tempVideoPath = path.join(tempDir, `video-${uuidv4()}.mp4`)
+
+        await writeFile(tempVideoPath, videoBuffer)
+
+        // สร้าง thumbnail จากไฟล์วิดีโอ
+        const localThumbnailPath = await generateThumbnail(tempVideoPath)
+
+        // อัปโหลด thumbnail ไป S3
+        const thumbnailFullPath = path.join(
+          process.cwd(),
+          'public',
+          localThumbnailPath
         )
-      }
+        const thumbnailBlob = await fetch(`file://${thumbnailFullPath}`).then(
+          (res) => res.blob()
+        )
 
-      mediaUrl = uploadResult.url
+        const thumbnailUploadResult = await s3UploadService.uploadFile(
+          new File([thumbnailBlob], `thumbnail-${uuidv4()}.jpg`, {
+            type: 'image/jpeg',
+          })
+        )
 
-      // ถ้าเป็นวิดีโอและไม่มี thumbnail ที่ส่งมา ให้สร้าง thumbnail
-      if (type === 'video' && !thumbnailFile) {
-        try {
-          // อัปโหลดไฟล์วิดีโอไปยังโฟลเดอร์ชั่วคราว
-          const tempDir = path.join(process.cwd(), 'tmp')
-          await mkdir(tempDir, { recursive: true })
-
-          const videoBuffer = Buffer.from(await mediaFile.arrayBuffer())
-          const tempVideoPath = path.join(tempDir, `video-${uuidv4()}.mp4`)
-
-          await writeFile(tempVideoPath, videoBuffer)
-
-          // สร้าง thumbnail จากไฟล์วิดีโอ
-          const localThumbnailPath = await generateThumbnail(tempVideoPath)
-
-          // อัปโหลด thumbnail ไป S3
-          const thumbnailFullPath = path.join(
-            process.cwd(),
-            'public',
-            localThumbnailPath
-          )
-          const thumbnailBlob = await fetch(`file://${thumbnailFullPath}`).then(
-            (res) => res.blob()
-          )
-
-          const thumbnailUploadResult = await s3UploadService.uploadFile(
-            new File([thumbnailBlob], `thumbnail-${uuidv4()}.jpg`, {
-              type: 'image/jpeg',
-            })
-          )
-
-          if (thumbnailUploadResult.success) {
-            thumbnailUrl = thumbnailUploadResult.url
-          }
-        } catch (thumbnailError) {
-          console.error('Error generating thumbnail:', thumbnailError)
-          // ไม่ให้การสร้าง thumbnail ล้มเหลวส่งผลต่อการ upload story
+        if (thumbnailUploadResult.success) {
+          thumbnailUrl = thumbnailUploadResult.url
         }
+      } catch (thumbnailError) {
+        console.error('Error generating thumbnail:', thumbnailError)
+        // ไม่ให้การสร้าง thumbnail ล้มเหลวส่งผลต่อการ upload story
       }
     }
+  }
 
-    // ถ้ามี thumbnail ที่ส่งมา ให้ใช้ thumbnail นั้น
-    if (thumbnailFile) {
-      const thumbnailUploadResult =
-        await s3UploadService.uploadFile(thumbnailFile)
+  // ถ้ามี thumbnail ที่ส่งมา ให้ใช้ thumbnail นั้น
+  if (thumbnailFile) {
+    const thumbnailUploadResult =
+      await s3UploadService.uploadFile(thumbnailFile)
 
-      if (thumbnailUploadResult.success) {
-        thumbnailUrl = thumbnailUploadResult.url
-      }
+    if (thumbnailUploadResult.success) {
+      thumbnailUrl = thumbnailUploadResult.url
     }
+  }
 
-    // สร้าง story
-    const story = await storyRepository.create({
-      content: (formData.get('content') as string) || null,
-      type: type as any,
-      mediaUrl,
-      thumbnailUrl, // เพิ่ม thumbnailUrl
-      text: (formData.get('text') as string) || null,
-      expiresAt,
-      user: {
-        connect: { id: userId },
-      },
-    })
+  // สร้าง story
+  const story = await storyRepository.create({
+    content: (formData.get('content') as string) || null,
+    type: type as any,
+    mediaUrl,
+    thumbnailUrl, // เพิ่ม thumbnailUrl
+    text: (formData.get('text') as string) || null,
+    expiresAt,
+    user: {
+      connect: { id: userId },
+    },
+  })
 
-    return NextResponse.json({
-      success: true,
-      story,
-      thumbnailUrl,
-    })
+  return NextResponse.json({
+    success: true,
+    story,
+    thumbnailUrl,
+  })
 })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import Image from 'next/image'
 
@@ -51,8 +51,8 @@ export default function GachaHistorySection() {
     if (data?.history) {
       console.log('Gacha History Data:', data.history)
       // ดู item ที่เป็น xeny โดยเฉพาะ
-      const xenyItems = data.history.filter((item: any) => 
-        item.isWin && item.rewardItem?.itemType === 'xeny'
+      const xenyItems = data.history.filter(
+        (item: any) => item.isWin && item.rewardItem?.itemType === 'xeny'
       )
       console.log('Xeny Rewards:', xenyItems)
     }
@@ -198,15 +198,20 @@ export default function GachaHistorySection() {
                         {/* Debug: แสดง metadata และ itemType */}
                         {item.isWin && item.rewardItem && (
                           <span className="text-xs text-gray-500">
-                            Type: {item.rewardItem.itemType} | Meta: {JSON.stringify(item.rewardItem.metadata)}
+                            Type: {item.rewardItem.itemType} | Meta:{' '}
+                            {JSON.stringify(item.rewardItem.metadata)}
                           </span>
                         )}
                         {(() => {
-                          // เช็คว่าได้รางวัลและมี metadata.value 
-                          if (!item.isWin || !item.rewardItem || !item.rewardItem.metadata) {
+                          // เช็คว่าได้รางวัลและมี metadata.value
+                          if (
+                            !item.isWin ||
+                            !item.rewardItem ||
+                            !item.rewardItem.metadata
+                          ) {
                             return null
                           }
-                          
+
                           let metadata = item.rewardItem.metadata
                           // ถ้า metadata เป็น string ให้ parse
                           if (typeof metadata === 'string') {
@@ -217,16 +222,16 @@ export default function GachaHistorySection() {
                               return null
                             }
                           }
-                          
+
                           // ถ้ามี value ใน metadata แสดงว่าเป็น currency reward
                           if (!metadata || !metadata.value) {
                             return null
                           }
-                          
+
                           return (
                             <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 px-2 py-0.5">
-                              <Gem className="h-3 w-3 mr-1" />
-                              +{metadata.value} {metadata.currency === 'THB' ? 'บาท' : 'Xeny'}
+                              <Gem className="h-3 w-3 mr-1" />+{metadata.value}{' '}
+                              {metadata.currency === 'THB' ? 'บาท' : 'Xeny'}
                             </Badge>
                           )
                         })()}

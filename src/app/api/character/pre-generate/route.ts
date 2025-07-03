@@ -19,15 +19,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   // ดึงข้อมูล character
   const userCharacter = await characterRepository.findByUserId(userId)
   if (!userCharacter) {
-    return NextResponse.json(
-      { error: 'Character not found' },
-      { status: 404 }
-    )
+    return NextResponse.json({ error: 'Character not found' }, { status: 404 })
   }
 
   // ตรวจสอบว่าควร pre-generate หรือไม่
-  const preGenerateCheck =
-    portraitGenerationService.checkPreGenerateCondition(userCharacter.level)
+  const preGenerateCheck = portraitGenerationService.checkPreGenerateCondition(
+    userCharacter.level
+  )
 
   if (!preGenerateCheck.shouldPreGenerate) {
     return NextResponse.json({
