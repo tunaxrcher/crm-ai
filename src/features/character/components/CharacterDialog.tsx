@@ -2,6 +2,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 
 import {
   Dialog,
@@ -18,6 +19,7 @@ import {
   Brain,
   Briefcase,
   Calendar,
+  Coins,
   Crown,
   Heart,
   Star,
@@ -75,6 +77,35 @@ export default function CharacterDialog({
   onClose,
   character,
 }: CharacterDialogProps) {
+  const [tokenData, setTokenData] = useState<{
+    currentTokens: number
+    totalEarnedTokens: number
+  } | null>(null)
+
+  useEffect(() => {
+    if (isOpen && character?.id) {
+      console.log('CharacterDialog opened with character:', character)
+      // Fetch token data when dialog opens
+      const fetchTokenData = async () => {
+        try {
+          const response = await fetch(`/api/character/${character.id}/token`)
+          console.log('Token API response status:', response.status)
+          if (response.ok) {
+            const data = await response.json()
+            console.log('Token data received:', data)
+            setTokenData({
+              currentTokens: data.currentTokens,
+              totalEarnedTokens: data.totalEarnedTokens,
+            })
+          }
+        } catch (error) {
+          console.error('Failed to fetch token data:', error)
+        }
+      }
+      fetchTokenData()
+    }
+  }, [isOpen, character?.id])
+
   if (!character) return null
 
   const xpProgress = (character.currentXP / character.nextLevelXP) * 100
@@ -89,6 +120,9 @@ export default function CharacterDialog({
     { key: 'VIT', value: character.statVIT },
     { key: 'INT', value: character.statINT },
   ]
+
+  console.log('Character data:', character)
+  console.log('Token data state:', tokenData)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -151,11 +185,32 @@ export default function CharacterDialog({
             <Progress value={xpProgress} className="h-2" />
           </div>
 
+          {/* Token Balance */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Coins className="h-4 w-4 text-yellow-500" />
+              <span className="font-semibold">Token</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+              <div>
+                <p className="text-sm text-muted-foreground">ปัจจุบัน</p>
+                <p className="text-xl font-bold text-yellow-600 dark:text-yellow-500">
+                  {tokenData?.currentTokens?.toLocaleString() || '0'}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">ได้รับไปทั้งหมดแล้ว</p>
+                <p className="text-lg font-semibold text-yellow-600 dark:text-yellow-500">
+                  {tokenData?.totalEarnedTokens?.toLocaleString() || '0'}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Stats Grid */}
           <div>
             <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Trophy className="h-4 w-4" />
-              Character Stats
+              <Trophy className="h-4 w-4" /> Stats
             </h3>
             <div className="grid grid-cols-5 gap-2">
               {stats.map(({ key, value }) => {
