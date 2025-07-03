@@ -13,7 +13,7 @@ const LEVEL_CONFIG = {
   IMPORTANT_THRESHOLDS: [10, 35, 60, 80, 99],
   BASE_XP: 1000,
   XP_GROWTH_RATE: 1.2,
-  STAT_POINTS_PER_LEVEL: 5,
+  STAT_POINTS_PER_LEVEL: 3,
   MAX_REASONING_LENGTH: 100,
   PRE_GENERATE_OFFSET: 3,
 } as const
@@ -452,11 +452,45 @@ export class CharacterLevelService {
     )
 
     if (!statGains) {
-      throw new Error('Failed to calculate stat gains')
+      // Fallback: Use default stat distribution based on job class
+      console.warn('[ProcessLevelUp] AI calculation failed, using fallback stats')
+      return this.getFallbackStatGains(character.jobClass.name)
     }
 
     console.log(`[ProcessLevelUp] AI stat gains:`, statGains)
     return statGains
+  }
+
+  /**
+   * Fallback stat distribution when AI calculation fails
+   */
+  private getFallbackStatGains(jobClassName: string): StatGains {
+    const baseFallback = {
+      agiGained: 1,
+      strGained: 1,
+      dexGained: 0,
+      vitGained: 1,
+      intGained: 0,
+      reasoning: 'AI calculation unavailable, used balanced stat distribution'
+    }
+
+    // Job-specific fallback distributions
+    switch (jobClassName) {
+      case 'โปรแกรมเมอร์':
+        return { ...baseFallback, intGained: 2, dexGained: 1, agiGained: 0, reasoning: 'Fallback: Focused on INT and DEX for programming tasks' }
+      case 'นักการตลาด':
+        return { ...baseFallback, agiGained: 2, intGained: 1, vitGained: 0, reasoning: 'Fallback: Focused on AGI and INT for marketing agility' }
+      case 'นักขาย':
+        return { ...baseFallback, agiGained: 2, strGained: 1, vitGained: 0, reasoning: 'Fallback: Focused on AGI and STR for sales persistence' }
+      case 'ดีไซน์เนอร์':
+        return { ...baseFallback, dexGained: 2, intGained: 1, strGained: 0, reasoning: 'Fallback: Focused on DEX and INT for creative work' }
+      case 'นักบัญชี':
+        return { ...baseFallback, intGained: 2, dexGained: 1, strGained: 0, reasoning: 'Fallback: Focused on INT and DEX for precision work' }
+      case 'ช่าง':
+        return { ...baseFallback, strGained: 2, dexGained: 1, agiGained: 0, reasoning: 'Fallback: Focused on STR and DEX for manual work' }
+      default:
+        return baseFallback
+    }
   }
 
   /**

@@ -179,7 +179,7 @@ export class CharacterService extends BaseService {
 
           // เรียกใช้ processLevelUp
           const result = await levelService.processLevelUp(
-            characterId,
+            character,
             currentLevelForLevelUp - 1,
             currentLevelForLevelUp,
             false // shouldUpdateLevel
