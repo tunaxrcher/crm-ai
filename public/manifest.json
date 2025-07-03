@@ -1,0 +1,32 @@
+{
+  "name": "KPI & AI",
+  "short_name": "KPI AI",
+  "description": "ระบบ KPI และ AI สำหรับองค์กร",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "scope": "/",
+  "version": "1.0.0",
+  "icons": [
+    {
+      "src": "/auto-import-evx-logo.png?v=1.0.0",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192x192.png?v=1.0.0",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png?v=1.0.0",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+} 
