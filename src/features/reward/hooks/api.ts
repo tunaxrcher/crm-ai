@@ -128,3 +128,15 @@ export const useGachaHistory = () => {
     },
   })
 }
+
+// Get gacha rates and rewards
+export const useGachaRates = () => {
+  return useQuery({
+    queryKey: ['gacha-rates'],
+    queryFn: async () => {
+      const response = await fetch('/api/rewards/gacha/rates')
+      if (!response.ok) throw new Error('Failed to fetch gacha rates')
+      return response.json()
+    },
+  })
+}

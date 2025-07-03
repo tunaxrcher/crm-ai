@@ -71,6 +71,65 @@ export class RewardService extends BaseService {
     }
   }
 
+  // ดึงข้อมูลรางวัลและเปอร์เซ็นต์การออกของตู้กาชา
+  async getGachaRates() {
+    const character = await this.getCurrentCharacter()
+
+    // ดึง rewards ที่สามารถได้จาก gacha
+    const gachaRewards = await prisma.rewardItem.findMany({
+      where: {
+        isActive: true,
+        gachaProbability: { gt: 0 },
+      },
+      orderBy: [
+        { rarity: 'desc' },
+        { gachaProbability: 'desc' },
+      ],
+    })
+
+    // คำนวณ total probability และ no reward probability
+    const totalRewardProbability = gachaRewards.reduce(
+      (sum, r) => sum + r.gachaProbability,
+      0
+    )
+    const noRewardProbability = Math.max(0, 1 - totalRewardProbability)
+
+    // ดึง user stats สำหรับ pity system info
+    let userStats = await prisma.userRewardStats.findUnique({
+      where: { characterId: character.id },
+    })
+
+    if (!userStats) {
+      userStats = await prisma.userRewardStats.create({
+        data: { characterId: character.id },
+      })
+    }
+
+    return {
+      gachaRewards: gachaRewards.map(reward => ({
+        ...reward,
+        probabilityPercent: (reward.gachaProbability * 100).toFixed(2),
+      })),
+      noRewardProbability: {
+        value: noRewardProbability,
+        percentText: (noRewardProbability * 100).toFixed(2),
+      },
+      totalRewardProbability: {
+        value: totalRewardProbability,
+        percentText: (totalRewardProbability * 100).toFixed(2),
+      },
+      userStats: {
+        luckyStreak: userStats.luckyStreak,
+        totalPulls: userStats.totalGachaPulls,
+        totalWins: userStats.totalGachaWins,
+        winRate: userStats.totalGachaPulls > 0 
+          ? ((userStats.totalGachaWins / userStats.totalGachaPulls) * 100).toFixed(2)
+          : '0.00',
+      },
+      costPerPull: 50,
+    }
+  }
+
   // ซื้อ reward โดยตรง
   async purchaseReward(rewardId: number) {
     const character = await this.getCurrentCharacter()
