@@ -49,7 +49,10 @@ const itemTypeIcons: Record<string, any> = {
   xeny: Sparkles,
 }
 
-export default function GachaRatesModal({ isOpen, onClose }: GachaRatesModalProps) {
+export default function GachaRatesModal({
+  isOpen,
+  onClose,
+}: GachaRatesModalProps) {
   const { data: gachaRatesData, isLoading } = useGachaRates()
 
   if (!isOpen) return null
@@ -122,13 +125,13 @@ export default function GachaRatesModal({ isOpen, onClose }: GachaRatesModalProp
                 <ScrollArea className="h-96">
                   <div className="space-y-3 pr-4">
                     {gachaRatesData.gachaRewards.map((reward: any) => {
-                      const IconComponent = itemTypeIcons[reward.itemType] || Gift
-                      
+                      const IconComponent =
+                        itemTypeIcons[reward.itemType] || Gift
+
                       return (
                         <div
                           key={reward.id}
-                          className="flex items-center gap-4 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
-                        >
+                          className="flex items-center gap-4 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
                           {/* Reward Icon/Image */}
                           <div className="relative">
                             {reward.imageUrl ? (
@@ -141,18 +144,18 @@ export default function GachaRatesModal({ isOpen, onClose }: GachaRatesModalProp
                               />
                             ) : (
                               <div
-                                className={`w-12 h-12 rounded-lg ${reward.color || 'bg-gray-500'} flex items-center justify-center`}
-                              >
+                                className={`w-12 h-12 rounded-lg ${reward.color || 'bg-gray-500'} flex items-center justify-center`}>
                                 <IconComponent className="h-6 w-6 text-white" />
                               </div>
                             )}
-                            
+
                             {/* Rarity Badge */}
                             <Badge
                               className={`absolute -top-1 -right-1 text-xs px-1 py-0 ${
-                                rarityColors[reward.rarity as keyof typeof rarityColors] || rarityColors.common
-                              } border-0`}
-                            >
+                                rarityColors[
+                                  reward.rarity as keyof typeof rarityColors
+                                ] || rarityColors.common
+                              } border-0`}>
                               {reward.rarity?.toUpperCase()}
                             </Badge>
                           </div>
@@ -161,7 +164,9 @@ export default function GachaRatesModal({ isOpen, onClose }: GachaRatesModalProp
                           <div className="flex-1">
                             <h4 className="font-semibold">{reward.name}</h4>
                             {reward.subtitle && (
-                              <p className="text-muted-foreground text-sm">{reward.subtitle}</p>
+                              <p className="text-muted-foreground text-sm">
+                                {reward.subtitle}
+                              </p>
                             )}
                             {reward.description && (
                               <p className="text-muted-foreground text-xs mt-1 line-clamp-2">
@@ -180,7 +185,9 @@ export default function GachaRatesModal({ isOpen, onClose }: GachaRatesModalProp
                             <div className="text-lg font-bold text-primary">
                               {reward.probabilityPercent}%
                             </div>
-                            <div className="text-muted-foreground text-xs">อัตราออก</div>
+                            <div className="text-muted-foreground text-xs">
+                              อัตราออก
+                            </div>
                           </div>
                         </div>
                       )
@@ -199,4 +206,4 @@ export default function GachaRatesModal({ isOpen, onClose }: GachaRatesModalProp
       </DialogContent>
     </Dialog>
   )
-} 
+}

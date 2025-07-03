@@ -14,13 +14,13 @@ import {
   DialogTitle,
 } from '@src/components/ui/dialog'
 import { useNotification } from '@src/components/ui/notification-system'
+import GachaRatesModal from '@src/features/reward/components/GachaRatesModal'
 import {
   type GachaResult,
   useGachaPull,
   usePurchaseReward,
   useRewards,
 } from '@src/features/reward/hooks/api'
-import GachaRatesModal from '@src/features/reward/components/GachaRatesModal'
 import {
   AlertCircle,
   Coins,
@@ -245,10 +245,9 @@ export default function RewardPage() {
               <div className="flex flex-col items-center">
                 <div className="relative group/machine">
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-cyan-400/30 rounded-3xl blur-2xl group-hover/machine:blur-3xl transition-all duration-500"></div>
-                  <div 
+                  <div
                     className="relative cursor-pointer"
-                    onClick={() => setShowGachaRates(true)}
-                  >
+                    onClick={() => setShowGachaRates(true)}>
                     <Image
                       src="/images/gacha-machine.webp"
                       alt="Futuristic Gacha Machine"
@@ -261,7 +260,6 @@ export default function RewardPage() {
                     <div className="absolute top-4 right-4 bg-blue-500/80 backdrop-blur-sm rounded-full p-2 hover:bg-blue-600/80 transition-colors">
                       <Info className="h-5 w-5 text-white" />
                     </div>
-          
                   </div>
                 </div>
               </div>
@@ -698,9 +696,9 @@ export default function RewardPage() {
       )}
 
       {/* Gacha Rates Modal */}
-      <GachaRatesModal 
-        isOpen={showGachaRates} 
-        onClose={() => setShowGachaRates(false)} 
+      <GachaRatesModal
+        isOpen={showGachaRates}
+        onClose={() => setShowGachaRates(false)}
       />
     </div>
   )

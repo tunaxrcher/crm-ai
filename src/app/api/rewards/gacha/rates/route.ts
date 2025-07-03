@@ -9,4 +9,4 @@ export const GET = withErrorHandling(async (_request: NextRequest) => {
   const data = await rewardService.getGachaRates()
 
   return NextResponse.json(data)
-}) 
+})

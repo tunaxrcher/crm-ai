@@ -37,7 +37,11 @@ export const metadata: Metadata = {
     ],
     apple: [
       { url: '/auto-import-evx-logo.png?v=1.0.0' },
-      { url: '/apple-touch-icon.png?v=1.0.0', sizes: '180x180', type: 'image/png' },
+      {
+        url: '/apple-touch-icon.png?v=1.0.0',
+        sizes: '180x180',
+        type: 'image/png',
+      },
     ],
   },
 }
@@ -51,7 +55,10 @@ export default function RootLayout({
     <html lang="th" className={`${kanit.variable} dark`}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content="KPI & AI" />
         <link rel="apple-touch-icon" href="/auto-import-evx-logo.png?v=1.0.0" />
         <link rel="manifest" href="/manifest.json?v=1.0.0" />

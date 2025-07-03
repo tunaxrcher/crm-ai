@@ -453,7 +453,9 @@ export class CharacterLevelService {
 
     if (!statGains) {
       // Fallback: Use default stat distribution based on job class
-      console.warn('[ProcessLevelUp] AI calculation failed, using fallback stats')
+      console.warn(
+        '[ProcessLevelUp] AI calculation failed, using fallback stats'
+      )
       return this.getFallbackStatGains(character.jobClass.name)
     }
 
@@ -471,23 +473,59 @@ export class CharacterLevelService {
       dexGained: 0,
       vitGained: 1,
       intGained: 0,
-      reasoning: 'AI calculation unavailable, used balanced stat distribution'
+      reasoning: 'AI calculation unavailable, used balanced stat distribution',
     }
 
     // Job-specific fallback distributions
     switch (jobClassName) {
       case 'โปรแกรมเมอร์':
-        return { ...baseFallback, intGained: 2, dexGained: 1, agiGained: 0, reasoning: 'Fallback: Focused on INT and DEX for programming tasks' }
+        return {
+          ...baseFallback,
+          intGained: 2,
+          dexGained: 1,
+          agiGained: 0,
+          reasoning: 'Fallback: Focused on INT and DEX for programming tasks',
+        }
       case 'นักการตลาด':
-        return { ...baseFallback, agiGained: 2, intGained: 1, vitGained: 0, reasoning: 'Fallback: Focused on AGI and INT for marketing agility' }
+        return {
+          ...baseFallback,
+          agiGained: 2,
+          intGained: 1,
+          vitGained: 0,
+          reasoning: 'Fallback: Focused on AGI and INT for marketing agility',
+        }
       case 'นักขาย':
-        return { ...baseFallback, agiGained: 2, strGained: 1, vitGained: 0, reasoning: 'Fallback: Focused on AGI and STR for sales persistence' }
+        return {
+          ...baseFallback,
+          agiGained: 2,
+          strGained: 1,
+          vitGained: 0,
+          reasoning: 'Fallback: Focused on AGI and STR for sales persistence',
+        }
       case 'ดีไซน์เนอร์':
-        return { ...baseFallback, dexGained: 2, intGained: 1, strGained: 0, reasoning: 'Fallback: Focused on DEX and INT for creative work' }
+        return {
+          ...baseFallback,
+          dexGained: 2,
+          intGained: 1,
+          strGained: 0,
+          reasoning: 'Fallback: Focused on DEX and INT for creative work',
+        }
       case 'นักบัญชี':
-        return { ...baseFallback, intGained: 2, dexGained: 1, strGained: 0, reasoning: 'Fallback: Focused on INT and DEX for precision work' }
+        return {
+          ...baseFallback,
+          intGained: 2,
+          dexGained: 1,
+          strGained: 0,
+          reasoning: 'Fallback: Focused on INT and DEX for precision work',
+        }
       case 'ช่าง':
-        return { ...baseFallback, strGained: 2, dexGained: 1, agiGained: 0, reasoning: 'Fallback: Focused on STR and DEX for manual work' }
+        return {
+          ...baseFallback,
+          strGained: 2,
+          dexGained: 1,
+          agiGained: 0,
+          reasoning: 'Fallback: Focused on STR and DEX for manual work',
+        }
       default:
         return baseFallback
     }

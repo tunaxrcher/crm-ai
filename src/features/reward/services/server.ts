@@ -81,10 +81,7 @@ export class RewardService extends BaseService {
         isActive: true,
         gachaProbability: { gt: 0 },
       },
-      orderBy: [
-        { rarity: 'desc' },
-        { gachaProbability: 'desc' },
-      ],
+      orderBy: [{ rarity: 'desc' }, { gachaProbability: 'desc' }],
     })
 
     // คำนวณ total probability และ no reward probability
@@ -106,7 +103,7 @@ export class RewardService extends BaseService {
     }
 
     return {
-      gachaRewards: gachaRewards.map(reward => ({
+      gachaRewards: gachaRewards.map((reward) => ({
         ...reward,
         probabilityPercent: (reward.gachaProbability * 100).toFixed(2),
       })),
@@ -122,9 +119,13 @@ export class RewardService extends BaseService {
         luckyStreak: userStats.luckyStreak,
         totalPulls: userStats.totalGachaPulls,
         totalWins: userStats.totalGachaWins,
-        winRate: userStats.totalGachaPulls > 0 
-          ? ((userStats.totalGachaWins / userStats.totalGachaPulls) * 100).toFixed(2)
-          : '0.00',
+        winRate:
+          userStats.totalGachaPulls > 0
+            ? (
+                (userStats.totalGachaWins / userStats.totalGachaPulls) *
+                100
+              ).toFixed(2)
+            : '0.00',
       },
       costPerPull: 50,
     }
