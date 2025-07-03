@@ -32,7 +32,7 @@ export function TokenDisplay({
         <span className="text-sm text-muted-foreground">Token:</span>
       )}
       <span className="font-semibold text-yellow-600 dark:text-yellow-500">
-        {data?.userToken?.currentTokens?.toLocaleString() || 0}
+        {data?.userToken?.currentTokens?.toLocaleString() || 0} Token
       </span>
     </div>
   )

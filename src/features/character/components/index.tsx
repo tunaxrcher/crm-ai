@@ -214,11 +214,6 @@ export default function CharacterPageComponent() {
 
           <AchievementSection achievements={character.achievements} />
 
-          {/* Work Settings */}
-          <div className="mt-4 flex justify-center">
-            <WorkSettingsDialog />
-          </div>
-
           {process.env.NODE_ENV === 'development' && (
             // {true && (
             <>

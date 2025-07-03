@@ -60,7 +60,7 @@ export default function GachaHistorySection() {
 
   if (isLoading) {
     return (
-      <Card className="backdrop-blur-xl bg-black/20 border-white/10">
+      <Card className="backdrop-blur-xl bg-black/20 border-white/10 mt-5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="h-5 w-5 text-yellow-400" />
@@ -84,7 +84,7 @@ export default function GachaHistorySection() {
   const displayHistory = isExpanded ? history : history.slice(0, 5)
 
   return (
-    <Card className="backdrop-blur-xl bg-black/20 border-white/10">
+    <Card className="backdrop-blur-xl bg-black/20 border-white/10 mt-5">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -122,13 +122,13 @@ export default function GachaHistorySection() {
               <div className="text-xl font-bold text-white">
                 {stats.totalGachaWins.toLocaleString()} ครั้ง
               </div>
-              <div className="text-xs text-gray-400">
+              {/* <div className="text-xs text-gray-400">
                 (
                 {((stats.totalGachaWins / stats.totalGachaPulls) * 100).toFixed(
                   1
                 )}
                 %)
-              </div>
+              </div> */}
             </div>
           </div>
         )}
@@ -195,13 +195,7 @@ export default function GachaHistorySection() {
                             ? item.rewardItem.name
                             : 'ไม่ได้รางวัล'}
                         </span>
-                        {/* Debug: แสดง metadata และ itemType */}
-                        {item.isWin && item.rewardItem && (
-                          <span className="text-xs text-gray-500">
-                            Type: {item.rewardItem.itemType} | Meta:{' '}
-                            {JSON.stringify(item.rewardItem.metadata)}
-                          </span>
-                        )}
+
                         {(() => {
                           // เช็คว่าได้รางวัลและมี metadata.value
                           if (
@@ -231,7 +225,7 @@ export default function GachaHistorySection() {
                           return (
                             <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 px-2 py-0.5">
                               <Gem className="h-3 w-3 mr-1" />+{metadata.value}{' '}
-                              {metadata.currency === 'THB' ? 'บาท' : 'Xeny'}
+                              {'Xeny'}
                             </Badge>
                           )
                         })()}
@@ -258,7 +252,7 @@ export default function GachaHistorySection() {
         </ScrollArea>
 
         {/* Lucky Streak Indicator */}
-        {stats && stats.luckyStreak > 0 && (
+        {/* {stats && stats.luckyStreak > 0 && (
           <div className="mt-4 p-3 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-lg border border-red-500/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -273,7 +267,7 @@ export default function GachaHistorySection() {
               โอกาสได้รางวัลเพิ่มขึ้น {Math.min(stats.luckyStreak * 1, 20)}%
             </p>
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   )

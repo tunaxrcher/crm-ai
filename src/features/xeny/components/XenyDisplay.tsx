@@ -33,7 +33,7 @@ export function XenyDisplay({
         <span className="text-sm text-muted-foreground">Xeny:</span>
       )}
       <span className="font-semibold text-purple-600 dark:text-purple-500">
-        {data?.userXeny?.currentXeny?.toLocaleString() || 0}
+        {data?.userXeny?.currentXeny?.toLocaleString() || 0} Xeny
       </span>
     </div>
   )
