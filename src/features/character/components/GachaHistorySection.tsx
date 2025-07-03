@@ -193,7 +193,7 @@ export default function GachaHistorySection() {
         </ScrollArea>
 
         {/* Lucky Streak Indicator */}
-        {stats && stats.luckyStreak > 0 && (
+        {/* {stats && stats.luckyStreak > 0 && (
           <div className="mt-4 p-3 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-lg border border-red-500/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export default function GachaHistorySection() {
               โอกาสได้รางวัลเพิ่มขึ้น {Math.min(stats.luckyStreak * 2, 30)}%
             </p>
           </div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   )

@@ -385,23 +385,43 @@ export class RewardService extends BaseService {
 
   // Logic การสุ่ม gacha
   private performGachaPull(rewards: any[], luckyStreak: number): GachaResult {
-    // Pity system: เพิ่มโอกาสถ้าไม่ได้รางวัลนานแล้ว
-    const pityBonus = Math.min(luckyStreak * 0.02, 0.3) // max 30% bonus
-
-    // คำนวณ total probability
-    const totalProbability = rewards.reduce(
+    // 1. คำนวณ total probability จาก rewards ทั้งหมด
+    const totalRewardProbability = rewards.reduce(
       (sum, r) => sum + r.gachaProbability,
       0
     )
 
-    // โอกาสไม่ได้รางวัล
-    const noRewardProbability = Math.max(0.5 - pityBonus, 0.2) // min 10% no reward
+    // 2. Validate ว่า total probability ไม่เกิน 1 (100%)
+    if (totalRewardProbability > 1) {
+      console.warn(`Warning: Total gacha probability exceeds 100% (${(totalRewardProbability * 100).toFixed(2)}%)`)
+    }
 
-    // สุ่มเลข
-    const random = Math.random() * (totalProbability + noRewardProbability)
+    // 3. คำนวณ base no reward probability อัตโนมัติ
+    // ถ้า rewards รวมกัน 30% -> no reward = 70%
+    const baseNoRewardProbability = Math.max(0, 1 - totalRewardProbability)
 
-    // ถ้าไม่ได้รางวัล
-    if (random <= noRewardProbability) {
+    // 4. Pity system: ลดโอกาสไม่ได้รางวัลตาม lucky streak
+    // เพิ่ม 1% ต่อครั้งที่ไม่ได้ สูงสุด 20%
+    const pityBonus = Math.min(luckyStreak * 0.01, 0.2)
+    const noRewardProbability = Math.max(0, baseNoRewardProbability - pityBonus)
+
+    // 5. สุ่มเลข 0-1
+    const random = Math.random()
+
+    // 6. Log for debugging (ถ้าต้องการ)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Gacha Pull Debug:', {
+        totalRewardProbability: (totalRewardProbability * 100).toFixed(2) + '%',
+        baseNoReward: (baseNoRewardProbability * 100).toFixed(2) + '%',
+        pityBonus: (pityBonus * 100).toFixed(2) + '%',
+        finalNoReward: (noRewardProbability * 100).toFixed(2) + '%',
+        luckyStreak,
+        random: random.toFixed(4)
+      })
+    }
+
+    // 7. ตรวจสอบว่าไม่ได้รางวัล
+    if (random < noRewardProbability) {
       return {
         rewardId: null,
         reward: null,
@@ -409,11 +429,11 @@ export class RewardService extends BaseService {
       }
     }
 
-    // สุ่มรางวัล
+    // 8. สุ่มว่าได้รางวัลไหน
     let cumulative = noRewardProbability
     for (const reward of rewards) {
       cumulative += reward.gachaProbability
-      if (random <= cumulative) {
+      if (random < cumulative) {
         return {
           rewardId: reward.id,
           reward,
@@ -422,7 +442,8 @@ export class RewardService extends BaseService {
       }
     }
 
-    // fallback (ไม่ควรเกิด)
+    // 9. Fallback (ไม่ควรเกิด แต่ใส่ไว้เพื่อความปลอดภัย)
+    console.error('Gacha pull fallback - this should not happen')
     return {
       rewardId: null,
       reward: null,
