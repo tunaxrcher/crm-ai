@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import Image from 'next/image'
 
@@ -19,6 +19,12 @@ import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { Award, Coins, Gem, Sparkles, TrendingUp, X } from 'lucide-react'
 
+// Type for Xeny metadata
+interface XenyMetadata {
+  value: number
+  currency?: string
+}
+
 // Map rarity to colors
 const rarityColors: Record<string, string> = {
   common: 'bg-gray-500',
@@ -28,9 +34,29 @@ const rarityColors: Record<string, string> = {
   legendary: 'bg-yellow-500',
 }
 
+// Format currency display
+const formatCurrency = (value: number, currency?: string): string => {
+  if (currency === 'THB') {
+    return `${value.toLocaleString()} บาท`
+  }
+  return `${value.toLocaleString()} Xeny`
+}
+
 export default function GachaHistorySection() {
   const [isExpanded, setIsExpanded] = useState(false)
   const { data, isLoading } = useGachaHistory()
+
+  // Debug: log data เพื่อดูโครงสร้าง
+  useEffect(() => {
+    if (data?.history) {
+      console.log('Gacha History Data:', data.history)
+      // ดู item ที่เป็น xeny โดยเฉพาะ
+      const xenyItems = data.history.filter((item: any) => 
+        item.isWin && item.rewardItem?.itemType === 'xeny'
+      )
+      console.log('Xeny Rewards:', xenyItems)
+    }
+  }, [data])
 
   if (isLoading) {
     return (
@@ -169,13 +195,41 @@ export default function GachaHistorySection() {
                             ? item.rewardItem.name
                             : 'ไม่ได้รางวัล'}
                         </span>
-                        {item.isWin &&
-                          item.rewardItem?.itemType === 'xeny' &&
-                          item.rewardItem.metadata && (
-                            <span className="text-purple-400 text-sm">
-                              +{item.rewardItem.metadata.value} Xeny
-                            </span>
-                          )}
+                        {/* Debug: แสดง metadata และ itemType */}
+                        {item.isWin && item.rewardItem && (
+                          <span className="text-xs text-gray-500">
+                            Type: {item.rewardItem.itemType} | Meta: {JSON.stringify(item.rewardItem.metadata)}
+                          </span>
+                        )}
+                        {(() => {
+                          // เช็คว่าได้รางวัลและมี metadata.value 
+                          if (!item.isWin || !item.rewardItem || !item.rewardItem.metadata) {
+                            return null
+                          }
+                          
+                          let metadata = item.rewardItem.metadata
+                          // ถ้า metadata เป็น string ให้ parse
+                          if (typeof metadata === 'string') {
+                            try {
+                              metadata = JSON.parse(metadata)
+                            } catch (e) {
+                              console.error('Failed to parse metadata:', e)
+                              return null
+                            }
+                          }
+                          
+                          // ถ้ามี value ใน metadata แสดงว่าเป็น currency reward
+                          if (!metadata || !metadata.value) {
+                            return null
+                          }
+                          
+                          return (
+                            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 px-2 py-0.5">
+                              <Gem className="h-3 w-3 mr-1" />
+                              +{metadata.value} {metadata.currency === 'THB' ? 'บาท' : 'Xeny'}
+                            </Badge>
+                          )
+                        })()}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
                         <span className="flex items-center gap-1">
@@ -199,7 +253,7 @@ export default function GachaHistorySection() {
         </ScrollArea>
 
         {/* Lucky Streak Indicator */}
-        {/* {stats && stats.luckyStreak > 0 && (
+        {stats && stats.luckyStreak > 0 && (
           <div className="mt-4 p-3 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-lg border border-red-500/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -211,10 +265,10 @@ export default function GachaHistorySection() {
               </span>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              โอกาสได้รางวัลเพิ่มขึ้น {Math.min(stats.luckyStreak * 2, 30)}%
+              โอกาสได้รางวัลเพิ่มขึ้น {Math.min(stats.luckyStreak * 1, 20)}%
             </p>
           </div>
-        )} */}
+        )}
       </CardContent>
     </Card>
   )

@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-
 import { characterService } from '@src/features/character/services/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
-export async function POST(request: NextRequest) {
-  console.log(`[API] Add XP to Character`)
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log('[API] POST Add XP')
 
-  try {
-    const { amount } = await request.json()
+  const { amount } = await request.json()
 
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid XP amount' }, { status: 400 })
-    }
+  const result = await characterService.addXP(amount)
 
-    const result = await characterService.addXP(amount)
-
-    return NextResponse.json({
-      success: true,
-      data: result,
-      message: `Added ${amount} XP successfully!`,
-    })
-  } catch (error) {
-    console.error('Error adding XP:', error)
-    return NextResponse.json({ error: 'Failed to add XP' }, { status: 500 })
-  }
-}
+  return NextResponse.json(result, { status: 200 })
+})

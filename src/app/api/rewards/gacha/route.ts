@@ -1,29 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
-
 import { rewardService } from '@src/features/reward/services/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 // src/app/api/rewards/gacha/route.ts
-export async function POST(request: NextRequest) {
-  try {
-    const { pullCount } = await request.json()
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log('[API] POST Gacha Pull')
 
-    if (pullCount !== 1 && pullCount !== 10) {
-      return NextResponse.json(
-        { error: 'Invalid pull count. Must be 1 or 10' },
-        { status: 400 }
-      )
-    }
+  const { pullCount = 1 } = await request.json()
 
-    const result = await rewardService.pullGacha(pullCount)
-
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error('Gacha pull error:', error)
+  if (pullCount !== 1 && pullCount !== 10) {
     return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : 'Failed to pull gacha',
-      },
+      { error: 'Invalid pull count. Must be 1 or 10' },
       { status: 400 }
     )
   }
-}
+
+  const data = await rewardService.pullGacha(pullCount)
+
+  return NextResponse.json(data)
+})

@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server'
-
 import { rewardService } from '@src/features/reward/services/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 // src/app/api/rewards/history/route.ts
-export async function GET() {
-  try {
-    const purchases = await rewardService.getCharacterPurchaseHistory()
-    return NextResponse.json(purchases)
-  } catch (error) {
-    console.error('Get purchase history error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch purchase history' },
-      { status: 500 }
-    )
-  }
-}
+export const GET = withErrorHandling(async () => {
+  console.log('[API] GET Purchase History')
+
+  const data = await rewardService.getCharacterPurchaseHistory()
+
+  return NextResponse.json(data)
+})

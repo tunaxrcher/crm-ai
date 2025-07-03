@@ -1,29 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-
 import { rewardService } from '@src/features/reward/services/server'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 // src/app/api/rewards/purchase/route.ts
-export async function POST(request: NextRequest) {
-  try {
-    const { rewardId } = await request.json()
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log('[API] POST Purchase Reward')
 
-    if (!rewardId) {
-      return NextResponse.json(
-        { error: 'Reward ID is required' },
-        { status: 400 }
-      )
-    }
+  const { rewardId } = await request.json()
 
-    const result = await rewardService.purchaseReward(rewardId)
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error('Purchase reward error:', error)
+  if (!rewardId) {
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : 'Failed to purchase reward',
-      },
+      { error: 'Reward ID is required' },
       { status: 400 }
     )
   }
-}
+
+  const result = await rewardService.purchaseReward(rewardId)
+  return NextResponse.json(result)
+})

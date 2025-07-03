@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { storyRepository } from '@src/features/feed/repository'
 import { getServerSession } from '@src/lib/auth'
 import { s3UploadService } from '@src/lib/services/s3UploadService'
+import { withErrorHandling } from '@src/lib/withErrorHandling'
 import { spawn } from 'child_process'
 import { mkdir, writeFile } from 'fs/promises'
 import path from 'path'
@@ -58,15 +59,16 @@ async function generateThumbnail(videoPath: string): Promise<string> {
 /**
  * API endpoint สำหรับอัปโหลด story ที่มีไฟล์ media
  */
-export async function POST(request: NextRequest) {
-  try {
-    // ตรวจสอบการเข้าสู่ระบบของผู้ใช้
-    const session = await getServerSession()
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  console.log('[API] POST Upload Story')
 
-    const userId = parseInt(session.user.id)
+  // ตรวจสอบการเข้าสู่ระบบของผู้ใช้
+  const session = await getServerSession()
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const userId = parseInt(session.user.id)
 
     // ดึงข้อมูล FormData
     const formData = await request.formData()
@@ -167,11 +169,4 @@ export async function POST(request: NextRequest) {
       story,
       thumbnailUrl,
     })
-  } catch (error) {
-    console.error('Error uploading story:', error)
-    return NextResponse.json(
-      { error: 'Failed to upload story' },
-      { status: 500 }
-    )
-  }
-}
+})
