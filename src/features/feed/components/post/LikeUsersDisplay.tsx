@@ -52,7 +52,22 @@ export const LikeUsersDisplay: React.FC<LikeUsersDisplayProps> = ({
           ))}
         </div>
         <span className="text-sm font-medium text-foreground">
-          {totalLikes} คน
+          {displayUsers.length === 1 ? (
+            <span>{displayUsers[0].user.character?.name || displayUsers[0].user.name}</span>
+          ) : displayUsers.length === 2 ? (
+            <span>
+              {displayUsers[0].user.character?.name || displayUsers[0].user.name} และ{' '}
+              {displayUsers[1].user.character?.name || displayUsers[1].user.name}
+            </span>
+          ) : displayUsers.length === 3 ? (
+            <span>
+              {displayUsers[0].user.character?.name || displayUsers[0].user.name}, {' '}
+              {displayUsers[1].user.character?.name || displayUsers[1].user.name} และ{' '}
+              {displayUsers[2].user.character?.name || displayUsers[2].user.name}
+            </span>
+          ) : (
+            `${totalLikes} คน`
+          )}
         </span>
         {hasMoreUsers && (
           <Button
