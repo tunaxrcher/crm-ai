@@ -65,15 +65,16 @@ export function useFeed() {
             text: comment.content,
             timestamp: comment.createdAt,
           })) || [],
-        likeUsers: apiItem.likes?.map((like: any) => ({
-          id: like.id,
-          user: {
-            id: like.user.id,
-            name: like.user.name,
-            character: like.user.character,
-          },
-          createdAt: like.createdAt,
-        })) || [],
+        likeUsers:
+          apiItem.likes?.map((like: any) => ({
+            id: like.id,
+            user: {
+              id: like.user.id,
+              name: like.user.name,
+              character: like.user.character,
+            },
+            createdAt: like.createdAt,
+          })) || [],
       },
     }
 

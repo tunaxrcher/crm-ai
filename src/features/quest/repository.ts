@@ -504,7 +504,6 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
             },
           })
         } else {
-          console.log('debug hhhh', data.tokenReward.tokensEarned)
           // อัพเดท tokens
           userToken = await tx.userToken.update({
             where: { userId: character.userId },

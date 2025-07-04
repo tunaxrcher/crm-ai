@@ -15,9 +15,8 @@ import {
 } from '@src/components/ui/card'
 import { Input } from '@src/components/ui/input'
 import { useAutoplayVideo } from '@src/features/feed/hooks/useAutoplayVideo'
-import { FeedItemUI } from '@src/features/feed/types'
-import { LikeUsersDisplay } from './LikeUsersDisplay'
 import { feedService } from '@src/features/feed/services/client'
+import { FeedItemUI } from '@src/features/feed/types'
 import {
   Award,
   Heart,
@@ -26,6 +25,8 @@ import {
   ThumbsUp,
   TrendingUp,
 } from 'lucide-react'
+
+import { LikeUsersDisplay } from './LikeUsersDisplay'
 
 interface PostCardProps {
   character: any
@@ -296,9 +297,9 @@ export const PostCard = function PostCard({
                   </span>
                 </div>
               ) : likeUsers && likeUsers.length > 0 ? (
-                <LikeUsersDisplay 
-                  likeUsers={likeUsers} 
-                  totalLikes={content.engagement.likes} 
+                <LikeUsersDisplay
+                  likeUsers={likeUsers}
+                  totalLikes={content.engagement.likes}
                 />
               ) : (
                 <>
@@ -316,7 +317,9 @@ export const PostCard = function PostCard({
 
             <div className="text-sm text-muted-foreground">
               {content.engagement.comments.length > 0 && (
-                <span className="font-medium">{content.engagement.comments.length} ความคิดเห็น</span>
+                <span className="font-medium">
+                  {content.engagement.comments.length} ความคิดเห็น
+                </span>
               )}
             </div>
           </div>
@@ -329,8 +332,8 @@ export const PostCard = function PostCard({
               size="sm"
               disabled={isLiking}
               className={`flex-1 h-10 rounded-lg ${
-                item.hasLiked 
-                  ? 'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20' 
+                item.hasLiked
+                  ? 'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
               } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={handleToggleLike}>
@@ -342,7 +345,11 @@ export const PostCard = function PostCard({
                 <ThumbsUp className="h-5 w-5 mr-2" />
               )}
               <span className="font-medium">
-                {isLiking ? 'กำลังประมวลผล...' : item.hasLiked ? 'Liked' : 'ยกนิ้วให้'}
+                {isLiking
+                  ? 'กำลังประมวลผล...'
+                  : item.hasLiked
+                    ? 'Liked'
+                    : 'ยกนิ้วให้'}
               </span>
             </Button>
 
@@ -363,7 +370,9 @@ export const PostCard = function PostCard({
               {content.engagement.comments.length > 0 && (
                 <div className="space-y-4">
                   {content.engagement.comments.map((comment: any) => (
-                    <div key={comment.id} className="flex items-start space-x-3">
+                    <div
+                      key={comment.id}
+                      className="flex items-start space-x-3">
                       <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg flex-shrink-0">
                         <div
                           className="absolute inset-0"
@@ -385,7 +394,9 @@ export const PostCard = function PostCard({
                           </div>
                         </div>
                         <div className="text-xs text-muted-foreground mt-2 flex items-center space-x-3">
-                          <span className="font-medium">{formatTimeDiff(comment.timestamp)}</span>
+                          <span className="font-medium">
+                            {formatTimeDiff(comment.timestamp)}
+                          </span>
                           {/* <button className="hover:text-primary font-medium transition-colors">
                             Like
                           </button>

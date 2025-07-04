@@ -1200,7 +1200,7 @@ export class QuestSubmissionService extends BaseService {
           "title": "ชื่อภารกิจที่สั้นและกระชับ",
           "description": "คำอธิบายภารกิจโดยละเอียดที่สอดคล้องกับสิ่งที่ผู้ใช้ทำ",
           "difficultyLevel": 3, // 1-5 โดย 1 = ง่ายมาก, 5 = ยากมาก
-          "xpReward": 150 // XP ที่ควรได้รับ (อยู่ระหว่าง 100 ถึง 1500(สูงสุด) ขึ้นอยู่กับความยาก)
+          "xpReward": [คำนวณจากระดับความยาก: ถ้ายากมากให้ใกล้ 500, ถ้าง่ายให้ใกล้ 100]
         }
       `
       const openai = new OpenAI({
@@ -1226,11 +1226,12 @@ export class QuestSubmissionService extends BaseService {
       if (!result) throw new Error('No response from OpenAI')
 
       const questInfo = JSON.parse(result)
+
       return {
         title: questInfo.title,
         description: questInfo.description,
         difficultyLevel: Math.min(Math.max(questInfo.difficultyLevel, 1), 5), // ระหว่าง 1-5
-        xpReward: Math.min(Math.max(questInfo.xpReward, 100), 500), // ระหว่าง 100-500
+        xpReward: Math.min(Math.max(questInfo.xpReward, 100), 500), // ระหว่าง 100-1500
       }
     } catch (error) {
       console.error('Error generating quest from submission:', error)

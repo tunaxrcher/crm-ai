@@ -16,4 +16,4 @@ export const GET = withErrorHandling(
 
     return NextResponse.json(likes)
   }
-) 
+)
