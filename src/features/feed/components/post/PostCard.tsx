@@ -54,10 +54,13 @@ export const PostCard = function PostCard({
   const [showComments, setShowComments] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [likeUsers, setLikeUsers] = useState(content.engagement.likeUsers || [])
+  const [isLoadingLikes, setIsLoadingLikes] = useState(false)
+  const [isLiking, setIsLiking] = useState(false)
 
   // Function to refresh likes data
   const refreshLikes = async () => {
     try {
+      setIsLoadingLikes(true)
       const likes = await feedService.getLikes(item.id)
       const transformedLikes = likes.map((like: any) => ({
         id: like.id,
@@ -71,14 +74,23 @@ export const PostCard = function PostCard({
       setLikeUsers(transformedLikes)
     } catch (error) {
       console.error('Failed to refresh likes:', error)
+    } finally {
+      setIsLoadingLikes(false)
     }
   }
 
   // Handle like toggle with refresh
   const handleToggleLike = async () => {
-    await toggleLike(item.id)
-    // Refresh likes data after a short delay
-    setTimeout(refreshLikes, 500)
+    try {
+      setIsLiking(true)
+      await toggleLike(item.id)
+      // Refresh likes data after a short delay
+      setTimeout(refreshLikes, 500)
+    } catch (error) {
+      console.error('Failed to toggle like:', error)
+    } finally {
+      setIsLiking(false)
+    }
   }
 
   // Load likes data on mount
@@ -272,28 +284,39 @@ export const PostCard = function PostCard({
 
         {/* Engagement stats */}
         <div className="px-4 py-2">
-          <div className="flex items-center justify-between text-sm text-muted-foreground border-b border-border pb-2">
-            <div className="flex items-center space-x-1">
-              {likeUsers && likeUsers.length > 0 ? (
+          <div className="flex items-center justify-between text-sm border-b border-border/50 pb-3">
+            <div className="flex items-center">
+              {isLoadingLikes ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                    <Heart className="h-3 w-3 text-white fill-current" />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    กำลังโหลด...
+                  </span>
+                </div>
+              ) : likeUsers && likeUsers.length > 0 ? (
                 <LikeUsersDisplay 
                   likeUsers={likeUsers} 
                   totalLikes={content.engagement.likes} 
                 />
               ) : (
                 <>
-                  <div className="flex -space-x-1">
-                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <div className="flex -space-x-1.5">
+                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                       <Heart className="h-3 w-3 text-white fill-current" />
                     </div>
                   </div>
-                  <span className="ml-2">{content.engagement.likes}</span>
+                  <span className="ml-2 text-sm font-medium text-foreground">
+                    {content.engagement.likes} คน
+                  </span>
                 </>
               )}
             </div>
 
-            <div>
+            <div className="text-sm text-muted-foreground">
               {content.engagement.comments.length > 0 && (
-                <span>{content.engagement.comments.length} comments</span>
+                <span className="font-medium">{content.engagement.comments.length} ความคิดเห็น</span>
               )}
             </div>
           </div>
@@ -304,35 +327,44 @@ export const PostCard = function PostCard({
             <Button
               variant="ghost"
               size="sm"
-              className={`flex-1 ${item.hasLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:bg-muted'}`}
+              disabled={isLiking}
+              className={`flex-1 h-10 rounded-lg ${
+                item.hasLiked 
+                  ? 'text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+              } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={handleToggleLike}>
-              {item.hasLiked ? (
+              {isLiking ? (
+                <div className="w-5 h-5 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : item.hasLiked ? (
                 <Heart className="h-5 w-5 mr-2 fill-red-500" />
               ) : (
                 <ThumbsUp className="h-5 w-5 mr-2" />
               )}
-              {item.hasLiked ? 'Liked' : 'ยกนิ้วให้'}
+              <span className="font-medium">
+                {isLiking ? 'กำลังประมวลผล...' : item.hasLiked ? 'Liked' : 'ยกนิ้วให้'}
+              </span>
             </Button>
 
             <Button
               variant="ghost"
               size="sm"
-              className="flex-1 text-muted-foreground hover:bg-muted"
+              className="flex-1 h-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80"
               onClick={() => setShowComments(!showComments)}>
               <MessageCircle className="h-5 w-5 mr-2" />
-              Comment
+              <span className="font-medium">ความคิดเห็น</span>
             </Button>
           </div>
 
           {/* Comments section - Only show when showComments is true */}
           {showComments && (
-            <div className="w-full pt-3 space-y-3">
+            <div className="w-full pt-3 space-y-4">
               {/* Existing comments */}
               {content.engagement.comments.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {content.engagement.comments.map((comment: any) => (
-                    <div key={comment.id} className="flex items-start">
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg mr-2">
+                    <div key={comment.id} className="flex items-start space-x-3">
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg flex-shrink-0">
                         <div
                           className="absolute inset-0"
                           style={{
@@ -343,21 +375,21 @@ export const PostCard = function PostCard({
                           }}
                         />
                       </div>
-                      <div className="flex-1">
-                        <div className="bg-muted p-2 rounded-lg">
-                          <div className="font-medium text-xs text-foreground">
+                      <div className="flex-1 min-w-0">
+                        <div className="bg-muted/50 p-3 rounded-xl">
+                          <div className="font-semibold text-sm text-foreground mb-1">
                             {comment.user.character?.name}
                           </div>
-                          <div className="text-sm text-foreground">
+                          <div className="text-sm text-foreground leading-relaxed">
                             {comment.text}
                           </div>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-1 flex items-center space-x-2">
-                          <span>{formatTimeDiff(comment.timestamp)}</span>
-                          {/* <button className="hover:text-primary font-medium">
+                        <div className="text-xs text-muted-foreground mt-2 flex items-center space-x-3">
+                          <span className="font-medium">{formatTimeDiff(comment.timestamp)}</span>
+                          {/* <button className="hover:text-primary font-medium transition-colors">
                             Like
                           </button>
-                          <button className="hover:text-primary font-medium">
+                          <button className="hover:text-primary font-medium transition-colors">
                             Reply
                           </button> */}
                         </div>
@@ -368,8 +400,8 @@ export const PostCard = function PostCard({
               )}
 
               {/* Comment input - Always show when comments section is open */}
-              <div className="flex items-center w-full pb-4">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg mr-2">
+              <div className="flex items-center w-full pb-4 space-x-3">
+                <div className="relative w-10 h-10 rounded-full overflow-hidden ai-gradient-bg flex-shrink-0">
                   <div
                     className="absolute inset-0"
                     style={{
@@ -381,11 +413,11 @@ export const PostCard = function PostCard({
                   />
                 </div>
 
-                <div className="flex-1 flex items-center bg-muted rounded-full overflow-hidden">
+                <div className="flex-1 flex items-center bg-muted/50 rounded-full overflow-hidden border border-border/50 focus-within:border-primary/50">
                   <Input
                     type="text"
                     placeholder={`แสดงความคิดเห็นในชื่อ ${character.name}`}
-                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground pl-3"
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground pl-4 pr-2"
                     value={commentInput}
                     onChange={(e) => onCommentInputChange(e.target.value)}
                     onKeyDown={(e) => {
@@ -398,7 +430,7 @@ export const PostCard = function PostCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="rounded-full h-8 w-8 text-primary"
+                    className="rounded-full h-8 w-8 text-primary hover:text-primary/80 hover:bg-primary/10"
                     onClick={handleAddComment}
                     disabled={!commentInput || commentInput.trim() === ''}>
                     <Send className="h-4 w-4" />

@@ -25,21 +25,21 @@ export const LikeUsersDisplay: React.FC<LikeUsersDisplayProps> = ({
 
   return (
     <>
-      <div className="flex items-center space-x-1">
-        <div className="flex -space-x-1">
+      <div className="flex items-center space-x-2">
+        <div className="flex -space-x-1.5">
           {displayUsers.map((likeUser, index) => (
             <div
               key={likeUser.id}
-              className="relative w-5 h-5 rounded-full overflow-hidden border border-background"
+              className="relative w-6 h-6 rounded-full overflow-hidden"
               style={{ zIndex: displayUsers.length - index }}
             >
               {likeUser.user.character?.currentPortraitUrl ? (
                 <div
-                  className="w-full h-full"
+                  className="absolute inset-0"
                   style={{
                     backgroundImage: `url(${likeUser.user.character.currentPortraitUrl})`,
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center -110px',
+                    backgroundPosition: 'center -114px',
                     transform: 'scale(2)',
                   }}
                 />
@@ -51,14 +51,14 @@ export const LikeUsersDisplay: React.FC<LikeUsersDisplayProps> = ({
             </div>
           ))}
         </div>
-        <span className="ml-2 text-sm text-muted-foreground">
+        <span className="text-sm font-medium text-foreground">
           {totalLikes} คน
         </span>
         {hasMoreUsers && (
           <Button
             variant="ghost"
             size="sm"
-            className="h-auto p-1 text-xs text-muted-foreground hover:text-foreground"
+            className="h-auto px-2 py-1 text-xs font-medium text-primary hover:text-primary/80 hover:bg-primary/10 rounded-full"
             onClick={() => setShowAllLikes(true)}
           >
             ดูทั้งหมด
@@ -69,23 +69,25 @@ export const LikeUsersDisplay: React.FC<LikeUsersDisplayProps> = ({
       {/* Dialog แสดงผู้ที่กดไลค์ทั้งหมด */}
       <Dialog open={showAllLikes} onOpenChange={setShowAllLikes}>
         <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Heart className="h-5 w-5 mr-2 text-red-500 fill-current" />
+          <DialogHeader className="pb-4">
+            <DialogTitle className="flex items-center text-lg font-semibold">
+              <div className="w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center mr-3">
+                <Heart className="h-4 w-4 text-white fill-current" />
+              </div>
               ผู้ที่กดไลค์ ({totalLikes} คน)
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          <div className="space-y-2 max-h-96 overflow-y-auto">
             {likeUsers.map((likeUser) => (
-              <div key={likeUser.id} className="flex items-center space-x-3">
-                <div className="relative w-10 h-10 rounded-full overflow-hidden">
+              <div key={likeUser.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-muted/50">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden ai-gradient-bg">
                   {likeUser.user.character?.currentPortraitUrl ? (
                     <div
-                      className="w-full h-full"
+                      className="absolute inset-0"
                       style={{
                         backgroundImage: `url(${likeUser.user.character.currentPortraitUrl})`,
                         backgroundSize: 'cover',
-                        backgroundPosition: 'center -110px',
+                        backgroundPosition: 'center -84px',
                         transform: 'scale(2)',
                       }}
                     />
@@ -95,12 +97,12 @@ export const LikeUsersDisplay: React.FC<LikeUsersDisplayProps> = ({
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-sm">
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm text-foreground truncate">
                     {likeUser.user.character?.name || likeUser.user.name}
                   </div>
                   {likeUser.user.character?.currentJobLevel?.title && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-muted-foreground truncate">
                       {likeUser.user.character.currentJobLevel.title}
                     </div>
                   )}
