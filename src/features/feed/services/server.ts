@@ -55,7 +55,17 @@ export class FeedService extends BaseService {
             },
           },
           likes: {
-            include: { user: true },
+            include: { 
+              user: {
+                include: {
+                  character: {
+                    include: {
+                      currentJobLevel: true,
+                    },
+                  },
+                },
+              },
+            },
           },
           comments: {
             include: {
@@ -293,7 +303,17 @@ export class LikeService extends BaseService {
 
   async getLikesByFeedItem(feedItemId: number) {
     return likeRepository.findByFeedItem(feedItemId, {
-      include: { user: true },
+      include: { 
+        user: {
+          include: {
+            character: {
+              include: {
+                currentJobLevel: true,
+              },
+            },
+          },
+        },
+      },
     })
   }
 }

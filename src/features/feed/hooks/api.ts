@@ -65,6 +65,15 @@ export function useFeed() {
             text: comment.content,
             timestamp: comment.createdAt,
           })) || [],
+        likeUsers: apiItem.likes?.map((like: any) => ({
+          id: like.id,
+          user: {
+            id: like.user.id,
+            name: like.user.name,
+            character: like.user.character,
+          },
+          createdAt: like.createdAt,
+        })) || [],
       },
     }
 
@@ -239,6 +248,8 @@ export function useFeed() {
                   likes: result.liked
                     ? item.content.engagement.likes + 1
                     : Math.max(0, item.content.engagement.likes - 1),
+                  // Note: likeUsers will be updated when the feed is refreshed
+                  // For now, we'll just update the count
                 },
               },
             }

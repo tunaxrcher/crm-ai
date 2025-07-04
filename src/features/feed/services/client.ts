@@ -76,6 +76,15 @@ export class FeedService extends BaseService {
     return response.json()
   }
 
+  async getLikes(feedItemId: string) {
+    const response = await fetch(`/api/feed/${feedItemId}/likes`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!response.ok) throw new Error('Failed to get likes')
+    return response.json()
+  }
+
   // Comment methods
   async createComment(feedItemId: string, content: string) {
     const response = await fetch(`/api/feed/${feedItemId}/comments`, {

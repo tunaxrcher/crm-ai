@@ -16,6 +16,8 @@ import {
 import { Input } from '@src/components/ui/input'
 import { useAutoplayVideo } from '@src/features/feed/hooks/useAutoplayVideo'
 import { FeedItemUI } from '@src/features/feed/types'
+import { LikeUsersDisplay } from './LikeUsersDisplay'
+import { feedService } from '@src/features/feed/services/client'
 import {
   Award,
   Heart,
@@ -51,6 +53,40 @@ export const PostCard = function PostCard({
   const videoRef = useAutoplayVideo()
   const [showComments, setShowComments] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [likeUsers, setLikeUsers] = useState(content.engagement.likeUsers || [])
+
+  // Function to refresh likes data
+  const refreshLikes = async () => {
+    try {
+      const likes = await feedService.getLikes(item.id)
+      const transformedLikes = likes.map((like: any) => ({
+        id: like.id,
+        user: {
+          id: like.user.id,
+          name: like.user.name,
+          character: like.user.character,
+        },
+        createdAt: like.createdAt,
+      }))
+      setLikeUsers(transformedLikes)
+    } catch (error) {
+      console.error('Failed to refresh likes:', error)
+    }
+  }
+
+  // Handle like toggle with refresh
+  const handleToggleLike = async () => {
+    await toggleLike(item.id)
+    // Refresh likes data after a short delay
+    setTimeout(refreshLikes, 500)
+  }
+
+  // Load likes data on mount
+  useEffect(() => {
+    if (content.engagement.likes > 0) {
+      refreshLikes()
+    }
+  }, [])
 
   // ฟังก์ชันสำหรับแสดง media ตามประเภท
   const renderMedia = () => {
@@ -238,12 +274,21 @@ export const PostCard = function PostCard({
         <div className="px-4 py-2">
           <div className="flex items-center justify-between text-sm text-muted-foreground border-b border-border pb-2">
             <div className="flex items-center space-x-1">
-              <div className="flex -space-x-1">
-                <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                  <Heart className="h-3 w-3 text-white fill-current" />
-                </div>
-              </div>
-              <span className="ml-2">{content.engagement.likes}</span>
+              {likeUsers && likeUsers.length > 0 ? (
+                <LikeUsersDisplay 
+                  likeUsers={likeUsers} 
+                  totalLikes={content.engagement.likes} 
+                />
+              ) : (
+                <>
+                  <div className="flex -space-x-1">
+                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                      <Heart className="h-3 w-3 text-white fill-current" />
+                    </div>
+                  </div>
+                  <span className="ml-2">{content.engagement.likes}</span>
+                </>
+              )}
             </div>
 
             <div>
@@ -260,7 +305,7 @@ export const PostCard = function PostCard({
               variant="ghost"
               size="sm"
               className={`flex-1 ${item.hasLiked ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:bg-muted'}`}
-              onClick={() => toggleLike(item.id)}>
+              onClick={handleToggleLike}>
               {item.hasLiked ? (
                 <Heart className="h-5 w-5 mr-2 fill-red-500" />
               ) : (
