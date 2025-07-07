@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kpi-ai-v1.0.0';
+const CACHE_NAME = 'kpi-ai-v1.0.1';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -31,18 +31,51 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Skip service worker for navigation requests to avoid redirect issues in Safari
+  if (event.request.mode === 'navigate') {
+    return;
+  }
+
+  // Skip service worker for API requests to avoid redirect issues
+  if (event.request.url.includes('/api/')) {
+    return;
+  }
+
+  // Only handle static assets (manifest, icons, images)
+  const isStaticAsset = event.request.url.includes('manifest.json') || 
+                        event.request.url.includes('.png') ||
+                        event.request.url.includes('.ico') ||
+                        event.request.url.includes('.jpg') ||
+                        event.request.url.includes('.jpeg') ||
+                        event.request.url.includes('.webp') ||
+                        event.request.url.includes('.svg');
+
+  if (!isStaticAsset) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Always try to fetch from network first for manifest and icons
-        if (event.request.url.includes('manifest.json') || 
-            event.request.url.includes('.png') ||
-            event.request.url.includes('.ico')) {
-          return fetch(event.request).catch(() => response);
+        if (response) {
+          return response;
         }
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
-      }
-    )
+        
+        return fetch(event.request)
+          .then((response) => {
+            // Don't cache if response is not ok
+            if (!response || !response.ok) {
+              return response;
+            }
+
+            // Cache the response
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+
+            return response;
+          });
+      })
   );
 }); 

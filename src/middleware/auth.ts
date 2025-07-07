@@ -9,29 +9,31 @@ export async function authMiddleware(req: NextRequest) {
   const isAuthPage = path.startsWith('/auth')
   const isCreatePage = path === '/create'
 
-  // If user is not logged in and trying to access protected routes
-  if (!token && !isAuthPage) {
-    return NextResponse.redirect(new URL('/auth/login', req.url))
+  // Handle unauthenticated users
+  if (!token) {
+    if (!isAuthPage) {
+      return NextResponse.redirect(new URL('/auth/login', req.url))
+    }
+    return NextResponse.next()
   }
 
-  // If user is logged in and trying to access login page
-  if (token && isAuthPage) {
-    // ตรวจสอบว่ามี character หรือยัง
-    if (!token.characterId) {
+  // Handle authenticated users
+  if (token) {
+    // User is on auth page but already logged in
+    if (isAuthPage) {
+      const redirectUrl = token.characterId ? '/' : '/create'
+      return NextResponse.redirect(new URL(redirectUrl, req.url))
+    }
+
+    // User needs to create character
+    if (!token.characterId && !isCreatePage) {
       return NextResponse.redirect(new URL('/create', req.url))
     }
 
-    return NextResponse.redirect(new URL('/', req.url))
-  }
-
-  // If user is logged in but doesn't have character and not on create page
-  if (token && !token.characterId && !isCreatePage) {
-    return NextResponse.redirect(new URL('/create', req.url))
-  }
-
-  // **เพิ่มส่วนนี้** - If user is logged in, has character, and trying to access create page
-  if (token && token.characterId && isCreatePage) {
-    return NextResponse.redirect(new URL('/', req.url))
+    // User has character but trying to access create page
+    if (token.characterId && isCreatePage) {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
   }
 
   return NextResponse.next()
