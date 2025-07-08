@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 
 import { Badge } from '@src/components/ui/badge'
 import { Button } from '@src/components/ui/button'
-import { useNotification } from '@src/components/ui/notification-system'
 import {
   Sheet,
   SheetContent,
@@ -12,32 +11,80 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@src/components/ui/sheet'
-import { Bell, Info, X } from 'lucide-react'
+import { Bell, Info, X, Heart, MessageCircle } from 'lucide-react'
+import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead } from '@src/features/notifications/hooks/api'
 
 export default function NotificationSheet() {
   const [isOpen, setIsOpen] = useState(false)
-  const {
-    notifications,
-    markAsRead,
-    markAllAsRead,
-    removeNotification,
-    unreadCount,
-  } = useNotification()
+  const [page, setPage] = useState(1)
+  
+  const { data: notificationData, isLoading, refetch, error } = useNotifications(page, 20)
+  const { data: unreadCountData, refetch: refetchUnreadCount, error: unreadError } = useUnreadCount()
+  const markAsReadMutation = useMarkAsRead()
+  const markAllAsReadMutation = useMarkAllAsRead()
+
+  const notifications = notificationData?.notifications || []
+  const unreadCount = unreadCountData?.count || 0
+
+  // Debug logs
+  console.log('🔔 NotificationSheet Debug:', {
+    isLoading,
+    notificationData,
+    unreadCountData,
+    error,
+    unreadError,
+    notifications: notifications.length,
+    unreadCount
+  })
 
   // Helper to format notification time
-  const formatTime = (date: Date) => {
+  const formatTime = (date: Date | string) => {
     const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
+    const notificationDate = new Date(date)
+    const diffMs = now.getTime() - notificationDate.getTime()
     const diffMins = Math.round(diffMs / 60000)
     const diffHours = Math.round(diffMs / 3600000)
     const diffDays = Math.round(diffMs / 86400000)
 
     if (diffMins < 60) {
-      return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`
+      return `${diffMins} ${diffMins === 1 ? 'นาที' : 'นาที'} ที่แล้ว`
     } else if (diffHours < 24) {
-      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
+      return `${diffHours} ${diffHours === 1 ? 'ชั่วโมง' : 'ชั่วโมง'} ที่แล้ว`
     } else {
-      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
+      return `${diffDays} ${diffDays === 1 ? 'วัน' : 'วัน'} ที่แล้ว`
+    }
+  }
+
+  const handleMarkAsRead = async (notificationId: number) => {
+    try {
+      await markAsReadMutation.mutateAsync(notificationId)
+      refetch()
+      refetchUnreadCount()
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+    }
+  }
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsReadMutation.mutateAsync()
+      refetch()
+      refetchUnreadCount()
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error)
+    }
+  }
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'like':
+        return <Heart className="h-5 w-5 text-red-400" />
+      case 'comment':
+        return <MessageCircle className="h-5 w-5 text-blue-400" />
+      case 'reply':
+        return <MessageCircle className="h-5 w-5 text-green-400" />
+      default:
+        return <Info className="h-5 w-5 text-gray-400" />
     }
   }
 
@@ -56,20 +103,26 @@ export default function NotificationSheet() {
 
       <SheetContent side="right" className="w-[90vw] sm:max-w-md">
         <SheetHeader className="flex flex-row items-center justify-between pr-8">
-          <SheetTitle>Notifications</SheetTitle>
+          <SheetTitle>การแจ้งเตือน</SheetTitle>
           {unreadCount > 0 && (
             <Button
               variant="outline"
               size="sm"
               className="text-xs h-7 px-2"
-              onClick={markAllAsRead}>
-              Mark all as read
+              onClick={handleMarkAllAsRead}
+              disabled={markAllAsReadMutation.isPending}>
+              {markAllAsReadMutation.isPending ? 'กำลังอ่าน...' : 'อ่านทั้งหมด'}
             </Button>
           )}
         </SheetHeader>
 
         <div className="mt-4 space-y-2 pb-16 max-h-[calc(100vh-120px)] overflow-y-auto">
-          {notifications.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2">กำลังโหลด...</p>
+            </div>
+          ) : notifications.length > 0 ? (
             notifications.map((notification) => (
               <div
                 key={notification.id}
@@ -77,21 +130,11 @@ export default function NotificationSheet() {
                   notification.isRead
                     ? 'bg-background border-border'
                     : 'bg-secondary/5 border-primary/10'
-                } hover:bg-secondary/10 transition-colors`}
-                onClick={() => markAsRead(notification.id)}>
+                } hover:bg-secondary/10 transition-colors cursor-pointer`}
+                onClick={() => handleMarkAsRead(notification.id)}>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
-                    <Info
-                      className={`h-5 w-5 ${
-                        notification.type === 'success'
-                          ? 'text-green-400'
-                          : notification.type === 'error'
-                            ? 'text-red-400'
-                            : notification.type === 'warning'
-                              ? 'text-yellow-400'
-                              : 'text-blue-400'
-                      }`}
-                    />
+                    {getNotificationIcon(notification.type)}
                   </div>
 
                   <div className="flex-1">
@@ -100,8 +143,7 @@ export default function NotificationSheet() {
                         {notification.title}
                       </h4>
                       <span className="text-xs text-muted-foreground">
-                        {notification.timestamp &&
-                          formatTime(notification.timestamp)}
+                        {formatTime(notification.createdAt)}
                       </span>
                     </div>
                     <p className="text-sm mt-1 text-muted-foreground">
@@ -109,23 +151,16 @@ export default function NotificationSheet() {
                     </p>
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeNotification(notification.id)
-                    }}>
-                    <X className="h-3 w-3" />
-                  </Button>
+                  {!notification.isRead && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  )}
                 </div>
               </div>
             ))
           ) : (
             <div className="text-center py-10 text-muted-foreground">
               <Bell className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
-              <p>No notifications yet</p>
+              <p>ยังไม่มีการแจ้งเตือน</p>
             </div>
           )}
         </div>

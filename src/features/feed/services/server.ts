@@ -9,6 +9,7 @@ import {
   likeRepository,
   storyRepository,
 } from '../repository'
+import { notificationService } from '@src/features/notifications/services/server'
 
 // Feed Service
 export class FeedService extends BaseService {
@@ -293,10 +294,48 @@ export class LikeService extends BaseService {
       return { liked: false }
     }
 
+    // สร้าง like
     await likeRepository.create({
       userId,
       feedItemId,
     })
+
+    // ส่งแจ้งเตือนให้เจ้าของฟีด (ถ้าไม่ใช่ตัวเอง)
+    try {
+      console.log('🔍 Checking if notification should be sent for like...')
+      
+      const feedItem = await feedRepository.findById(feedItemId, {
+        include: { user: { include: { character: true } } }
+      })
+      
+      console.log('📝 Feed item found:', {
+        feedId: feedItemId,
+        feedOwnerId: feedItem?.userId,
+        likerId: userId,
+        shouldSendNotification: feedItem && feedItem.userId !== userId
+      })
+      
+      if (feedItem && feedItem.userId !== userId) {
+        // ใช้ข้อมูลจาก session
+        const likerName = session.user.name || 'Unknown User'
+        console.log('📤 Sending like notification:', {
+          feedOwnerId: feedItem.userId,
+          likerName
+        })
+        
+        await notificationService.createLikeNotification({
+          feedOwnerId: feedItem.userId,
+          likerName,
+        })
+        
+        console.log('✅ Like notification sent successfully')
+      } else {
+        console.log('ℹ️ No notification sent (own post or feed not found)')
+      }
+    } catch (error) {
+      console.error('❌ Error creating like notification:', error)
+      // ไม่ให้ error ใน notification กระทบต่อการทำงานหลัก
+    }
 
     return { liked: true }
   }
@@ -363,11 +402,51 @@ export class CommentService extends BaseService {
 
     console.log(`[SERVER] createComment: ${feedItemId}`)
 
-    return commentRepository.create({
+    const comment = await commentRepository.create({
       feedItemId,
       userId,
       content,
     })
+
+    // ส่งแจ้งเตือนให้เจ้าของฟีด (ถ้าไม่ใช่ตัวเอง)
+    try {
+      console.log('🔍 Checking if notification should be sent for comment...')
+      
+      const feedItem = await feedRepository.findById(feedItemId, {
+        include: { user: { include: { character: true } } }
+      })
+      
+      console.log('📝 Feed item found:', {
+        feedId: feedItemId,
+        feedOwnerId: feedItem?.userId,
+        commenterId: userId,
+        shouldSendNotification: feedItem && feedItem.userId !== userId
+      })
+      
+      if (feedItem && feedItem.userId !== userId) {
+        const commenterName = session.user.name || 'Unknown User'
+        console.log('📤 Sending comment notification:', {
+          feedOwnerId: feedItem.userId,
+          commenterName,
+          comment: content
+        })
+        
+        await notificationService.createCommentNotification({
+          feedOwnerId: feedItem.userId,
+          commenterName,
+          comment: content,
+        })
+        
+        console.log('✅ Comment notification sent successfully')
+      } else {
+        console.log('ℹ️ No notification sent (own post or feed not found)')
+      }
+    } catch (error) {
+      console.error('❌ Error creating comment notification:', error)
+      // ไม่ให้ error ใน notification กระทบต่อการทำงานหลัก
+    }
+
+    return comment
   }
 
   async createReplyComment(data: {
@@ -375,7 +454,29 @@ export class CommentService extends BaseService {
     userId: number
     content: string
   }) {
-    return commentRepository.createReply(data)
+    const reply = await commentRepository.createReply(data)
+
+    // ส่งแจ้งเตือนให้เจ้าของความคิดเห็นต้นฉบับ (ถ้าไม่ใช่ตัวเอง)
+    try {
+      const originalComment = await commentRepository.findById(data.commentId)
+      
+      if (originalComment && originalComment.userId !== data.userId) {
+        // ใช้ข้อมูลจาก session แทน
+        const session = await getServerSession()
+        const replierName = session.user.name || 'Unknown User'
+        
+        await notificationService.createReplyNotification({
+          originalCommenterId: originalComment.userId,
+          replierName,
+          reply: data.content,
+        })
+      }
+    } catch (error) {
+      console.error('Error creating reply notification:', error)
+      // ไม่ให้ error ใน notification กระทบต่อการทำงานหลัก
+    }
+
+    return reply
   }
 
   async deleteComment(id: number) {

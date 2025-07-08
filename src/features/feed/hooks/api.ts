@@ -1,10 +1,12 @@
 // src/features/feed/hooks/api.ts
 import { useCallback, useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { feedService } from '../services/client'
 import { FeedItemUI, StoryUI } from '../types'
 
 export function useFeed() {
+  const queryClient = useQueryClient()
   const [feedItems, setFeedItems] = useState<FeedItemUI[]>([])
   const [stories, setStories] = useState<StoryUI[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -259,12 +261,24 @@ export function useFeed() {
         })
       )
 
+      // Invalidate and refetch notification queries for real-time updates
+      console.log('🔄 Invalidating and refetching notification queries after like...')
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      // Force refetch all notification queries
+      queryClient.refetchQueries({ queryKey: ['notifications'] })
+      
+      // Additional delay refetch to ensure server has committed data
+      setTimeout(() => {
+        console.log('🔄 Delayed refetch of notification queries...')
+        queryClient.refetchQueries({ queryKey: ['notifications'] })
+      }, 1000)
+
       return result
     } catch (err) {
       console.error('Toggle like failed:', err)
       throw err
     }
-  }, [])
+  }, [queryClient])
 
   // Add comment
   const addComment = useCallback(
@@ -307,13 +321,25 @@ export function useFeed() {
           })
         )
 
+        // Invalidate and refetch notification queries for real-time updates
+        console.log('🔄 Invalidating and refetching notification queries after comment...')
+        queryClient.invalidateQueries({ queryKey: ['notifications'] })
+        // Force refetch all notification queries
+        queryClient.refetchQueries({ queryKey: ['notifications'] })
+        
+        // Additional delay refetch to ensure server has committed data
+        setTimeout(() => {
+          console.log('🔄 Delayed refetch of notification queries...')
+          queryClient.refetchQueries({ queryKey: ['notifications'] })
+        }, 1000)
+
         return newComment
       } catch (err) {
         console.error('Add comment failed:', err)
         throw err
       }
     },
-    []
+    [queryClient]
   )
 
   // Format time helper
