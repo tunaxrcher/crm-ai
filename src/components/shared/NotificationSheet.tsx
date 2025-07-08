@@ -60,8 +60,7 @@ export default function NotificationSheet() {
   const handleMarkAsRead = async (notificationId: number) => {
     try {
       await markAsReadMutation.mutateAsync(notificationId)
-      refetch()
-      refetchUnreadCount()
+      // Smart polling จะ handle refetch ให้เอง
     } catch (error) {
       console.error('Error marking notification as read:', error)
     }
@@ -70,8 +69,7 @@ export default function NotificationSheet() {
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsReadMutation.mutateAsync()
-      refetch()
-      refetchUnreadCount()
+      // Smart polling จะ handle refetch ให้เอง
     } catch (error) {
       console.error('Error marking all notifications as read:', error)
     }

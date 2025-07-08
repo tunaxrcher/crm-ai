@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import { feedService } from '../services/client'
 import { FeedItemUI, StoryUI } from '../types'
+import { useSmartPolling } from '@src/hooks/useSmartPolling'
 
 export function useFeed() {
   const queryClient = useQueryClient()
@@ -15,6 +16,15 @@ export function useFeed() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  // Setup smart polling for feed and notifications (ULTRA FAST MODE)
+  const { triggerFastPolling } = useSmartPolling({
+    queryKeys: [['notifications'], ['notifications', 'unread-count']],
+    fastPollDuration: 20,  // poll เร็ว 20 ครั้งหลัง action (สูงสุด)
+    fastInterval: 400,     // ทุก 0.4 วินาที (เร็วมาก)
+    slowInterval: 10000,   // ทุก 10 วินาที (เร็วสุด)
+    ultraFastMode: true,   // 🚀⚡ ULTRA FAST MODE สำหรับ feed actions
+  })
 
   // Load more function
   const loadMore = useCallback(async () => {
@@ -261,21 +271,10 @@ export function useFeed() {
         })
       )
 
-      // Invalidate and refetch notification queries for real-time updates
-      console.log('🔄 Invalidating and refetching notification queries after like...')
+      // Trigger smart polling for fast updates
+      console.log('👍 Like action - triggering smart polling for notifications')
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      
-      // Immediate refetch to catch notification faster
-      setTimeout(() => {
-        console.log('🔄 Immediate refetch of notification queries (200ms)...')
-        queryClient.refetchQueries({ queryKey: ['notifications'] })
-      }, 200)
-      
-      // Delayed refetch to ensure notification is caught if server is slow
-      setTimeout(() => {
-        console.log('🔄 Delayed refetch of notification queries (1.5s)...')
-        queryClient.refetchQueries({ queryKey: ['notifications'] })
-      }, 1500)
+      triggerFastPolling()
 
       return result
     } catch (err) {
@@ -325,21 +324,10 @@ export function useFeed() {
           })
         )
 
-        // Invalidate and refetch notification queries for real-time updates
-        console.log('🔄 Invalidating and refetching notification queries after comment...')
+        // Trigger smart polling for fast updates
+        console.log('💬 Comment action - triggering smart polling for notifications')
         queryClient.invalidateQueries({ queryKey: ['notifications'] })
-        
-        // Immediate refetch to catch notification faster
-        setTimeout(() => {
-          console.log('🔄 Immediate refetch of notification queries (200ms)...')
-          queryClient.refetchQueries({ queryKey: ['notifications'] })
-        }, 200)
-        
-        // Delayed refetch to ensure notification is caught if server is slow
-        setTimeout(() => {
-          console.log('🔄 Delayed refetch of notification queries (1.5s)...')
-          queryClient.refetchQueries({ queryKey: ['notifications'] })
-        }, 1500)
+        triggerFastPolling()
 
         return newComment
       } catch (err) {
