@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { Badge } from '@src/components/ui/badge'
 import { Button } from '@src/components/ui/button'
@@ -17,6 +18,7 @@ import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead } fro
 export default function NotificationSheet() {
   const [isOpen, setIsOpen] = useState(false)
   const [page, setPage] = useState(1)
+  const router = useRouter()
   
   const { data: notificationData, isLoading, refetch, error } = useNotifications(page, 20)
   const { data: unreadCountData, refetch: refetchUnreadCount, error: unreadError } = useUnreadCount()
@@ -72,6 +74,40 @@ export default function NotificationSheet() {
       refetchUnreadCount()
     } catch (error) {
       console.error('Error marking all notifications as read:', error)
+    }
+  }
+
+  const handleNotificationClick = async (notification: any) => {
+    console.log('🔔 Notification clicked:', notification)
+    console.log('📝 Notification data:', {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      feedId: notification.feedId,
+      isRead: notification.isRead
+    })
+    
+    try {
+      // Mark notification as read
+      if (!notification.isRead) {
+        console.log('📖 Marking notification as read...')
+        await handleMarkAsRead(notification.id)
+      }
+
+      // Close the notification sheet
+      console.log('❌ Closing notification sheet...')
+      setIsOpen(false)
+
+      // Redirect to the related feed if feedId exists
+      if (notification.feedId) {
+        console.log('🔄 Redirecting to feed:', notification.feedId)
+        router.push(`/feed/${notification.feedId}`)
+      } else {
+        console.log('ℹ️ No feedId found in notification, staying on current page')
+        console.log('🔍 Available notification fields:', Object.keys(notification))
+      }
+    } catch (error) {
+      console.error('❌ Error handling notification click:', error)
     }
   }
 
@@ -131,7 +167,7 @@ export default function NotificationSheet() {
                     ? 'bg-background border-border'
                     : 'bg-secondary/5 border-primary/10'
                 } hover:bg-secondary/10 transition-colors cursor-pointer`}
-                onClick={() => handleMarkAsRead(notification.id)}>
+                onClick={() => handleNotificationClick(notification)}>
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
                     {getNotificationIcon(notification.type)}

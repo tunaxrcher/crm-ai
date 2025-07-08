@@ -122,18 +122,61 @@ export class FeedService extends BaseService {
   async getFeedItemById(id: number) {
     return feedRepository.findById(id, {
       include: {
-        user: true,
+        user: {
+          include: {
+            character: {
+              include: {
+                currentJobLevel: true,
+              },
+            },
+          },
+        },
         likes: {
-          include: { user: true },
+          include: {
+            user: {
+              include: {
+                character: {
+                  include: {
+                    currentJobLevel: true,
+                  },
+                },
+              },
+            },
+          },
         },
         comments: {
           include: {
-            user: true,
+            user: {
+              include: {
+                character: {
+                  include: {
+                    currentJobLevel: true,
+                  },
+                },
+              },
+            },
             replies: {
-              include: { user: true },
+              include: { 
+                user: {
+                  include: {
+                    character: {
+                      include: {
+                        currentJobLevel: true,
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
           orderBy: { createdAt: 'desc' },
+        },
+        questSubmission: {
+          include: { quest: true },
+        },
+        levelHistory: true,
+        achievement: {
+          include: { achievement: true },
         },
       },
     })
@@ -329,6 +372,7 @@ export class LikeService extends BaseService {
         await notificationService.createLikeNotification({
           feedOwnerId: feedItem.userId,
           likerName,
+          feedId: feedItemId,
         })
         
         console.log('✅ Like notification sent successfully')
@@ -438,6 +482,7 @@ export class CommentService extends BaseService {
           feedOwnerId: feedItem.userId,
           commenterName,
           comment: content,
+          feedId: feedItemId,
         })
         
         console.log('✅ Comment notification sent successfully')

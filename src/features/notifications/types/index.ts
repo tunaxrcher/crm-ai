@@ -6,6 +6,7 @@ export interface NotificationBase {
   isRead: boolean
   createdAt: Date
   userId: number
+  feedId?: number // Optional reference to related feed item
 }
 
 export interface CreateNotificationData {
@@ -13,6 +14,7 @@ export interface CreateNotificationData {
   title: string
   message: string
   userId: number
+  feedId?: number // Optional reference to related feed item
 }
 
 export interface NotificationResponse extends NotificationBase {

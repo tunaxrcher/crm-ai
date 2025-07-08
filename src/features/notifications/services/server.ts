@@ -30,6 +30,7 @@ export class NotificationService extends BaseService {
       title: data.title,
       message: data.message,
       userId: data.userId,
+      feedId: data.feedId, // Include feedId if provided
       isRead: false,
     }
     
@@ -80,7 +81,8 @@ export class NotificationService extends BaseService {
   // Helper methods for creating specific types of notifications
   async createLikeNotification(data: { 
     feedOwnerId: number, 
-    likerName: string 
+    likerName: string,
+    feedId: number 
   }) {
     console.log('🔔 Creating like notification:', data)
     
@@ -92,6 +94,7 @@ export class NotificationService extends BaseService {
       title: template.title,
       message,
       userId: data.feedOwnerId,
+      feedId: data.feedId, // Include feedId for redirect
     }
     
     console.log('📝 Like notification data to create:', notificationData)
@@ -111,7 +114,8 @@ export class NotificationService extends BaseService {
   async createCommentNotification(data: { 
     feedOwnerId: number, 
     commenterName: string, 
-    comment: string 
+    comment: string,
+    feedId: number 
   }) {
     console.log('🔔 Creating comment notification:', data)
     
@@ -129,6 +133,7 @@ export class NotificationService extends BaseService {
       title: template.title,
       message,
       userId: data.feedOwnerId,
+      feedId: data.feedId, // Include feedId for redirect
     }
     
     console.log('📝 Comment notification data to create:', notificationData)

@@ -186,6 +186,7 @@ model FeedItem {
   questSubmission   QuestSubmission?      @relation(fields: [questSubmissionId], references: [id])
   user              User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   likes             Like[]
+  notifications     Notification[]        // Notifications related to this feed item
 
   @@index([achievementId], map: "FeedItem_achievementId_fkey")
   @@index([levelHistoryId], map: "FeedItem_levelHistoryId_fkey")
@@ -357,9 +358,12 @@ model Notification {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
   userId    Int
+  feedId    Int?     // Optional reference to the related feed item
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedItem  FeedItem? @relation(fields: [feedId], references: [id], onDelete: Cascade)
 
   @@index([userId], map: "Notification_userId_fkey")
+  @@index([feedId], map: "Notification_feedId_fkey")
 }
 
 model UserToken {
