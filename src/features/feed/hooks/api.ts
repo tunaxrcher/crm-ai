@@ -265,21 +265,17 @@ export function useFeed() {
       console.log('🔄 Invalidating and refetching notification queries after like...')
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
       
-      // Multiple delayed refetches to ensure notification is caught
+      // Immediate refetch to catch notification faster
       setTimeout(() => {
-        console.log('🔄 1st delayed refetch of notification queries (500ms)...')
+        console.log('🔄 Immediate refetch of notification queries (200ms)...')
         queryClient.refetchQueries({ queryKey: ['notifications'] })
-      }, 500)
+      }, 200)
       
+      // Delayed refetch to ensure notification is caught if server is slow
       setTimeout(() => {
-        console.log('🔄 2nd delayed refetch of notification queries (1.5s)...')
+        console.log('🔄 Delayed refetch of notification queries (1.5s)...')
         queryClient.refetchQueries({ queryKey: ['notifications'] })
       }, 1500)
-      
-      setTimeout(() => {
-        console.log('🔄 3rd delayed refetch of notification queries (3s)...')
-        queryClient.refetchQueries({ queryKey: ['notifications'] })
-      }, 3000)
 
       return result
     } catch (err) {
@@ -333,14 +329,15 @@ export function useFeed() {
         console.log('🔄 Invalidating and refetching notification queries after comment...')
         queryClient.invalidateQueries({ queryKey: ['notifications'] })
         
-        // Multiple delayed refetches to ensure notification is caught
+        // Immediate refetch to catch notification faster
         setTimeout(() => {
-          console.log('🔄 1st delayed refetch of notification queries (500ms)...')
+          console.log('🔄 Immediate refetch of notification queries (200ms)...')
           queryClient.refetchQueries({ queryKey: ['notifications'] })
-        }, 500)
+        }, 200)
         
+        // Delayed refetch to ensure notification is caught if server is slow
         setTimeout(() => {
-          console.log('🔄 2nd delayed refetch of notification queries (1.5s)...')
+          console.log('🔄 Delayed refetch of notification queries (1.5s)...')
           queryClient.refetchQueries({ queryKey: ['notifications'] })
         }, 1500)
 

@@ -4,6 +4,7 @@ export class NotificationToastService {
   private static instance: NotificationToastService
   private lastUnreadCount = 0
   private lastNotificationId = 0
+  private shownNotificationIds = new Set<number>() // Track shown notifications
   private toastContext: ReturnType<typeof useToast> | null = null
 
   private constructor() {}
@@ -27,36 +28,41 @@ export class NotificationToastService {
       newUnreadCount,
       lastUnreadCount: this.lastUnreadCount,
       lastNotificationId: this.lastNotificationId,
+      shownNotificationsCount: this.shownNotificationIds.size,
       latestNotifications: latestNotifications.map(n => ({ id: n.id, type: n.type }))
     })
     
-    // เช็คว่ามี notification ใหม่หรือไม่
-    if (newUnreadCount > this.lastUnreadCount && latestNotifications.length > 0) {
-      // ตรวจสอบ notification ใหม่ทั้งหมดที่ยังไม่ได้แสดง
-      const newNotifications = latestNotifications
-        .filter(notification => notification.id > this.lastNotificationId)
-        .sort((a, b) => b.id - a.id) // เรียงจากใหม่ไปเก่า
-      
-      console.log('🍞 Toast Service - Found new notifications:', newNotifications.map(n => ({ id: n.id, type: n.type })))
-      
-      // แสดง toast สำหรับ notification ใหม่ล่าสุด
-      if (newNotifications.length > 0) {
-        const latestNotification = newNotifications[0]
-        console.log('🍞 Toast Service - Showing toast for:', latestNotification)
-        
-        // เช็คเฉพาะ like notification
-        if (latestNotification.type === 'like') {
-          console.log('💖 Toast Service - LIKE notification detected!', {
-            id: latestNotification.id,
-            title: latestNotification.title,
-            message: latestNotification.message,
-            userId: latestNotification.userId
-          })
-        }
-        
-        this.showToastForNotification(latestNotification)
-        this.lastNotificationId = latestNotification.id
-      }
+    // ตรวจสอบ notification ใหม่ทั้งหมดที่ยังไม่ได้แสดง
+    const newNotifications = latestNotifications
+      .filter(notification => 
+        !this.shownNotificationIds.has(notification.id) &&
+        notification.id > this.lastNotificationId
+      )
+      .sort((a, b) => a.id - b.id) // เรียงจากเก่าไปใหม่ เพื่อแสดงตามลำดับ
+    
+    console.log('🍞 Toast Service - Found new notifications:', newNotifications.map(n => ({ id: n.id, type: n.type })))
+    
+    // แสดง toast สำหรับ notification ใหม่ทั้งหมด
+    if (newNotifications.length > 0) {
+      newNotifications.forEach((notification, index) => {
+        setTimeout(() => {
+          console.log('🍞 Toast Service - Showing toast for:', notification)
+          
+          // เช็คเฉพาะ like notification
+          if (notification.type === 'like') {
+            console.log('💖 Toast Service - LIKE notification detected!', {
+              id: notification.id,
+              title: notification.title,
+              message: notification.message,
+              userId: notification.userId
+            })
+          }
+          
+          this.showToastForNotification(notification)
+          this.shownNotificationIds.add(notification.id)
+          this.lastNotificationId = Math.max(this.lastNotificationId, notification.id)
+        }, index * 1000) // แสดงห่างกัน 1 วินาที
+      })
     } else {
       console.log('🍞 Toast Service - No new notifications to show:', {
         unreadCountChanged: newUnreadCount !== this.lastUnreadCount,
@@ -130,6 +136,7 @@ export class NotificationToastService {
   public resetCounters() {
     this.lastUnreadCount = 0
     this.lastNotificationId = 0
+    this.shownNotificationIds.clear()
   }
 }
 

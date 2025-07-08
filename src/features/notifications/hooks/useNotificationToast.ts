@@ -39,7 +39,7 @@ export function useNotificationToast() {
       unreadCount,
       notificationsCount: notifications.length,
       isInitialized: isInitialized.current,
-      latestNotificationId: notifications[0]?.id
+      latestNotifications: notifications.slice(0, 3).map(n => ({ id: n.id, type: n.type, createdAt: n.createdAt }))
     })
 
     // รอให้ initialize ครับก่อน
@@ -48,7 +48,7 @@ export function useNotificationToast() {
       console.log('🍞 Initializing toast service...')
       console.log('🍞 Initial notifications check:', {
         unreadCount,
-        notifications: notifications.map(n => ({ id: n.id, type: n.type, message: n.message }))
+        notifications: notifications.slice(0, 5).map(n => ({ id: n.id, type: n.type, message: n.message.substring(0, 50) + '...' }))
       })
       notificationToastService.checkForNewNotifications(unreadCount, notifications)
       isInitialized.current = true
@@ -56,6 +56,7 @@ export function useNotificationToast() {
     }
 
     // เช็คว่ามี notification ใหม่
+    console.log('🍞 Checking for new notifications...')
     notificationToastService.checkForNewNotifications(unreadCount, notifications)
   }, [notificationData, unreadCountData, session?.user?.id])
 
