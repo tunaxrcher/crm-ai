@@ -264,14 +264,22 @@ export function useFeed() {
       // Invalidate and refetch notification queries for real-time updates
       console.log('🔄 Invalidating and refetching notification queries after like...')
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
-      // Force refetch all notification queries
-      queryClient.refetchQueries({ queryKey: ['notifications'] })
       
-      // Additional delay refetch to ensure server has committed data
+      // Multiple delayed refetches to ensure notification is caught
       setTimeout(() => {
-        console.log('🔄 Delayed refetch of notification queries...')
+        console.log('🔄 1st delayed refetch of notification queries (500ms)...')
         queryClient.refetchQueries({ queryKey: ['notifications'] })
-      }, 1000)
+      }, 500)
+      
+      setTimeout(() => {
+        console.log('🔄 2nd delayed refetch of notification queries (1.5s)...')
+        queryClient.refetchQueries({ queryKey: ['notifications'] })
+      }, 1500)
+      
+      setTimeout(() => {
+        console.log('🔄 3rd delayed refetch of notification queries (3s)...')
+        queryClient.refetchQueries({ queryKey: ['notifications'] })
+      }, 3000)
 
       return result
     } catch (err) {
@@ -324,14 +332,17 @@ export function useFeed() {
         // Invalidate and refetch notification queries for real-time updates
         console.log('🔄 Invalidating and refetching notification queries after comment...')
         queryClient.invalidateQueries({ queryKey: ['notifications'] })
-        // Force refetch all notification queries
-        queryClient.refetchQueries({ queryKey: ['notifications'] })
         
-        // Additional delay refetch to ensure server has committed data
+        // Multiple delayed refetches to ensure notification is caught
         setTimeout(() => {
-          console.log('🔄 Delayed refetch of notification queries...')
+          console.log('🔄 1st delayed refetch of notification queries (500ms)...')
           queryClient.refetchQueries({ queryKey: ['notifications'] })
-        }, 1000)
+        }, 500)
+        
+        setTimeout(() => {
+          console.log('🔄 2nd delayed refetch of notification queries (1.5s)...')
+          queryClient.refetchQueries({ queryKey: ['notifications'] })
+        }, 1500)
 
         return newComment
       } catch (err) {

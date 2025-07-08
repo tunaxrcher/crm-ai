@@ -94,11 +94,16 @@ export class NotificationService extends BaseService {
       userId: data.feedOwnerId,
     }
     
-    console.log('📝 Notification data to create:', notificationData)
+    console.log('📝 Like notification data to create:', notificationData)
 
     const result = await this.createNotification(notificationData)
     
-    console.log('✅ Like notification created:', result)
+    console.log('✅ Like notification created with ID:', result.id)
+    
+    // เพิ่ม delay เล็กน้อยเพื่อให้แน่ใจว่า database commit แล้ว
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    console.log('💾 Like notification committed to database')
     
     return result
   }

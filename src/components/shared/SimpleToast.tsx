@@ -123,7 +123,7 @@ const ToastContainer: React.FC<{
   removeToast: (id: string) => void
 }> = ({ toasts, removeToast }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 w-80">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col-reverse gap-2 w-80">
       {toasts.map((toast) => (
         <div
           key={toast.id}
@@ -132,7 +132,7 @@ const ToastContainer: React.FC<{
             getToastColor(toast.type)
           )}
           style={{
-            animation: 'slideIn 0.3s forwards',
+            animation: 'slideInFromBottom 0.3s forwards',
           }}>
           <div className="flex items-start gap-3">
             <div className="mt-0.5">{getToastIcon(toast.type)}</div>
@@ -151,14 +151,14 @@ const ToastContainer: React.FC<{
         </div>
       ))}
       <style jsx global>{`
-        @keyframes slideIn {
+        @keyframes slideInFromBottom {
           from {
             opacity: 0;
-            transform: translateX(30px);
+            transform: translateY(30px) translateX(30px);
           }
           to {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0) translateX(0);
           }
         }
       `}</style>

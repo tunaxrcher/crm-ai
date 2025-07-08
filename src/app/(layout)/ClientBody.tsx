@@ -17,6 +17,7 @@ import {
 } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
 import { useCheckinStatus } from '@src/features/checkin/hooks/api'
+import { useNotificationToast } from '@src/features/notifications/hooks/useNotificationToast'
 import {
   Activity,
   CheckCircle2,
@@ -45,6 +46,9 @@ export default function ClientBody({
 // Inner component without notification context
 function ClientBodyInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  
+  // Initialize notification toast system
+  useNotificationToast()
 
   // State for special notification animations
   const [showXPGained, setShowXPGained] = useState(false)

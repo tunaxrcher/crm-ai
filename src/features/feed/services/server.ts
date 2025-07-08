@@ -290,9 +290,12 @@ export class LikeService extends BaseService {
     )
 
     if (existingLike) {
+      console.log('❌ Unlike detected - removing like, no notification sent')
       await likeRepository.delete(existingLike.id)
       return { liked: false }
     }
+
+    console.log('💖 New like detected - will send notification')
 
     // สร้าง like
     await likeRepository.create({
