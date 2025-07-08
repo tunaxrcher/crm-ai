@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
 
 import { Badge } from '@src/components/ui/badge'
@@ -12,16 +13,30 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@src/components/ui/sheet'
-import { Bell, Info, X, Heart, MessageCircle } from 'lucide-react'
-import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead } from '@src/features/notifications/hooks/api'
+import {
+  useMarkAllAsRead,
+  useMarkAsRead,
+  useNotifications,
+  useUnreadCount,
+} from '@src/features/notifications/hooks/api'
+import { Bell, Heart, Info, MessageCircle, X } from 'lucide-react'
 
 export default function NotificationSheet() {
   const [isOpen, setIsOpen] = useState(false)
   const [page, setPage] = useState(1)
   const router = useRouter()
-  
-  const { data: notificationData, isLoading, refetch, error } = useNotifications(page, 20)
-  const { data: unreadCountData, refetch: refetchUnreadCount, error: unreadError } = useUnreadCount()
+
+  const {
+    data: notificationData,
+    isLoading,
+    refetch,
+    error,
+  } = useNotifications(page, 20)
+  const {
+    data: unreadCountData,
+    refetch: refetchUnreadCount,
+    error: unreadError,
+  } = useUnreadCount()
   const markAsReadMutation = useMarkAsRead()
   const markAllAsReadMutation = useMarkAllAsRead()
 
@@ -36,7 +51,7 @@ export default function NotificationSheet() {
     error,
     unreadError,
     notifications: notifications.length,
-    unreadCount
+    unreadCount,
   })
 
   // Helper to format notification time
@@ -82,9 +97,9 @@ export default function NotificationSheet() {
       type: notification.type,
       title: notification.title,
       feedId: notification.feedId,
-      isRead: notification.isRead
+      isRead: notification.isRead,
     })
-    
+
     try {
       // Mark notification as read
       if (!notification.isRead) {
@@ -101,8 +116,13 @@ export default function NotificationSheet() {
         console.log('🔄 Redirecting to feed:', notification.feedId)
         router.push(`/feed/${notification.feedId}`)
       } else {
-        console.log('ℹ️ No feedId found in notification, staying on current page')
-        console.log('🔍 Available notification fields:', Object.keys(notification))
+        console.log(
+          'ℹ️ No feedId found in notification, staying on current page'
+        )
+        console.log(
+          '🔍 Available notification fields:',
+          Object.keys(notification)
+        )
       }
     } catch (error) {
       console.error('❌ Error handling notification click:', error)

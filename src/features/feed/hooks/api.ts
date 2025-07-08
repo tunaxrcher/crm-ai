@@ -1,15 +1,20 @@
 // src/features/feed/hooks/api.ts
 import { useCallback, useEffect, useState } from 'react'
+
+import { useSmartPolling } from '@src/hooks/useSmartPolling'
+import {
+  createCacheAwareMutation,
+  useCacheStore,
+  useFeedStore,
+} from '@src/stores'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { feedService } from '../services/client'
 import { FeedItemUI, StoryUI } from '../types'
-import { useSmartPolling } from '@src/hooks/useSmartPolling'
-import { useFeedStore, useCacheStore, createCacheAwareMutation } from '@src/stores'
 
 export function useFeed() {
   const queryClient = useQueryClient()
-  
+
   // Use Zustand store instead of local state
   const {
     feedItems,
@@ -41,10 +46,10 @@ export function useFeed() {
   // Setup smart polling for feed and notifications (ULTRA FAST MODE)
   const { triggerFastPolling } = useSmartPolling({
     queryKeys: [['notifications'], ['notifications', 'unread-count']],
-    fastPollDuration: 20,  // poll เร็ว 20 ครั้งหลัง action (สูงสุด)
-    fastInterval: 400,     // ทุก 0.4 วินาที (เร็วมาก)
-    slowInterval: 10000,   // ทุก 10 วินาที (เร็วสุด)
-    ultraFastMode: true,   // 🚀⚡ ULTRA FAST MODE สำหรับ feed actions
+    fastPollDuration: 20, // poll เร็ว 20 ครั้งหลัง action (สูงสุด)
+    fastInterval: 400, // ทุก 0.4 วินาที (เร็วมาก)
+    slowInterval: 10000, // ทุก 10 วินาที (เร็วสุด)
+    ultraFastMode: true, // 🚀⚡ ULTRA FAST MODE สำหรับ feed actions
   })
 
   // Load more function
@@ -81,7 +86,16 @@ export function useFeed() {
     } finally {
       setLoadingMore(false)
     }
-  }, [page, hasMore, isLoadingMore, setLoadingMore, addFeedItems, incrementPage, setHasMore, setError])
+  }, [
+    page,
+    hasMore,
+    isLoadingMore,
+    setLoadingMore,
+    addFeedItems,
+    incrementPage,
+    setHasMore,
+    setError,
+  ])
 
   // Mock data transformer - แปลงข้อมูลจาก API ให้ตรงกับ types ที่ UI ใช้อยู่
   const transformApiToFeedItem = (apiItem: any): FeedItemUI => {
@@ -254,7 +268,16 @@ export function useFeed() {
         setRefreshing(false)
       }
     },
-    [page, setRefreshing, setLoading, setFeedItems, setPage, addFeedItems, setStories, setError]
+    [
+      page,
+      setRefreshing,
+      setLoading,
+      setFeedItems,
+      setPage,
+      addFeedItems,
+      setStories,
+      setError,
+    ]
   )
 
   // Initial load
@@ -268,43 +291,51 @@ export function useFeed() {
   }, [loadFeedData])
 
   // Toggle like with optimistic updates
-  const toggleLike = useCallback(async (feedItemId: string) => {
-    // Find current item to determine hasLiked status
-    const currentItem = feedItems.find(item => item.id === feedItemId)
-    if (!currentItem) return
-    
-    const newHasLiked = !currentItem.hasLiked
+  const toggleLike = useCallback(
+    async (feedItemId: string) => {
+      // Find current item to determine hasLiked status
+      const currentItem = feedItems.find((item) => item.id === feedItemId)
+      if (!currentItem) return
 
-    try {
-      // Optimistic update
-      optimisticToggleLike(feedItemId, newHasLiked)
-      
-      // Trigger cache invalidation
-      useCacheStore.getState().invalidateQueriesForAction('like', { feedItemId, hasLiked: newHasLiked })
+      const newHasLiked = !currentItem.hasLiked
 
-      const result = await feedService.toggleLike(feedItemId)
+      try {
+        // Optimistic update
+        optimisticToggleLike(feedItemId, newHasLiked)
 
-      // Confirm optimistic update with server response
-      confirmLike(feedItemId, {
-        liked: result.liked,
-        likesCount: result.likesCount
-      })
+        // Trigger cache invalidation
+        useCacheStore
+          .getState()
+          .invalidateQueriesForAction('like', {
+            feedItemId,
+            hasLiked: newHasLiked,
+          })
 
-      console.log('👍 Like action - success')
-      return result
-    } catch (err) {
-      console.error('Toggle like failed:', err)
-      // Rollback optimistic update
-      rollbackLike(feedItemId)
-      throw err
-    }
-  }, [feedItems, optimisticToggleLike, confirmLike, rollbackLike])
+        const result = await feedService.toggleLike(feedItemId)
+
+        // Confirm optimistic update with server response
+        confirmLike(feedItemId, {
+          liked: result.liked,
+          likesCount: result.likesCount,
+        })
+
+        console.log('👍 Like action - success')
+        return result
+      } catch (err) {
+        console.error('Toggle like failed:', err)
+        // Rollback optimistic update
+        rollbackLike(feedItemId)
+        throw err
+      }
+    },
+    [feedItems, optimisticToggleLike, confirmLike, rollbackLike]
+  )
 
   // Add comment with optimistic updates
   const addComment = useCallback(
     async (feedItemId: string, content: string) => {
       const optimisticCommentId = `optimistic-${Date.now()}`
-      
+
       try {
         // Create optimistic comment data
         const optimisticComment = {
@@ -314,9 +345,11 @@ export function useFeed() {
 
         // Optimistic update
         optimisticAddComment(feedItemId, optimisticComment)
-        
+
         // Trigger cache invalidation
-        useCacheStore.getState().invalidateQueriesForAction('comment', { feedItemId, content })
+        useCacheStore
+          .getState()
+          .invalidateQueriesForAction('comment', { feedItemId, content })
 
         const newComment = await feedService.createComment(feedItemId, content)
 

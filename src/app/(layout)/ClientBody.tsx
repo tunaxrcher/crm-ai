@@ -46,7 +46,7 @@ export default function ClientBody({
 // Inner component without notification context
 function ClientBodyInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  
+
   // Initialize notification toast system
   useNotificationToast()
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { immer } from 'zustand/middleware/immer'
 import { persist } from 'zustand/middleware'
+import { immer } from 'zustand/middleware/immer'
 
 interface Toast {
   id: string
@@ -28,15 +28,15 @@ interface NotificationState {
   toasts: Toast[]
   shownNotificationIds: Set<string>
   lastSessionTimestamp: number
-  
+
   // Persistent notifications
   notifications: NotificationItem[]
   unreadCount: number
   isLoading: boolean
-  
+
   // UI state
   isNotificationPanelOpen: boolean
-  
+
   // Settings
   enableToasts: boolean
   maxToasts: number
@@ -48,12 +48,12 @@ interface NotificationActions {
   removeToast: (id: string) => void
   clearToasts: () => void
   markToastAsRead: (id: string) => void
-  
+
   // Session management
   clearExpiredShownIds: () => void
   markAsShown: (notificationId: string) => void
   hasBeenShown: (notificationId: string) => boolean
-  
+
   // Persistent notifications
   setNotifications: (notifications: NotificationItem[]) => void
   addNotification: (notification: NotificationItem) => void
@@ -61,22 +61,22 @@ interface NotificationActions {
   markAllAsRead: () => void
   setUnreadCount: (count: number) => void
   setLoading: (loading: boolean) => void
-  
+
   // UI actions
   toggleNotificationPanel: () => void
   setNotificationPanelOpen: (open: boolean) => void
-  
+
   // Settings
   setEnableToasts: (enable: boolean) => void
   setMaxToasts: (max: number) => void
-  
+
   // Optimistic updates
   optimisticLike: (feedId: string, hasLiked: boolean) => void
   optimisticComment: (feedId: string, comment: any) => void
-  
+
   // Internal
   _initializeStore: () => void
-  
+
   // Reset
   reset: () => void
 }
@@ -93,18 +93,22 @@ const initialState: NotificationState = {
   maxToasts: 5,
 }
 
-export const useNotificationStore = create<NotificationState & NotificationActions>()(
+export const useNotificationStore = create<
+  NotificationState & NotificationActions
+>()(
   persist(
     immer((set, get) => ({
       ...initialState,
-      
+
       // Initialize store after rehydration
       _initializeStore: () => {
         const state = get()
         // Convert array back to Set after persistence rehydration
         if (Array.isArray(state.shownNotificationIds)) {
           set((draft) => {
-            draft.shownNotificationIds = new Set(state.shownNotificationIds as any)
+            draft.shownNotificationIds = new Set(
+              state.shownNotificationIds as any
+            )
           })
         }
         get().clearExpiredShownIds()
@@ -113,7 +117,7 @@ export const useNotificationStore = create<NotificationState & NotificationActio
       // Toast actions
       addToast: (toastData) => {
         const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        
+
         set((state) => {
           const newToast: Toast = {
             id,
@@ -121,22 +125,22 @@ export const useNotificationStore = create<NotificationState & NotificationActio
             createdAt: Date.now(),
             isRead: false,
           }
-          
+
           state.toasts.push(newToast)
-          
+
           // Remove oldest toasts if exceeding max
           if (state.toasts.length > state.maxToasts) {
             state.toasts = state.toasts.slice(-state.maxToasts)
           }
         })
-        
+
         // Auto remove toast after duration
         if (toastData.duration !== 0) {
           setTimeout(() => {
             get().removeToast(id)
           }, toastData.duration || 5000)
         }
-        
+
         return id
       },
 
@@ -163,7 +167,7 @@ export const useNotificationStore = create<NotificationState & NotificationActio
         set((state) => {
           const currentTime = Date.now()
           const dayInMs = 24 * 60 * 60 * 1000
-          
+
           // Clear if more than 24 hours old
           if (currentTime - state.lastSessionTimestamp > dayInMs) {
             state.shownNotificationIds.clear()
@@ -192,7 +196,7 @@ export const useNotificationStore = create<NotificationState & NotificationActio
         set((state) => {
           // Add to beginning (newest first)
           state.notifications.unshift(notification)
-          
+
           if (!notification.isRead) {
             state.unreadCount += 1
           }
@@ -260,9 +264,9 @@ export const useNotificationStore = create<NotificationState & NotificationActio
               isRead: false,
               feedId: parseInt(feedId),
               createdAt: new Date().toISOString(),
-              data: { optimistic: true }
+              data: { optimistic: true },
             }
-            
+
             state.notifications.unshift(optimisticNotification)
           }
         }),
@@ -278,9 +282,9 @@ export const useNotificationStore = create<NotificationState & NotificationActio
             isRead: false,
             feedId: parseInt(feedId),
             createdAt: new Date().toISOString(),
-            data: { optimistic: true, comment }
+            data: { optimistic: true, comment },
           }
-          
+
           state.notifications.unshift(optimisticNotification)
         }),
 
@@ -302,7 +306,11 @@ export const useNotificationStore = create<NotificationState & NotificationActio
 
 // Selectors
 export const useToasts = () => useNotificationStore((state) => state.toasts)
-export const useUnreadCount = () => useNotificationStore((state) => state.unreadCount)
-export const useNotifications = () => useNotificationStore((state) => state.notifications)
-export const useNotificationPanelOpen = () => useNotificationStore((state) => state.isNotificationPanelOpen)
-export const useNotificationLoading = () => useNotificationStore((state) => state.isLoading) 
+export const useUnreadCount = () =>
+  useNotificationStore((state) => state.unreadCount)
+export const useNotifications = () =>
+  useNotificationStore((state) => state.notifications)
+export const useNotificationPanelOpen = () =>
+  useNotificationStore((state) => state.isNotificationPanelOpen)
+export const useNotificationLoading = () =>
+  useNotificationStore((state) => state.isLoading)

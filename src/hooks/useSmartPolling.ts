@@ -1,27 +1,32 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+
 import { useQueryClient } from '@tanstack/react-query'
 
 interface SmartPollingOptions {
   fastPollDuration?: number // จำนวนครั้งที่จะ poll เร็ว
-  fastInterval?: number     // interval เมื่อ poll เร็ว (ms)
-  slowInterval?: number     // interval เมื่อ poll ช้า (ms)
-  queryKeys?: (string | number)[][]    // query keys ที่จะ refetch
-  ultraFastMode?: boolean   // โหมดเร็วสุดสำหรับ critical actions
+  fastInterval?: number // interval เมื่อ poll เร็ว (ms)
+  slowInterval?: number // interval เมื่อ poll ช้า (ms)
+  queryKeys?: (string | number)[][] // query keys ที่จะ refetch
+  ultraFastMode?: boolean // โหมดเร็วสุดสำหรับ critical actions
 }
 
 export function useSmartPolling(options: SmartPollingOptions = {}) {
   const queryClient = useQueryClient()
   const {
-    fastPollDuration = 8,      // poll เร็ว 8 ครั้ง (เพิ่มขึ้น)
-    fastInterval = 800,        // ทุก 0.8 วินาที (เร็วขึ้น)
-    slowInterval = 20000,      // ทุก 20 วินาที (เร็วขึ้น)
+    fastPollDuration = 8, // poll เร็ว 8 ครั้ง (เพิ่มขึ้น)
+    fastInterval = 800, // ทุก 0.8 วินาที (เร็วขึ้น)
+    slowInterval = 20000, // ทุก 20 วินาที (เร็วขึ้น)
     queryKeys = [['notifications']], // default refetch notifications
-    ultraFastMode = false      // โหมดเร็วสุด
+    ultraFastMode = false, // โหมดเร็วสุด
   } = options
 
   // ปรับ intervals ถ้าเป็น ultra fast mode
-  const actualFastInterval = ultraFastMode ? Math.min(fastInterval, 300) : fastInterval // ขั้นต่ำ 300ms
-  const actualFastDuration = ultraFastMode ? fastPollDuration + 5 : fastPollDuration // เพิ่ม 5 cycles
+  const actualFastInterval = ultraFastMode
+    ? Math.min(fastInterval, 300)
+    : fastInterval // ขั้นต่ำ 300ms
+  const actualFastDuration = ultraFastMode
+    ? fastPollDuration + 5
+    : fastPollDuration // เพิ่ม 5 cycles
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const fastPollCountRef = useRef<number>(0)
@@ -31,7 +36,7 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
   // ฟังก์ชัน refetch ตาม query keys ที่กำหนด
   const refetchQueries = useCallback(() => {
     if (!isActiveRef.current) return
-    
+
     queryKeys.forEach((queryKey: (string | number)[]) => {
       queryClient.refetchQueries({ queryKey })
     })
@@ -40,8 +45,10 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
   // เริ่ม fast polling หลัง user action
   const startFastPolling = useCallback(() => {
     const modeText = ultraFastMode ? '🚀⚡ ULTRA FAST' : '🚀 Fast'
-    console.log(`${modeText} Polling - Starting for ${actualFastDuration} cycles every ${actualFastInterval}ms`)
-    
+    console.log(
+      `${modeText} Polling - Starting for ${actualFastDuration} cycles every ${actualFastInterval}ms`
+    )
+
     // Clear existing interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -59,8 +66,10 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
         queryClient.refetchQueries({ queryKey })
       })
       fastPollCountRef.current++
-      
-      console.log(`⚡ Fast poll cycle ${fastPollCountRef.current}/${actualFastDuration}`)
+
+      console.log(
+        `⚡ Fast poll cycle ${fastPollCountRef.current}/${actualFastDuration}`
+      )
 
       // หลังจาก fast poll ครบแล้ว กลับไป slow polling
       if (fastPollCountRef.current >= actualFastDuration) {
@@ -72,7 +81,13 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
         startSlowPollingRef.current()
       }
     }, actualFastInterval)
-  }, [actualFastDuration, actualFastInterval, queryKeys, queryClient, ultraFastMode])
+  }, [
+    actualFastDuration,
+    actualFastInterval,
+    queryKeys,
+    queryClient,
+    ultraFastMode,
+  ])
 
   // เริ่ม slow polling ปกติ
   const startSlowPolling = useCallback(() => {
@@ -96,7 +111,9 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
 
   // เรียกใช้หลัง user action เพื่อเริ่ม fast polling
   const triggerFastPolling = useCallback(() => {
-    console.log('🎯 Smart Polling - User action detected, triggering fast polling')
+    console.log(
+      '🎯 Smart Polling - User action detected, triggering fast polling'
+    )
     startFastPolling()
   }, [startFastPolling])
 
@@ -139,7 +156,7 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
@@ -149,6 +166,6 @@ export function useSmartPolling(options: SmartPollingOptions = {}) {
     triggerFastPolling,
     pausePolling,
     resumePolling,
-    isActive: isActiveRef.current
+    isActive: isActiveRef.current,
   }
-} 
+}

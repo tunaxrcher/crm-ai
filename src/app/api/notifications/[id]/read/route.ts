@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from '@src/lib/auth'
+
 import { notificationService } from '@src/features/notifications/services/server'
+import { getServerSession } from '@src/lib/auth'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 // PUT /api/notifications/[id]/read - อ่านแจ้งเตือนแล้ว
@@ -23,4 +24,4 @@ export const PUT = withErrorHandling(
 
     return NextResponse.json(notification)
   }
-) 
+)

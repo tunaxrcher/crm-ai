@@ -1,4 +1,5 @@
 // src/features/feed/services/server.ts
+import { notificationService } from '@src/features/notifications/services/server'
 import { getServerSession } from '@src/lib/auth'
 import { BaseService } from '@src/lib/services/server/baseService'
 import 'server-only'
@@ -9,7 +10,6 @@ import {
   likeRepository,
   storyRepository,
 } from '../repository'
-import { notificationService } from '@src/features/notifications/services/server'
 
 // Feed Service
 export class FeedService extends BaseService {
@@ -156,7 +156,7 @@ export class FeedService extends BaseService {
               },
             },
             replies: {
-              include: { 
+              include: {
                 user: {
                   include: {
                     character: {
@@ -349,32 +349,32 @@ export class LikeService extends BaseService {
     // ส่งแจ้งเตือนให้เจ้าของฟีด (ถ้าไม่ใช่ตัวเอง)
     try {
       console.log('🔍 Checking if notification should be sent for like...')
-      
+
       const feedItem = await feedRepository.findById(feedItemId, {
-        include: { user: { include: { character: true } } }
+        include: { user: { include: { character: true } } },
       })
-      
+
       console.log('📝 Feed item found:', {
         feedId: feedItemId,
         feedOwnerId: feedItem?.userId,
         likerId: userId,
-        shouldSendNotification: feedItem && feedItem.userId !== userId
+        shouldSendNotification: feedItem && feedItem.userId !== userId,
       })
-      
+
       if (feedItem && feedItem.userId !== userId) {
         // ใช้ข้อมูลจาก session
         const likerName = session.user.name || 'Unknown User'
         console.log('📤 Sending like notification:', {
           feedOwnerId: feedItem.userId,
-          likerName
+          likerName,
         })
-        
+
         await notificationService.createLikeNotification({
           feedOwnerId: feedItem.userId,
           likerName,
           feedId: feedItemId,
         })
-        
+
         console.log('✅ Like notification sent successfully')
       } else {
         console.log('ℹ️ No notification sent (own post or feed not found)')
@@ -458,33 +458,33 @@ export class CommentService extends BaseService {
     // ส่งแจ้งเตือนให้เจ้าของฟีด (ถ้าไม่ใช่ตัวเอง)
     try {
       console.log('🔍 Checking if notification should be sent for comment...')
-      
+
       const feedItem = await feedRepository.findById(feedItemId, {
-        include: { user: { include: { character: true } } }
+        include: { user: { include: { character: true } } },
       })
-      
+
       console.log('📝 Feed item found:', {
         feedId: feedItemId,
         feedOwnerId: feedItem?.userId,
         commenterId: userId,
-        shouldSendNotification: feedItem && feedItem.userId !== userId
+        shouldSendNotification: feedItem && feedItem.userId !== userId,
       })
-      
+
       if (feedItem && feedItem.userId !== userId) {
         const commenterName = session.user.name || 'Unknown User'
         console.log('📤 Sending comment notification:', {
           feedOwnerId: feedItem.userId,
           commenterName,
-          comment: content
+          comment: content,
         })
-        
+
         await notificationService.createCommentNotification({
           feedOwnerId: feedItem.userId,
           commenterName,
           comment: content,
           feedId: feedItemId,
         })
-        
+
         console.log('✅ Comment notification sent successfully')
       } else {
         console.log('ℹ️ No notification sent (own post or feed not found)')
@@ -507,12 +507,12 @@ export class CommentService extends BaseService {
     // ส่งแจ้งเตือนให้เจ้าของความคิดเห็นต้นฉบับ (ถ้าไม่ใช่ตัวเอง)
     try {
       const originalComment = await commentRepository.findById(data.commentId)
-      
+
       if (originalComment && originalComment.userId !== data.userId) {
         // ใช้ข้อมูลจาก session แทน
         const session = await getServerSession()
         const replierName = session.user.name || 'Unknown User'
-        
+
         await notificationService.createReplyNotification({
           originalCommenterId: originalComment.userId,
           replierName,

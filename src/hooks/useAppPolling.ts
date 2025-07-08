@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+
 import { useSmartPolling } from './useSmartPolling'
 
 /**
@@ -7,17 +8,18 @@ import { useSmartPolling } from './useSmartPolling'
  */
 export function useAppPolling() {
   // Setup smart polling สำหรับ queries หลักของ app
-  const { triggerFastPolling, pausePolling, resumePolling, isActive } = useSmartPolling({
-    queryKeys: [
-      ['notifications'],           // notifications list
-      ['notifications', 'unread-count'], // unread count
-      ['feed'],                   // feed items
-    ],
-    fastPollDuration: 15,       // poll เร็ว 15 ครั้ง (เพิ่มขึ้น)
-    fastInterval: 500,          // ทุก 0.5 วินาที (เร็วมาก)
-    slowInterval: 12000,        // ทุก 12 วินาที (เร็วขึ้น)
-    ultraFastMode: true,        // 🚀⚡ ULTRA FAST MODE
-  })
+  const { triggerFastPolling, pausePolling, resumePolling, isActive } =
+    useSmartPolling({
+      queryKeys: [
+        ['notifications'], // notifications list
+        ['notifications', 'unread-count'], // unread count
+        ['feed'], // feed items
+      ],
+      fastPollDuration: 15, // poll เร็ว 15 ครั้ง (เพิ่มขึ้น)
+      fastInterval: 500, // ทุก 0.5 วินาที (เร็วมาก)
+      slowInterval: 12000, // ทุก 12 วินาที (เร็วขึ้น)
+      ultraFastMode: true, // 🚀⚡ ULTRA FAST MODE
+    })
 
   // Trigger fast polling หลังจาก user interactions
   const triggerAfterLike = useCallback(() => {
@@ -26,7 +28,7 @@ export function useAppPolling() {
   }, [triggerFastPolling])
 
   const triggerAfterComment = useCallback(() => {
-    console.log('💬 User commented - triggering fast polling') 
+    console.log('💬 User commented - triggering fast polling')
     triggerFastPolling()
   }, [triggerFastPolling])
 
@@ -48,15 +50,15 @@ export function useAppPolling() {
   return {
     // Specific triggers for different actions
     triggerAfterLike,
-    triggerAfterComment, 
+    triggerAfterComment,
     triggerAfterNotificationRead,
     triggerAfterPost,
     triggerAfterQuest,
-    
+
     // General controls
     triggerFastPolling,
     pausePolling,
     resumePolling,
-    isActive
+    isActive,
   }
-} 
+}

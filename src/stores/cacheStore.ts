@@ -1,6 +1,6 @@
+import { QueryClient } from '@tanstack/react-query'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import { QueryClient } from '@tanstack/react-query'
 
 interface InvalidationRule {
   queryKeys: (string | number)[][]
@@ -21,22 +21,25 @@ interface CacheState {
   // Operation tracking
   operations: CacheOperation[]
   pendingOperations: Set<string>
-  
+
   // Invalidation rules
   invalidationRules: Map<string, InvalidationRule[]>
-  
+
   // Query status tracking
-  queryStates: Map<string, {
-    lastFetched: number
-    isStale: boolean
-    errorCount: number
-  }>
-  
+  queryStates: Map<
+    string,
+    {
+      lastFetched: number
+      isStale: boolean
+      errorCount: number
+    }
+  >
+
   // Background sync status
   isBackgroundSyncing: boolean
   lastBackgroundSync: number
   backgroundSyncInterval: number
-  
+
   // Settings
   enableBatchInvalidation: boolean
   batchDelay: number
@@ -45,40 +48,45 @@ interface CacheState {
 
 interface CacheActions {
   // Operation management
-  addOperation: (operation: Omit<CacheOperation, 'id' | 'timestamp' | 'status'>) => string
+  addOperation: (
+    operation: Omit<CacheOperation, 'id' | 'timestamp' | 'status'>
+  ) => string
   completeOperation: (id: string) => void
   failOperation: (id: string) => void
   clearOperationsHistory: () => void
-  
+
   // Smart invalidation
   invalidateQueriesForAction: (actionType: string, data?: any) => void
   batchInvalidate: (queryKeys: (string | number)[][][]) => void
-  
+
   // Rule management
   addInvalidationRule: (actionType: string, rule: InvalidationRule) => void
   removeInvalidationRule: (actionType: string, ruleIndex: number) => void
-  
+
   // Query state tracking
-  updateQueryState: (queryKey: string, state: Partial<{
-    lastFetched: number
-    isStale: boolean
-    errorCount: number
-  }>) => void
-  
+  updateQueryState: (
+    queryKey: string,
+    state: Partial<{
+      lastFetched: number
+      isStale: boolean
+      errorCount: number
+    }>
+  ) => void
+
   // Background sync
   startBackgroundSync: () => void
   stopBackgroundSync: () => void
   triggerBackgroundSync: () => void
   setBackgroundSyncInterval: (interval: number) => void
-  
+
   // Cache optimization
   optimizeCache: () => void
   removeStaleQueries: () => void
-  
+
   // Settings
   setEnableBatchInvalidation: (enable: boolean) => void
   setBatchDelay: (delay: number) => void
-  
+
   // Reset
   reset: () => void
 }
@@ -88,23 +96,29 @@ const initialState: CacheState = {
   pendingOperations: new Set(),
   invalidationRules: new Map([
     // Default rules
-    ['like', [
-      { queryKeys: [['notifications'], ['notifications', 'unread-count']] },
-      { queryKeys: [['feed']], delay: 100 }
-    ]],
-    ['comment', [
-      { queryKeys: [['notifications'], ['notifications', 'unread-count']] },
-      { queryKeys: [['feed']], delay: 100 }
-    ]],
-    ['notification_read', [
-      { queryKeys: [['notifications'], ['notifications', 'unread-count']] }
-    ]],
-    ['quest_submit', [
-      { queryKeys: [['quests'], ['character'], ['feed']], delay: 200 }
-    ]],
-    ['checkin', [
-      { queryKeys: [['checkin'], ['character']], delay: 100 }
-    ]]
+    [
+      'like',
+      [
+        { queryKeys: [['notifications'], ['notifications', 'unread-count']] },
+        { queryKeys: [['feed']], delay: 100 },
+      ],
+    ],
+    [
+      'comment',
+      [
+        { queryKeys: [['notifications'], ['notifications', 'unread-count']] },
+        { queryKeys: [['feed']], delay: 100 },
+      ],
+    ],
+    [
+      'notification_read',
+      [{ queryKeys: [['notifications'], ['notifications', 'unread-count']] }],
+    ],
+    [
+      'quest_submit',
+      [{ queryKeys: [['quests'], ['character'], ['feed']], delay: 200 }],
+    ],
+    ['checkin', [{ queryKeys: [['checkin'], ['character']], delay: 100 }]],
   ]),
   queryStates: new Map(),
   isBackgroundSyncing: false,
@@ -125,18 +139,18 @@ export const useCacheStore = create<CacheState & CacheActions>()(
     // Operation management
     addOperation: (operationData) => {
       const id = `op-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      
+
       set((state) => {
         const operation: CacheOperation = {
           id,
           ...operationData,
           timestamp: Date.now(),
-          status: 'pending'
+          status: 'pending',
         }
-        
+
         state.operations.push(operation)
         state.pendingOperations.add(id)
-        
+
         // Maintain history limit
         if (state.operations.length > state.maxOperationsHistory) {
           const removed = state.operations.shift()
@@ -145,13 +159,13 @@ export const useCacheStore = create<CacheState & CacheActions>()(
           }
         }
       })
-      
+
       return id
     },
 
     completeOperation: (id) =>
       set((state) => {
-        const operation = state.operations.find(op => op.id === id)
+        const operation = state.operations.find((op) => op.id === id)
         if (operation) {
           operation.status = 'completed'
           state.pendingOperations.delete(id)
@@ -160,7 +174,7 @@ export const useCacheStore = create<CacheState & CacheActions>()(
 
     failOperation: (id) =>
       set((state) => {
-        const operation = state.operations.find(op => op.id === id)
+        const operation = state.operations.find((op) => op.id === id)
         if (operation) {
           operation.status = 'failed'
           state.pendingOperations.delete(id)
@@ -177,10 +191,10 @@ export const useCacheStore = create<CacheState & CacheActions>()(
     invalidateQueriesForAction: (actionType, data) => {
       const state = get()
       const rules = state.invalidationRules.get(actionType)
-      
+
       if (!rules) return
 
-      rules.forEach(rule => {
+      rules.forEach((rule) => {
         const shouldInvalidate = !rule.condition || rule.condition(data)
         if (!shouldInvalidate) return
 
@@ -196,14 +210,14 @@ export const useCacheStore = create<CacheState & CacheActions>()(
 
     batchInvalidate: (queryKeys) => {
       const state = get()
-      
+
       if (!state.enableBatchInvalidation) {
         // Immediate invalidation
         const operationId = get().addOperation({
           type: 'invalidate',
-          queryKeys: queryKeys.flat()
+          queryKeys: queryKeys.flat(),
         })
-        
+
         // This would be called with actual QueryClient instance
         console.log('🔄 Cache - Immediate invalidation:', queryKeys)
         get().completeOperation(operationId)
@@ -223,12 +237,12 @@ export const useCacheStore = create<CacheState & CacheActions>()(
 
         const operationId = get().addOperation({
           type: 'invalidate',
-          queryKeys: toInvalidate.flat()
+          queryKeys: toInvalidate.flat(),
         })
 
         console.log('🔄 Cache - Batched invalidation:', toInvalidate)
         get().completeOperation(operationId)
-        
+
         batchTimeout = null
       }, state.batchDelay)
     },
@@ -256,12 +270,12 @@ export const useCacheStore = create<CacheState & CacheActions>()(
         const currentState = state.queryStates.get(queryKey) || {
           lastFetched: 0,
           isStale: false,
-          errorCount: 0
+          errorCount: 0,
         }
-        
+
         state.queryStates.set(queryKey, {
           ...currentState,
-          ...stateUpdate
+          ...stateUpdate,
         })
       }),
 
@@ -269,12 +283,12 @@ export const useCacheStore = create<CacheState & CacheActions>()(
     startBackgroundSync: () =>
       set((state) => {
         state.isBackgroundSyncing = true
-        
+
         // Start interval
         const interval = setInterval(() => {
           get().triggerBackgroundSync()
         }, state.backgroundSyncInterval)
-        
+
         // Store interval ID (in real implementation)
         console.log('🔄 Cache - Background sync started')
       }),
@@ -288,13 +302,13 @@ export const useCacheStore = create<CacheState & CacheActions>()(
     triggerBackgroundSync: () =>
       set((state) => {
         state.lastBackgroundSync = Date.now()
-        
+
         // Sync critical queries
         const criticalQueries = [
           [['notifications', 'unread-count']],
-          [['user', 'character']]
+          [['user', 'character']],
         ]
-        
+
         console.log('🔄 Cache - Background sync triggered')
         get().batchInvalidate(criticalQueries)
       }),
@@ -307,12 +321,14 @@ export const useCacheStore = create<CacheState & CacheActions>()(
     // Cache optimization
     optimizeCache: () => {
       console.log('🧹 Cache - Optimizing cache...')
-      
+
       set((state) => {
         // Remove old operations
-        const oneHourAgo = Date.now() - (60 * 60 * 1000)
-        state.operations = state.operations.filter(op => op.timestamp > oneHourAgo)
-        
+        const oneHourAgo = Date.now() - 60 * 60 * 1000
+        state.operations = state.operations.filter(
+          (op) => op.timestamp > oneHourAgo
+        )
+
         // Remove old query states
         const queryStatesToRemove: string[] = []
         state.queryStates.forEach((queryState, key) => {
@@ -320,8 +336,8 @@ export const useCacheStore = create<CacheState & CacheActions>()(
             queryStatesToRemove.push(key)
           }
         })
-        
-        queryStatesToRemove.forEach(key => {
+
+        queryStatesToRemove.forEach((key) => {
           state.queryStates.delete(key)
         })
       })
@@ -330,19 +346,19 @@ export const useCacheStore = create<CacheState & CacheActions>()(
     removeStaleQueries: () => {
       const state = get()
       const staleQueries: string[] = []
-      
+
       state.queryStates.forEach((queryState, key) => {
         if (queryState.isStale) {
           staleQueries.push(key)
         }
       })
-      
+
       if (staleQueries.length > 0) {
         const operationId = get().addOperation({
           type: 'removeQueries',
-          queryKeys: staleQueries.map(key => [key])
+          queryKeys: staleQueries.map((key) => [key]),
         })
-        
+
         console.log('🗑️ Cache - Removing stale queries:', staleQueries)
         get().completeOperation(operationId)
       }
@@ -373,11 +389,11 @@ export function createCacheAwareMutation<T extends any[], R>(
   return async (...args: T): Promise<R> => {
     try {
       const result = await mutationFn(...args)
-      
+
       // Trigger smart invalidation
       const data = extractData ? extractData(args, result) : { args, result }
       useCacheStore.getState().invalidateQueriesForAction(actionType, data)
-      
+
       return result
     } catch (error) {
       console.error(`Cache-aware mutation failed for ${actionType}:`, error)
@@ -389,18 +405,18 @@ export function createCacheAwareMutation<T extends any[], R>(
 // Utility to integrate with QueryClient
 export function integrateCacheStore(queryClient: QueryClient) {
   const store = useCacheStore.getState()
-  
+
   // Override batch invalidation to use actual QueryClient
   const originalBatchInvalidate = store.batchInvalidate
-  
+
   store.batchInvalidate = (queryKeys) => {
     const operationId = store.addOperation({
       type: 'invalidate',
-      queryKeys: queryKeys.flat()
+      queryKeys: queryKeys.flat(),
     })
-    
+
     try {
-      queryKeys.flat().forEach(queryKey => {
+      queryKeys.flat().forEach((queryKey) => {
         queryClient.invalidateQueries({ queryKey })
       })
       store.completeOperation(operationId)
@@ -409,7 +425,7 @@ export function integrateCacheStore(queryClient: QueryClient) {
       store.failOperation(operationId)
     }
   }
-  
+
   return () => {
     // Cleanup function
     store.batchInvalidate = originalBatchInvalidate
@@ -417,9 +433,12 @@ export function integrateCacheStore(queryClient: QueryClient) {
 }
 
 // Selectors
-export const useCacheOperations = () => useCacheStore((state) => state.operations)
-export const usePendingOperations = () => useCacheStore((state) => state.pendingOperations.size)
-export const useBackgroundSyncStatus = () => useCacheStore((state) => ({
-  isActive: state.isBackgroundSyncing,
-  lastSync: state.lastBackgroundSync
-})) 
+export const useCacheOperations = () =>
+  useCacheStore((state) => state.operations)
+export const usePendingOperations = () =>
+  useCacheStore((state) => state.pendingOperations.size)
+export const useBackgroundSyncStatus = () =>
+  useCacheStore((state) => ({
+    isActive: state.isBackgroundSyncing,
+    lastSync: state.lastBackgroundSync,
+  }))

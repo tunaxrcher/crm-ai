@@ -1,21 +1,27 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { useParams, useRouter } from 'next/navigation'
+
+import {
+  ErrorDisplay,
+  GlobalErrorBoundary,
+  SkeletonLoading,
+} from '@src/components/shared'
 import { Button } from '@src/components/ui/button'
 import { Card, CardContent } from '@src/components/ui/card'
-import { SkeletonLoading, GlobalErrorBoundary, ErrorDisplay } from '@src/components/shared'
-import { ArrowLeft } from 'lucide-react'
 import { useCharacter } from '@src/contexts/CharacterContext'
+import { PostCard } from '@src/features/feed/components/post/PostCard'
+import { useFeed } from '@src/features/feed/hooks/api'
+import { FeedItemUI } from '@src/features/feed/types'
+import { ArrowLeft } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 
-import { useFeed } from '@src/features/feed/hooks/api'
-import { PostCard } from '@src/features/feed/components/post/PostCard'
-import { FeedItemUI } from '@src/features/feed/types'
-
 // Map API type to UI type helper function
-const mapTypeToUI = (apiType: string): 'post' | 'quest_complete' | 'level_up' | 'achievement' => {
+const mapTypeToUI = (
+  apiType: string
+): 'post' | 'quest_complete' | 'level_up' | 'achievement' => {
   switch (apiType) {
     case 'quest_completion':
       return 'quest_complete'
@@ -34,12 +40,16 @@ const transformApiToFeedItem = (data: any, session: any): FeedItemUI => {
   const transformedFeedItem: FeedItemUI = {
     id: data.id.toString(),
     type: mapTypeToUI(data.type),
-    hasLiked: session?.user?.id ? data.likes?.some((like: any) => like.user.id === parseInt(session.user.id)) : false,
+    hasLiked: session?.user?.id
+      ? data.likes?.some(
+          (like: any) => like.user.id === parseInt(session.user.id)
+        )
+      : false,
     user: {
       id: data.user.id,
       name: data.user.name,
       character: data.user.character,
-      title: data.user.bio || data.user.character?.currentJobLevel?.title
+      title: data.user.bio || data.user.character?.currentJobLevel?.title,
     },
     content: {
       timestamp: new Date(data.createdAt),
@@ -47,57 +57,62 @@ const transformApiToFeedItem = (data: any, session: any): FeedItemUI => {
       image: data.mediaUrl,
       engagement: {
         likes: data.likes?.length || 0,
-        likeUsers: data.likes?.map((like: any) => ({
-          id: like.id,
-          user: {
-            id: like.user.id,
-            name: like.user.name,
-            character: like.user.character
-          },
-          createdAt: like.createdAt
-        })) || [],
-        comments: data.comments?.map((comment: any) => ({
-          id: comment.id,
-          user: {
-            id: comment.user.id,
-            name: comment.user.name,
-            character: comment.user.character
-          },
-          text: comment.content,
-          timestamp: new Date(comment.createdAt)
-        })) || []
+        likeUsers:
+          data.likes?.map((like: any) => ({
+            id: like.id,
+            user: {
+              id: like.user.id,
+              name: like.user.name,
+              character: like.user.character,
+            },
+            createdAt: like.createdAt,
+          })) || [],
+        comments:
+          data.comments?.map((comment: any) => ({
+            id: comment.id,
+            user: {
+              id: comment.user.id,
+              name: comment.user.name,
+              character: comment.user.character,
+            },
+            text: comment.content,
+            timestamp: new Date(comment.createdAt),
+          })) || [],
       },
       // Add quest data if it's a quest completion
-      ...(mapTypeToUI(data.type) === 'quest_complete' && data.questSubmission && {
-        quest: {
-          id: data.questSubmission.id,
-          title: data.questSubmission.quest?.title || 'Unknown Quest',
-          xpEarned: data.questSubmission.xpEarned || 0
-        }
-      }),
+      ...(mapTypeToUI(data.type) === 'quest_complete' &&
+        data.questSubmission && {
+          quest: {
+            id: data.questSubmission.id,
+            title: data.questSubmission.quest?.title || 'Unknown Quest',
+            xpEarned: data.questSubmission.xpEarned || 0,
+          },
+        }),
       // Add level up data if it's a level up
-      ...(data.type === 'level_up' && data.levelHistory && {
-        previousLevel: data.levelHistory.levelFrom,
-        newLevel: data.levelHistory.levelTo,
-        newTitle: data.user.character?.currentJobLevel?.title || 'Level Up!'
-      }),
+      ...(data.type === 'level_up' &&
+        data.levelHistory && {
+          previousLevel: data.levelHistory.levelFrom,
+          newLevel: data.levelHistory.levelTo,
+          newTitle: data.user.character?.currentJobLevel?.title || 'Level Up!',
+        }),
       // Add achievement data if it's an achievement
-      ...(data.type === 'achievement' && data.achievement && {
-        achievement: {
-          id: data.achievement.id,
-          name: data.achievement.achievement?.name || 'Achievement',
-          description: data.achievement.achievement?.description || '',
-          icon: data.achievement.achievement?.icon || '🏆'
-        }
-      })
-    }
+      ...(data.type === 'achievement' &&
+        data.achievement && {
+          achievement: {
+            id: data.achievement.id,
+            name: data.achievement.achievement?.name || 'Achievement',
+            description: data.achievement.achievement?.description || '',
+            icon: data.achievement.achievement?.icon || '🏆',
+          },
+        }),
+    },
   }
 
   // Add additional fields from API
   Object.assign(transformedFeedItem, {
     post: data.post,
     mediaType: data.mediaType,
-    mediaUrl: data.mediaUrl
+    mediaUrl: data.mediaUrl,
   })
 
   return transformedFeedItem
@@ -130,24 +145,26 @@ function SingleFeedContent() {
       try {
         setIsLoading(true)
         setError(null)
-        
+
         const response = await fetch(`/api/feed/${feedId}`)
-        
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error('ไม่พบโพสต์ที่ต้องการ')
           }
           throw new Error('ไม่สามารถโหลดโพสต์ได้')
         }
-        
+
         const data = await response.json()
-        
-                // Transform data to match FeedItemUI format
+
+        // Transform data to match FeedItemUI format
         const transformedFeedItem = transformApiToFeedItem(data, session)
         setFeedItem(transformedFeedItem)
       } catch (err) {
         console.error('Error fetching feed item:', err)
-        setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ')
+        setError(
+          err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'
+        )
       } finally {
         setIsLoading(false)
       }
@@ -164,7 +181,7 @@ function SingleFeedContent() {
 
   const handleToggleLike = async () => {
     if (!feedItem) return
-    
+
     try {
       await toggleLike(feedItem.id)
       // Refetch the feed item to get updated data
@@ -211,7 +228,10 @@ function SingleFeedContent() {
     return (
       <div className="container mx-auto px-4 py-6 max-w-2xl">
         <div className="mb-4">
-          <Button variant="ghost" onClick={handleBack} className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             กลับไปที่ฟีด
           </Button>
@@ -226,7 +246,10 @@ function SingleFeedContent() {
     return (
       <div className="container mx-auto px-4 py-6 max-w-2xl">
         <div className="mb-4">
-          <Button variant="ghost" onClick={handleBack} className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             กลับไปที่ฟีด
           </Button>
@@ -247,14 +270,19 @@ function SingleFeedContent() {
     return (
       <div className="container mx-auto px-4 py-6 max-w-2xl">
         <div className="mb-4">
-          <Button variant="ghost" onClick={handleBack} className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             กลับไปที่ฟีด
           </Button>
         </div>
         <Card>
           <CardContent className="p-6 text-center">
-            <h2 className="text-lg font-semibold mb-2">กำลังโหลดข้อมูลผู้ใช้...</h2>
+            <h2 className="text-lg font-semibold mb-2">
+              กำลังโหลดข้อมูลผู้ใช้...
+            </h2>
             <p className="text-muted-foreground">โปรดรอสักครู่</p>
           </CardContent>
         </Card>
@@ -267,7 +295,10 @@ function SingleFeedContent() {
     <div className="container mx-auto px-4 py-6 max-w-2xl">
       {/* Header with back button */}
       <div className="mb-6">
-        <Button variant="ghost" onClick={handleBack} className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          onClick={handleBack}
+          className="flex items-center gap-2">
           <ArrowLeft className="h-4 w-4" />
           กลับไปที่ฟีด
         </Button>
@@ -288,4 +319,4 @@ function SingleFeedContent() {
       </div>
     </div>
   )
-} 
+}

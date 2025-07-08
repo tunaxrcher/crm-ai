@@ -28,7 +28,11 @@ export class NotificationRepository extends BaseRepository<Notification> {
     })
   }
 
-  async create(data: Prisma.NotificationCreateInput | Prisma.NotificationUncheckedCreateInput) {
+  async create(
+    data:
+      | Prisma.NotificationCreateInput
+      | Prisma.NotificationUncheckedCreateInput
+  ) {
     return this.prisma.notification.create({ data })
   }
 
@@ -66,4 +70,4 @@ export class NotificationRepository extends BaseRepository<Notification> {
   }
 }
 
-export const notificationRepository = NotificationRepository.getInstance() 
+export const notificationRepository = NotificationRepository.getInstance()

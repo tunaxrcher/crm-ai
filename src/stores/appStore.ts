@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { immer } from 'zustand/middleware/immer'
 import { subscribeWithSelector } from 'zustand/middleware'
+import { immer } from 'zustand/middleware/immer'
 
 interface User {
   id: string
@@ -13,7 +13,7 @@ interface AppState {
   // User state
   user: User | null
   isAuthenticated: boolean
-  
+
   // UI state
   isLoading: boolean
   errors: Record<string, string>
@@ -21,11 +21,11 @@ interface AppState {
     show: boolean
     count: number
   }
-  
+
   // App settings
   theme: 'light' | 'dark'
   language: 'th' | 'en'
-  
+
   // Connection state
   isOnline: boolean
   lastSyncTime: number | null
@@ -35,25 +35,25 @@ interface AppActions {
   // User actions
   setUser: (user: User | null) => void
   setAuthenticated: (isAuth: boolean) => void
-  
+
   // UI actions
   setLoading: (loading: boolean) => void
   setError: (key: string, error: string) => void
   clearError: (key: string) => void
   clearAllErrors: () => void
-  
+
   // Notification actions
   setNotificationCount: (count: number) => void
   toggleNotificationPanel: () => void
-  
+
   // App settings
   setTheme: (theme: 'light' | 'dark') => void
   setLanguage: (lang: 'th' | 'en') => void
-  
+
   // Connection actions
   setOnlineStatus: (online: boolean) => void
   updateSyncTime: () => void
-  
+
   // Reset actions
   reset: () => void
 }
@@ -155,9 +155,11 @@ export const useAppStore = create<AppState & AppActions>()(
 
 // Selectors สำหรับ performance optimization
 export const useUser = () => useAppStore((state) => state.user)
-export const useIsAuthenticated = () => useAppStore((state) => state.isAuthenticated)
-export const useNotificationCount = () => useAppStore((state) => state.notifications.count)
+export const useIsAuthenticated = () =>
+  useAppStore((state) => state.isAuthenticated)
+export const useNotificationCount = () =>
+  useAppStore((state) => state.notifications.count)
 export const useAppLoading = () => useAppStore((state) => state.isLoading)
 export const useAppErrors = () => useAppStore((state) => state.errors)
 export const useAppTheme = () => useAppStore((state) => state.theme)
-export const useConnectionStatus = () => useAppStore((state) => state.isOnline) 
+export const useConnectionStatus = () => useAppStore((state) => state.isOnline)

@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { useSession } from 'next-auth/react'
+
 import { useToast } from '@src/components/shared/SimpleToast'
-import { useNotifications, useUnreadCount } from './api'
+import { useSession } from 'next-auth/react'
+
 import { notificationToastService } from '../services/toastService'
+import { useNotifications, useUnreadCount } from './api'
 
 export function useNotificationToast() {
   const toastContext = useToast()
@@ -39,7 +41,9 @@ export function useNotificationToast() {
       unreadCount,
       notificationsCount: notifications.length,
       isInitialized: isInitialized.current,
-      latestNotifications: notifications.slice(0, 3).map(n => ({ id: n.id, type: n.type, createdAt: n.createdAt }))
+      latestNotifications: notifications
+        .slice(0, 3)
+        .map((n) => ({ id: n.id, type: n.type, createdAt: n.createdAt })),
     })
 
     // รอให้ initialize ครับก่อน
@@ -48,16 +52,28 @@ export function useNotificationToast() {
       console.log('🍞 Initializing toast service...')
       console.log('🍞 Initial notifications check:', {
         unreadCount,
-        notifications: notifications.slice(0, 5).map(n => ({ id: n.id, type: n.type, message: n.message.substring(0, 50) + '...' }))
+        notifications: notifications
+          .slice(0, 5)
+          .map((n) => ({
+            id: n.id,
+            type: n.type,
+            message: n.message.substring(0, 50) + '...',
+          })),
       })
-      notificationToastService.checkForNewNotifications(unreadCount, notifications)
+      notificationToastService.checkForNewNotifications(
+        unreadCount,
+        notifications
+      )
       isInitialized.current = true
       return
     }
 
     // เช็คว่ามี notification ใหม่
     console.log('🍞 Checking for new notifications...')
-    notificationToastService.checkForNewNotifications(unreadCount, notifications)
+    notificationToastService.checkForNewNotifications(
+      unreadCount,
+      notifications
+    )
   }, [notificationData, unreadCountData, session?.user?.id])
 
   // Reset เมื่อ component unmount
@@ -66,4 +82,4 @@ export function useNotificationToast() {
       notificationToastService.resetCounters()
     }
   }, [])
-} 
+}

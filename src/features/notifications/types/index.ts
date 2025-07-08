@@ -39,7 +39,8 @@ export const NotificationTypes = {
   SYSTEM: 'system',
 } as const
 
-export type NotificationTypeValue = typeof NotificationTypes[keyof typeof NotificationTypes]
+export type NotificationTypeValue =
+  (typeof NotificationTypes)[keyof typeof NotificationTypes]
 
 // Notification templates
 export const NotificationTemplates = {
@@ -58,4 +59,4 @@ export const NotificationTemplates = {
     title: 'มีคนตอบกลับความคิดเห็นของคุณ',
     message: '{userName} ตอบกลับความคิดเห็นของคุณ: "{reply}"',
   },
-} as const 
+} as const
