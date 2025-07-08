@@ -1,10 +1,14 @@
 // Store initialization utility
 import { QueryClient } from '@tanstack/react-query'
+import { enableMapSet } from 'immer'
 
 import { useAppStore } from './appStore'
 import { integrateCacheStore, useCacheStore } from './cacheStore'
 import { useFeedStore } from './feedStore'
 import { useNotificationStore } from './notificationStore'
+
+// Enable Map and Set support in Immer
+enableMapSet()
 
 // Core stores
 export * from './appStore'

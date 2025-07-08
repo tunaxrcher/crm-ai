@@ -52,13 +52,11 @@ export function useNotificationToast() {
       console.log('🍞 Initializing toast service...')
       console.log('🍞 Initial notifications check:', {
         unreadCount,
-        notifications: notifications
-          .slice(0, 5)
-          .map((n) => ({
-            id: n.id,
-            type: n.type,
-            message: n.message.substring(0, 50) + '...',
-          })),
+        notifications: notifications.slice(0, 5).map((n) => ({
+          id: n.id,
+          type: n.type,
+          message: n.message.substring(0, 50) + '...',
+        })),
       })
       notificationToastService.checkForNewNotifications(
         unreadCount,

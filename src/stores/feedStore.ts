@@ -20,7 +20,7 @@ interface FeedState {
   error: Error | null
 
   // Optimistic updates tracking
-  optimisticUpdates: Map<
+  optimisticUpdates: Record<
     string,
     {
       type: 'like' | 'comment'
@@ -89,7 +89,7 @@ const initialState: FeedState = {
   page: 1,
   hasMore: true,
   error: null,
-  optimisticUpdates: new Map(),
+  optimisticUpdates: {},
   lastFetchTime: 0,
   cacheValidUntil: 0,
 }
@@ -196,11 +196,11 @@ export const useFeedStore = create<FeedState & FeedActions>()(
           likes: item.content.engagement.likes,
         }
 
-        state.optimisticUpdates.set(`like-${feedItemId}`, {
+        state.optimisticUpdates[`like-${feedItemId}`] = {
           type: 'like',
           timestamp: Date.now(),
           data: originalState,
-        })
+        }
 
         // Apply optimistic update
         item.hasLiked = hasLiked
@@ -215,7 +215,7 @@ export const useFeedStore = create<FeedState & FeedActions>()(
         if (!item) return
 
         // Remove optimistic update tracking
-        state.optimisticUpdates.delete(`like-${feedItemId}`)
+        delete state.optimisticUpdates[`like-${feedItemId}`]
 
         // Update with server response
         item.hasLiked = result.liked
@@ -224,9 +224,7 @@ export const useFeedStore = create<FeedState & FeedActions>()(
 
     rollbackLike: (feedItemId) =>
       set((state) => {
-        const optimisticUpdate = state.optimisticUpdates.get(
-          `like-${feedItemId}`
-        )
+        const optimisticUpdate = state.optimisticUpdates[`like-${feedItemId}`]
         const item = state.feedItems.find((item) => item.id === feedItemId)
 
         if (!optimisticUpdate || !item) return
@@ -237,7 +235,7 @@ export const useFeedStore = create<FeedState & FeedActions>()(
         item.content.engagement.likes = likes
 
         // Remove tracking
-        state.optimisticUpdates.delete(`like-${feedItemId}`)
+        delete state.optimisticUpdates[`like-${feedItemId}`]
       }),
 
     // Comment actions with optimistic updates
@@ -257,14 +255,13 @@ export const useFeedStore = create<FeedState & FeedActions>()(
         item.content.engagement.comments.push(optimisticComment)
 
         // Track for potential rollback
-        state.optimisticUpdates.set(
-          `comment-${feedItemId}-${optimisticComment.id}`,
-          {
-            type: 'comment',
-            timestamp: Date.now(),
-            data: optimisticComment,
-          }
-        )
+        state.optimisticUpdates[
+          `comment-${feedItemId}-${optimisticComment.id}`
+        ] = {
+          type: 'comment',
+          timestamp: Date.now(),
+          data: optimisticComment,
+        }
       }),
 
     confirmComment: (feedItemId, comment) =>
@@ -292,9 +289,9 @@ export const useFeedStore = create<FeedState & FeedActions>()(
           })
 
           // Clean up tracking
-          state.optimisticUpdates.delete(
+          delete state.optimisticUpdates[
             `comment-${feedItemId}-${optimisticComment.id}`
-          )
+          ]
         }
       }),
 
@@ -310,9 +307,9 @@ export const useFeedStore = create<FeedState & FeedActions>()(
           )
 
         // Clean up tracking
-        state.optimisticUpdates.delete(
+        delete state.optimisticUpdates[
           `comment-${feedItemId}-${optimisticCommentId}`
-        )
+        ]
       }),
 
     // Cache actions

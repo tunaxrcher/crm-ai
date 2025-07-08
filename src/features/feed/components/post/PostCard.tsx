@@ -377,7 +377,7 @@ export const PostCard = function PostCard({
                         <div
                           className="absolute inset-0"
                           style={{
-                            backgroundImage: `url(${comment.user.character?.currentPortraitUrl})`,
+                            backgroundImage: `url(${comment.user?.character?.portrait || comment.user?.character?.currentPortraitUrl || '/character-image.png'})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center -110px',
                             transform: 'scale(2)',
@@ -416,7 +416,7 @@ export const PostCard = function PostCard({
                   <div
                     className="absolute inset-0"
                     style={{
-                      backgroundImage: `url(${character?.portrait})`,
+                      backgroundImage: `url(${character?.portrait || '/character-image.png'})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center -110px',
                       transform: 'scale(2)',

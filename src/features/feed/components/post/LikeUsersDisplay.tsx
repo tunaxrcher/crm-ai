@@ -83,7 +83,8 @@ export const LikeUsersDisplay: React.FC<LikeUsersDisplayProps> = ({
             </span>
           ) : (
             `${totalLikes} คน`
-          )}
+          )}{' '}
+          ยกนิ้วให้
         </span>
         {hasMoreUsers && (
           <Button

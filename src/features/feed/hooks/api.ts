@@ -1,6 +1,7 @@
 // src/features/feed/hooks/api.ts
 import { useCallback, useEffect, useState } from 'react'
 
+import { useCharacter } from '@src/contexts/CharacterContext'
 import { useSmartPolling } from '@src/hooks/useSmartPolling'
 import {
   createCacheAwareMutation,
@@ -14,6 +15,7 @@ import { FeedItemUI, StoryUI } from '../types'
 
 export function useFeed() {
   const queryClient = useQueryClient()
+  const { character } = useCharacter()
 
   // Use Zustand store instead of local state
   const {
@@ -304,12 +306,10 @@ export function useFeed() {
         optimisticToggleLike(feedItemId, newHasLiked)
 
         // Trigger cache invalidation
-        useCacheStore
-          .getState()
-          .invalidateQueriesForAction('like', {
-            feedItemId,
-            hasLiked: newHasLiked,
-          })
+        useCacheStore.getState().invalidateQueriesForAction('like', {
+          feedItemId,
+          hasLiked: newHasLiked,
+        })
 
         const result = await feedService.toggleLike(feedItemId)
 
@@ -337,9 +337,20 @@ export function useFeed() {
       const optimisticCommentId = `optimistic-${Date.now()}`
 
       try {
-        // Create optimistic comment data
+        // Create optimistic comment data with current user character
         const optimisticComment = {
-          user: { name: 'You' }, // This should come from current user context
+          user: {
+            id: character?.id || 0,
+            name: character?.name || 'You',
+            character: character
+              ? {
+                  id: character.id,
+                  name: character.name,
+                  portrait: character.portrait,
+                  level: character.level,
+                }
+              : null,
+          },
           text: content,
         }
 
