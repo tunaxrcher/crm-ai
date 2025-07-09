@@ -699,6 +699,7 @@ export class RewardService extends BaseService {
       characterName: record.character.name,
       userName: record.character.user.name,
       username: record.character.user.username,
+      currentPortraitUrl: record.character.currentPortraitUrl,
       // ดึงยอด Jackpot จากฟิลด์ xeny ที่บันทึกไว้
       jackpotAmount: (record as any).xeny || 0,
     }))
