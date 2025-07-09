@@ -15,8 +15,10 @@ import {
 } from '@src/components/ui/dialog'
 import { useNotification } from '@src/components/ui/notification-system'
 import GachaRatesModal from '@src/features/reward/components/GachaRatesModal'
+import JackpotWinnersSection from '@src/features/reward/components/JackpotWinnersSection'
 import {
   type GachaResult,
+  useCurrentJackpot,
   useGachaPull,
   usePurchaseReward,
   useRewards,
@@ -70,6 +72,7 @@ export default function RewardPage() {
 
   // Hooks
   const { data: rewardsData, isLoading } = useRewards()
+  const { data: jackpotData } = useCurrentJackpot()
   const purchaseReward = usePurchaseReward()
   const gachaPull = useGachaPull()
   const { addNotification } = useNotification()
@@ -114,6 +117,16 @@ export default function RewardPage() {
         setShowReward(false)
         setCurrentRewards(result.data.results)
         setCurrentRewardIndex(0)
+
+        // แสดงข้อมูล Jackpot ที่เพิ่มขึ้น
+        if (result.data.jackpot.addedThisSession > 0) {
+          addNotification({
+            type: 'info',
+            title: '💎 Jackpot เพิ่มขึ้น!',
+            message: `เพิ่ม ${result.data.jackpot.addedThisSession} Xeny เข้า Jackpot Pool`,
+            duration: 4000,
+          })
+        }
 
         // เล่นวิดีโอ
         if (videoRef.current) {
@@ -241,6 +254,37 @@ export default function RewardPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-[2rem] blur-2xl group-hover:blur-3xl transition-all duration-700"></div>
           <div className="relative overflow-hidden">
             <div className="px-10 py-12 pb-0">
+              {/* Jackpot Display */}
+              <div className="flex justify-center mb-8">
+                <div className="relative group/jackpot">
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-400/30 to-red-400/30 rounded-2xl blur-xl group-hover/jackpot:blur-2xl transition-all duration-500"></div>
+                  <div className="relative bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-red-500/20 backdrop-blur-sm border border-yellow-400/30 rounded-2xl px-8 py-4">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-yellow-400 rounded-full blur-sm animate-pulse"></div>
+                        <div className="relative w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                          <span className="text-lg">💎</span>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-yellow-200/80 font-medium mb-1">
+                          JACKPOT POOL
+                        </div>
+                        <div className="text-2xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text">
+                          {jackpotData?.data?.value?.toLocaleString() || '0'}{' '}
+                          Xeny
+                        </div>
+                        {(jackpotData?.data?.value || 0) >= 1000 && (
+                          <div className="text-xs text-green-400 mt-1 animate-pulse">
+                            🔥 พร้อมแตก!
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Gacha Machine Image */}
               <div className="flex flex-col items-center">
                 <div className="relative group/machine">
@@ -301,6 +345,11 @@ export default function RewardPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Jackpot Winners Section */}
+        <div className="relative z-10 px-8 mb-12">
+          <JackpotWinnersSection />
         </div>
 
         {/* Rewards Mall */}

@@ -53,12 +53,15 @@ export class RewardService extends BaseService {
     const character = await this.getCurrentCharacter()
 
     // ดึง rewards และ token ปัจจุบันของ user
-    const [rewards, userToken] = await Promise.all([
+    const [allRewards, userToken] = await Promise.all([
       rewardRepository.getActiveRewards(),
       prisma.userToken.findUnique({
         where: { userId: character.userId },
       }),
     ])
+
+    // Filter ออก Jackpot (ID 1) จาก Rewards Mall
+    const rewards = allRewards.filter((reward) => reward.id !== 1)
 
     return {
       rewards,
@@ -75,17 +78,42 @@ export class RewardService extends BaseService {
   async getGachaRates() {
     const character = await this.getCurrentCharacter()
 
-    // ดึง rewards ที่สามารถได้จาก gacha
-    const gachaRewards = await prisma.rewardItem.findMany({
+    // ดึง rewards ที่สามารถได้จาก gacha (ไม่รวม Jackpot)
+    const regularGachaRewards = await prisma.rewardItem.findMany({
       where: {
         isActive: true,
         gachaProbability: { gt: 0 },
+        id: { not: 1 }, // ไม่รวม Jackpot
       },
       orderBy: [{ rarity: 'desc' }, { gachaProbability: 'desc' }],
     })
 
-    // คำนวณ total probability และ no reward probability
-    const totalRewardProbability = gachaRewards.reduce(
+    // ดึงข้อมูล Jackpot แยกต่างหาก
+    const jackpotReward = await prisma.rewardItem.findUnique({
+      where: { id: 1 }, // Jackpot ใหญ่
+    })
+
+    // รวม Jackpot เข้าไปในรายการ
+    const allGachaRewards = []
+
+    // เพิ่ม Jackpot ไว้ด้านบนสุด
+    if (jackpotReward) {
+      allGachaRewards.push({
+        ...jackpotReward,
+        probabilityPercent: '0.10', // Hard code 0.10%
+      })
+    }
+
+    // เพิ่มรางวัลอื่นๆ
+    regularGachaRewards.forEach((reward) => {
+      allGachaRewards.push({
+        ...reward,
+        probabilityPercent: (reward.gachaProbability * 100).toFixed(2),
+      })
+    })
+
+    // คำนวณ total probability และ no reward probability (ไม่รวม Jackpot ในการคำนวณ)
+    const totalRewardProbability = regularGachaRewards.reduce(
       (sum, r) => sum + r.gachaProbability,
       0
     )
@@ -103,10 +131,7 @@ export class RewardService extends BaseService {
     }
 
     return {
-      gachaRewards: gachaRewards.map((reward) => ({
-        ...reward,
-        probabilityPercent: (reward.gachaProbability * 100).toFixed(2),
-      })),
+      gachaRewards: allGachaRewards,
       noRewardProbability: {
         value: noRewardProbability,
         percentText: (noRewardProbability * 100).toFixed(2),
@@ -270,6 +295,7 @@ export class RewardService extends BaseService {
         // 4. ทำการสุ่ม
         const pullResults: GachaResult[] = []
         const purchases = []
+        let totalJackpotAdded = 0
 
         for (let i = 0; i < pullCount; i++) {
           const result = this.performGachaPull(
@@ -291,8 +317,32 @@ export class RewardService extends BaseService {
             },
           })
 
+          // ถ้าไม่ได้รางวัล ให้สะสม Token ÷ 2 เข้า Jackpot
+          if (!result.isWin) {
+            const jackpotAmount = costPerPull / 2 // 50 ÷ 2 = 25 Xeny
+            await this.addToJackpot(jackpotAmount, tx)
+            totalJackpotAdded += jackpotAmount
+          }
+
           // ถ้าได้รางวัล สร้าง purchase record
           if (result.isWin && result.rewardId) {
+            // ถ้าได้รางวัล Jackpot ให้เก็บยอดก่อนรีเซ็ต
+            if (result.rewardId === 1) {
+              // ดึงยอด Jackpot ปัจจุบันก่อนรีเซ็ต
+              const currentJackpotData = await this.getCurrentJackpot()
+              const jackpotWonAmount = currentJackpotData.value
+
+              // อัปเดตยอด Xeny ใน GachaHistory
+              await tx.$executeRaw`
+                UPDATE GachaHistory 
+                SET xeny = ${jackpotWonAmount} 
+                WHERE id = ${gachaHistory.id}
+              `
+
+              // ตอนนี้ค่อยรีเซ็ต Jackpot
+              await this.resetJackpot(tx)
+            }
+
             const purchase = await tx.rewardPurchase.create({
               data: {
                 characterId: character.id,
@@ -309,8 +359,14 @@ export class RewardService extends BaseService {
             purchases.push(purchase)
 
             // ตรวจสอบว่าเป็น itemType "xeny" หรือไม่
-            const rewardItem = purchase.rewardItem
-            if (rewardItem.itemType === 'xeny' && rewardItem.metadata) {
+            const rewardItem = await tx.rewardItem.findUnique({
+              where: { id: result.rewardId },
+            })
+            if (
+              rewardItem &&
+              rewardItem.itemType === 'xeny' &&
+              rewardItem.metadata
+            ) {
               const metadata = rewardItem.metadata as any
               const xenyAmount = metadata.value || 0
 
@@ -422,11 +478,18 @@ export class RewardService extends BaseService {
           },
         })
 
+        // ดึงข้อมูล Jackpot ปัจจุบันหลังการสุ่ม
+        const currentJackpot = await this.getCurrentJackpot()
+
         return {
           results: pullResults,
           purchases,
           currentTokens: updatedUserToken.currentTokens,
           sessionId,
+          jackpot: {
+            current: currentJackpot.value,
+            addedThisSession: totalJackpotAdded,
+          },
         }
       })
 
@@ -522,6 +585,68 @@ export class RewardService extends BaseService {
     return purchases
   }
 
+  // ดึงข้อมูล Jackpot ปัจจุบัน
+  async getCurrentJackpot() {
+    const jackpotReward = await prisma.rewardItem.findUnique({
+      where: { id: 1 }, // Jackpot ใหญ่
+    })
+
+    if (!jackpotReward || !jackpotReward.metadata) {
+      return { value: 0, currency: 'Xeny' }
+    }
+
+    const metadata = jackpotReward.metadata as any
+    return {
+      value: metadata.value || 0,
+      currency: metadata.currency || 'Xeny',
+    }
+  }
+
+  // เพิ่มยอดสะสม Jackpot
+  private async addToJackpot(amount: number, tx: any) {
+    const jackpotReward = await tx.rewardItem.findUnique({
+      where: { id: 1 },
+    })
+
+    if (!jackpotReward) {
+      throw new Error('Jackpot reward not found')
+    }
+
+    const currentMetadata = (jackpotReward.metadata as any) || {
+      value: 0,
+      currency: 'Xeny',
+    }
+    const newValue = currentMetadata.value + amount
+
+    await tx.rewardItem.update({
+      where: { id: 1 },
+      data: {
+        metadata: {
+          value: newValue,
+          currency: 'Xeny',
+        },
+        // อัปเดตโอกาสการออกของ Jackpot
+        gachaProbability: newValue >= 1000 ? 0.001 : 0, // 0.1% เมื่อยอดเกิน 1000
+      },
+    })
+
+    return newValue
+  }
+
+  // รีเซ็ต Jackpot เมื่อมีคนถูกรางวัล
+  private async resetJackpot(tx: any) {
+    await tx.rewardItem.update({
+      where: { id: 1 },
+      data: {
+        metadata: {
+          value: 0,
+          currency: 'Xeny',
+        },
+        gachaProbability: 0, // ไม่มีโอกาสออกเมื่อยอดเป็น 0
+      },
+    })
+  }
+
   // ดึงประวัติ gacha
   async getCharacterGachaHistory() {
     const character = await this.getCurrentCharacter()
@@ -540,6 +665,43 @@ export class RewardService extends BaseService {
         level: character.level,
       },
     }
+  }
+
+  // ดึงประวัติผู้ถูกรางวัล Jackpot
+  async getJackpotWinners(limit: number = 10) {
+    const jackpotWinners = await prisma.gachaHistory.findMany({
+      where: {
+        rewardItemId: 1, // Jackpot ใหญ่
+        isWin: true,
+      },
+      include: {
+        character: {
+          include: {
+            user: {
+              select: {
+                name: true,
+                username: true,
+              },
+            },
+          },
+        },
+        rewardItem: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+    })
+
+    return jackpotWinners.map((record) => ({
+      id: record.id,
+      createdAt: record.createdAt,
+      characterName: record.character.name,
+      userName: record.character.user.name,
+      username: record.character.user.username,
+      // ดึงยอด Jackpot จากฟิลด์ xeny ที่บันทึกไว้
+      jackpotAmount: (record as any).xeny || 0,
+    }))
   }
 }
 

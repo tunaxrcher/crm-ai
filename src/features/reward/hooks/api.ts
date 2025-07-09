@@ -43,6 +43,10 @@ export interface GachaPullResult {
     purchases: any[]
     currentTokens: number
     sessionId: string
+    jackpot: {
+      current: number
+      addedThisSession: number
+    }
   }
 }
 
@@ -101,6 +105,8 @@ export const useGachaPull = () => {
       queryClient.invalidateQueries({ queryKey: ['rewards'] })
       queryClient.invalidateQueries({ queryKey: ['user-token'] })
       queryClient.invalidateQueries({ queryKey: ['gacha-history'] })
+      queryClient.invalidateQueries({ queryKey: ['current-jackpot'] })
+      queryClient.invalidateQueries({ queryKey: ['jackpot-winners'] })
     },
   })
 }
@@ -138,5 +144,34 @@ export const useGachaRates = () => {
       if (!response.ok) throw new Error('Failed to fetch gacha rates')
       return response.json()
     },
+  })
+}
+
+// Get current jackpot amount
+export const useCurrentJackpot = () => {
+  return useQuery({
+    queryKey: ['current-jackpot'],
+    queryFn: async () => {
+      const response = await fetch('/api/rewards/gacha/jackpot')
+      if (!response.ok) throw new Error('Failed to fetch current jackpot')
+      return response.json()
+    },
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+  })
+}
+
+// Get jackpot winners history
+export const useJackpotWinners = (limit: number = 10) => {
+  return useQuery({
+    queryKey: ['jackpot-winners', limit],
+    queryFn: async () => {
+      const response = await fetch(
+        `/api/rewards/gacha/jackpot/history?limit=${limit}`
+      )
+      if (!response.ok) throw new Error('Failed to fetch jackpot winners')
+      return response.json()
+    },
+    refetchInterval: 10000, // Refresh every 10 seconds
+    staleTime: 5000, // Consider data stale after 5 seconds
   })
 }

@@ -197,35 +197,44 @@ export default function GachaHistorySection() {
                         </span>
 
                         {(() => {
-                          // เช็คว่าได้รางวัลและมี metadata.value
+                          // เช็คว่าได้รางวัลและเป็น itemType xeny
                           if (
                             !item.isWin ||
                             !item.rewardItem ||
-                            !item.rewardItem.metadata
+                            item.rewardItem.itemType !== 'xeny'
                           ) {
                             return null
                           }
 
-                          let metadata = item.rewardItem.metadata
-                          // ถ้า metadata เป็น string ให้ parse
-                          if (typeof metadata === 'string') {
-                            try {
-                              metadata = JSON.parse(metadata)
-                            } catch (e) {
-                              console.error('Failed to parse metadata:', e)
-                              return null
+                          // ใช้ฟิลด์ xeny จากตาราง GachaHistory แทน metadata
+                          const xenyAmount = item.xeny || 0
+
+                          // ถ้าไม่มียอด xeny ให้ fallback ไปใช้ metadata (สำหรับข้อมูลเก่า)
+                          let displayAmount = xenyAmount
+                          if (xenyAmount === 0) {
+                            let metadata = item.rewardItem.metadata
+                            if (typeof metadata === 'string') {
+                              try {
+                                metadata = JSON.parse(metadata)
+                                displayAmount = metadata?.value || 0
+                              } catch (e) {
+                                console.error('Failed to parse metadata:', e)
+                                displayAmount = 0
+                              }
+                            } else if (metadata?.value) {
+                              displayAmount = metadata.value
                             }
                           }
 
-                          // ถ้ามี value ใน metadata แสดงว่าเป็น currency reward
-                          if (!metadata || !metadata.value) {
+                          // ถ้ายังไม่มียอดให้แสดง ไม่แสดง badge
+                          if (displayAmount === 0) {
                             return null
                           }
 
                           return (
                             <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 px-2 py-0.5">
-                              <Gem className="h-3 w-3 mr-1" />+{metadata.value}{' '}
-                              {'Xeny'}
+                              <Gem className="h-3 w-3 mr-1" />+
+                              {displayAmount.toLocaleString()} Xeny
                             </Badge>
                           )
                         })()}

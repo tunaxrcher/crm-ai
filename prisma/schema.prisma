@@ -630,6 +630,7 @@ model GachaHistory {
   pullNumber   Int // ลำดับที่ดึงใน session (1-10)
   tokenSpent   Int
   isWin        Boolean  @default(false)
+  xeny         Int?     @default(0) // ยอด Xeny ที่ได้รับ (สำหรับ Jackpot)
   createdAt    DateTime @default(now())
 
   character  Character   @relation(fields: [characterId], references: [id])

@@ -255,10 +255,39 @@ export class GachaHistoryRepository extends BaseRepository<GachaHistory> {
 
   // ดึงประวัติ Gacha ของ character
   async getCharacterGachaHistory(characterId: number, limit: number = 50) {
-    return this.prisma.gachaHistory.findMany({
+    // ใช้ any เพื่อ bypass TypeScript error จากฟิลด์ xeny ที่เพิ่งเพิ่ม
+    return (this.prisma.gachaHistory as any).findMany({
       where: { characterId },
-      include: {
-        rewardItem: true,
+      select: {
+        id: true,
+        characterId: true,
+        rewardItemId: true,
+        sessionId: true,
+        pullNumber: true,
+        tokenSpent: true,
+        isWin: true,
+        xeny: true, // เพิ่มฟิลด์ xeny
+        createdAt: true,
+        rewardItem: {
+          select: {
+            id: true,
+            name: true,
+            subtitle: true,
+            description: true,
+            category: true,
+            itemType: true,
+            icon: true,
+            imageUrl: true,
+            color: true,
+            tokenCost: true,
+            gachaCost: true,
+            stock: true,
+            isActive: true,
+            rarity: true,
+            gachaProbability: true,
+            metadata: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',

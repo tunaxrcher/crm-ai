@@ -15,6 +15,7 @@ import { ScrollArea } from '@src/components/ui/scroll-area'
 import { Skeleton } from '@src/components/ui/skeleton'
 import {
   AlertCircle,
+  Crown,
   Gift,
   Sparkles,
   Star,
@@ -47,6 +48,7 @@ const itemTypeIcons: Record<string, any> = {
   smartwatch: Watch,
   scooter: Zap,
   xeny: Sparkles,
+  jackpot: Crown,
 }
 
 export default function GachaRatesModal({
@@ -127,11 +129,16 @@ export default function GachaRatesModal({
                     {gachaRatesData.gachaRewards.map((reward: any) => {
                       const IconComponent =
                         itemTypeIcons[reward.itemType] || Gift
+                      const isJackpot = reward.id === 1
 
                       return (
                         <div
                           key={reward.id}
-                          className="flex items-center gap-4 p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
+                          className={`flex items-center gap-4 p-3 rounded-lg transition-colors ${
+                            isJackpot
+                              ? 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 hover:border-yellow-500/50'
+                              : 'bg-secondary/30 hover:bg-secondary/50'
+                          }`}>
                           {/* Reward Icon/Image */}
                           <div className="relative">
                             {reward.imageUrl ? (
@@ -144,7 +151,11 @@ export default function GachaRatesModal({
                               />
                             ) : (
                               <div
-                                className={`w-12 h-12 rounded-lg ${reward.color || 'bg-gray-500'} flex items-center justify-center`}>
+                                className={`w-12 h-12 rounded-lg ${
+                                  isJackpot
+                                    ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
+                                    : reward.color || 'bg-gray-500'
+                                } flex items-center justify-center`}>
                                 <IconComponent className="h-6 w-6 text-white" />
                               </div>
                             )}
@@ -152,28 +163,37 @@ export default function GachaRatesModal({
                             {/* Rarity Badge */}
                             <Badge
                               className={`absolute -top-1 -right-1 text-xs px-1 py-0 ${
-                                rarityColors[
-                                  reward.rarity as keyof typeof rarityColors
-                                ] || rarityColors.common
+                                isJackpot
+                                  ? 'bg-yellow-500 text-white'
+                                  : rarityColors[
+                                      reward.rarity as keyof typeof rarityColors
+                                    ] || rarityColors.common
                               } border-0`}>
-                              {reward.rarity?.toUpperCase()}
+                              {isJackpot
+                                ? 'JACKPOT'
+                                : reward.rarity?.toUpperCase()}
                             </Badge>
                           </div>
 
                           {/* Reward Info */}
                           <div className="flex-1">
-                            <h4 className="font-semibold">{reward.name}</h4>
-                            {reward.subtitle && (
+                            <h4
+                              className={`font-semibold ${
+                                isJackpot ? 'text-yellow-400' : ''
+                              }`}>
+                              {reward.name}
+                            </h4>
+                            {!isJackpot && reward.subtitle && (
                               <p className="text-muted-foreground text-sm">
                                 {reward.subtitle}
                               </p>
                             )}
-                            {reward.description && (
+                            {!isJackpot && reward.description && (
                               <p className="text-muted-foreground text-xs mt-1 line-clamp-2">
                                 {reward.description}
                               </p>
                             )}
-                            {reward.stock !== null && (
+                            {!isJackpot && reward.stock !== null && (
                               <p className="text-yellow-600 dark:text-yellow-500 text-xs mt-1">
                                 เหลือ: {reward.stock} ชิ้น
                               </p>
@@ -182,7 +202,10 @@ export default function GachaRatesModal({
 
                           {/* Drop Rate */}
                           <div className="text-right">
-                            <div className="text-lg font-bold text-primary">
+                            <div
+                              className={`text-lg font-bold ${
+                                isJackpot ? 'text-yellow-400' : 'text-primary'
+                              }`}>
                               {reward.probabilityPercent}%
                             </div>
                             <div className="text-muted-foreground text-xs">
