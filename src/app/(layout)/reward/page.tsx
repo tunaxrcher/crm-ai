@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import Image from 'next/image'
 
@@ -53,6 +53,54 @@ interface ConfirmDialogData {
   itemData?: any // สำหรับเก็บข้อมูล item ที่จะซื้อ
 }
 
+interface AnimatedCounterProps {
+  value: number
+  duration?: number
+}
+
+function AnimatedCounter({ value, duration = 1500 }: AnimatedCounterProps) {
+  const [displayValue, setDisplayValue] = useState(value)
+  const [isAnimating, setIsAnimating] = useState(false)
+
+  useEffect(() => {
+    if (displayValue === value) return
+
+    setIsAnimating(true)
+    const startValue = displayValue
+    const difference = value - startValue
+    const startTime = Date.now()
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+
+      // Easing function for smooth animation
+      const easeOutCubic = 1 - Math.pow(1 - progress, 3)
+
+      const currentValue = Math.floor(startValue + difference * easeOutCubic)
+      setDisplayValue(currentValue)
+
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      } else {
+        setDisplayValue(value)
+        setIsAnimating(false)
+      }
+    }
+
+    requestAnimationFrame(animate)
+  }, [value, duration, displayValue])
+
+  return (
+    <span
+      className={`font-mono font-bold text-transparent bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text transition-all duration-200 ${
+        isAnimating ? 'scale-110 drop-shadow-lg' : ''
+      }`}>
+      {displayValue.toLocaleString()}
+    </span>
+  )
+}
+
 export default function RewardPage() {
   const [isGachaPlaying, setIsGachaPlaying] = useState(false)
   const [showReward, setShowReward] = useState(false)
@@ -79,6 +127,16 @@ export default function RewardPage() {
 
   const userTokens = rewardsData?.currentTokens || 0
   const rewardItems = rewardsData?.rewards || []
+
+  const [xenyAmount, setXenyAmount] = useState(125000)
+
+  const addXeny = (amount: number) => {
+    setXenyAmount((prev) => prev + amount)
+  }
+
+  const resetJackpot = () => {
+    setXenyAmount(0)
+  }
 
   const handleGachaConfirm = (pullCount: 1 | 10) => {
     const cost = pullCount === 1 ? 50 : 500
@@ -254,37 +312,6 @@ export default function RewardPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-[2rem] blur-2xl group-hover:blur-3xl transition-all duration-700"></div>
           <div className="relative overflow-hidden">
             <div className="px-10 py-12 pb-0">
-              {/* Jackpot Display */}
-              <div className="flex justify-center mb-8">
-                <div className="relative group/jackpot">
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 via-orange-400/30 to-red-400/30 rounded-2xl blur-xl group-hover/jackpot:blur-2xl transition-all duration-500"></div>
-                  <div className="relative bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-red-500/20 backdrop-blur-sm border border-yellow-400/30 rounded-2xl px-8 py-4">
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-yellow-400 rounded-full blur-sm animate-pulse"></div>
-                        <div className="relative w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                          <span className="text-lg">💎</span>
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-yellow-200/80 font-medium mb-1">
-                          JACKPOT POOL
-                        </div>
-                        <div className="text-2xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text">
-                          {jackpotData?.data?.value?.toLocaleString() || '0'}{' '}
-                          Xeny
-                        </div>
-                        {(jackpotData?.data?.value || 0) >= 1000 && (
-                          <div className="text-xs text-green-400 mt-1 animate-pulse">
-                            🔥 พร้อมแตก!
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Gacha Machine Image */}
               <div className="flex flex-col items-center">
                 <div className="relative group/machine">
@@ -295,15 +322,15 @@ export default function RewardPage() {
                     <Image
                       src="/images/gacha-machine.webp"
                       alt="Futuristic Gacha Machine"
-                      width={300}
-                      height={300}
+                      width={200}
+                      height={200}
                       className="relative drop-shadow-2xl hover:scale-105 transition-transform duration-700 filter hover:brightness-110"
                       priority
                     />
                     {/* Info Icon Overlay */}
-                    <div className="absolute top-4 right-4 bg-blue-500/80 backdrop-blur-sm rounded-full p-2 hover:bg-blue-600/80 transition-colors">
+                    {/* <div className="absolute top-4 right-4 bg-blue-500/80 backdrop-blur-sm rounded-full p-2 hover:bg-blue-600/80 transition-colors">
                       <Info className="h-5 w-5 text-white" />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -341,6 +368,46 @@ export default function RewardPage() {
                       <span className="text-lg">กด 10 ครั้ง</span>
                     </div>
                   </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Jackpot Display */}
+        <div className=" justify-center mb-8">
+          <div className="relative group/jackpot">
+            <div className="relative py-6">
+              {/* 3D Jackpot Image */}
+              <div className="flex justify-center mb-4">
+                <Image
+                  src="/jackpot.png"
+                  alt="Jackpot 3D Text"
+                  width={250}
+                  height={100}
+                  className="drop-shadow-2xl"
+                />
+              </div>
+
+              <div className="flex items-center justify-center gap-3">
+                <div className="bg-white/90 rounded-lg p-6 border-2 border-yellow-500/50 shadow-inner w-full">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-yellow-400 text-4xl">₿</span>
+                    <div className="text-3xl flex items-center justify-center gap-2">
+                      <AnimatedCounter
+                        value={jackpotData?.data?.value || 0}
+                        duration={2000}
+                      />
+                      <span className="text-2xl font-bold text-transparent bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text">
+                        XENY
+                      </span>
+                    </div>
+                    {(jackpotData?.data?.value || 0) >= 1000 && (
+                      <div className="text-xs text-green-400 mt-1 animate-pulse">
+                        🔥 สู้สู้ !
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
