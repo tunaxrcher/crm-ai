@@ -419,11 +419,12 @@ export default function RewardPage() {
           <JackpotWinnersSection />
         </div>
 
+        <hr />
         {/* Rewards Mall */}
         <div className="relative group">
           <div className="absolute inset-0"></div>
           <div className="relative overflow-hidden">
-            <div className="px-10 py-12">
+            <div className="px-10 pb-12">
               <div className="text-center mb-10">
                 <h2 className="text-3xl mb-3">Rewards Mall</h2>
               </div>
