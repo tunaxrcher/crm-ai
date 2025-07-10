@@ -115,7 +115,6 @@ export default function JackpotWinnersSection() {
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="flex items-center justify-center gap-2 text-2xl font-bold text-yellow-400 mb-2">
-          <Crown className="h-6 w-6" />
           🏆 แท่นรายชื่อ
         </h2>
         <p className="text-gray-400 text-sm">
@@ -201,12 +200,6 @@ export default function JackpotWinnersSection() {
                 <h2 className="text-2xl font-bold mb-3">
                   {winners[currentIndex].characterName}
                 </h2>
-                <div className="flex items-center justify-center gap-1 mb-4">
-                  <User className="h-4 w-4 text-gray-400" />
-                  <Badge variant="secondary" className="text-sm px-2 py-1">
-                    {winners[currentIndex].username}
-                  </Badge>
-                </div>
                 <div className="text-sm text-muted-foreground mb-4">
                   <div className="flex items-center justify-center gap-2 text-yellow-600 font-bold mb-2">
                     <Trophy className="h-5 w-5" />
