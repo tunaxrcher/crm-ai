@@ -371,6 +371,13 @@ export class RewardService extends BaseService {
               const xenyAmount = metadata.value || 0
 
               if (xenyAmount > 0) {
+                // อัปเดตยอด Xeny ใน GachaHistory สำหรับรางวัล xeny ปกติ
+                await tx.$executeRaw`
+                  UPDATE GachaHistory 
+                  SET xeny = ${xenyAmount} 
+                  WHERE id = ${gachaHistory.id}
+                `
+
                 // สร้างหรืออัปเดต UserXeny
                 // @ts-ignore
                 let userXeny = await tx.userXeny.findUnique({

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `GachaHistory` ADD COLUMN `xeny` INTEGER NULL DEFAULT 0;

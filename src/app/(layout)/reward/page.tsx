@@ -63,6 +63,9 @@ function AnimatedCounter({ value, duration = 1500 }: AnimatedCounterProps) {
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
+    console.log(displayValue)
+    console.log(value)
+
     if (displayValue === value) return
 
     setIsAnimating(true)
@@ -127,16 +130,6 @@ export default function RewardPage() {
 
   const userTokens = rewardsData?.currentTokens || 0
   const rewardItems = rewardsData?.rewards || []
-
-  const [xenyAmount, setXenyAmount] = useState(125000)
-
-  const addXeny = (amount: number) => {
-    setXenyAmount((prev) => prev + amount)
-  }
-
-  const resetJackpot = () => {
-    setXenyAmount(0)
-  }
 
   const handleGachaConfirm = (pullCount: 1 | 10) => {
     const cost = pullCount === 1 ? 50 : 500
