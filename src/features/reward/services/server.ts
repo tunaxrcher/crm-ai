@@ -690,6 +690,12 @@ export class RewardService extends BaseService {
                 username: true,
               },
             },
+            jobClass: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         rewardItem: true,
@@ -707,6 +713,7 @@ export class RewardService extends BaseService {
       userName: record.character.user.name,
       username: record.character.user.username,
       currentPortraitUrl: record.character.currentPortraitUrl,
+      jobClassName: record.character.jobClass.name,
       // ดึงยอด Jackpot จากฟิลด์ xeny ที่บันทึกไว้
       jackpotAmount: (record as any).xeny || 0,
     }))

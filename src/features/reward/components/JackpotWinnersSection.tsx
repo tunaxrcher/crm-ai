@@ -29,9 +29,10 @@ export default function JackpotWinnersSection() {
   const minSwipeDistance = 50
 
   const winners = winnersData?.data || []
+  const showNavigation = winners.length >= 3 // แสดง navigation เมื่อมี 3 คนขึ้นไป
 
   const goToPrevious = () => {
-    if (isAnimating || winners.length <= 1) return
+    if (isAnimating || winners.length <= 1 || !showNavigation) return
     setSlideDirection('right')
     setIsAnimating(true)
     setCurrentIndex((prevIndex) => {
@@ -41,7 +42,7 @@ export default function JackpotWinnersSection() {
   }
 
   const goToNext = () => {
-    if (isAnimating || winners.length <= 1) return
+    if (isAnimating || winners.length <= 1 || !showNavigation) return
     setSlideDirection('left')
     setIsAnimating(true)
     setCurrentIndex((prevIndex) => {
@@ -52,16 +53,18 @@ export default function JackpotWinnersSection() {
 
   // Touch event handlers
   const onTouchStart = (e: React.TouchEvent) => {
+    if (!showNavigation) return
     setTouchEnd(null) // otherwise the swipe is fired even with usual touch events
     setTouchStart(e.targetTouches[0].clientX)
   }
 
   const onTouchMove = (e: React.TouchEvent) => {
+    if (!showNavigation) return
     setTouchEnd(e.targetTouches[0].clientX)
   }
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
+    if (!showNavigation || !touchStart || !touchEnd) return
 
     const distance = touchStart - touchEnd
     const isLeftSwipe = distance > minSwipeDistance
@@ -94,20 +97,94 @@ export default function JackpotWinnersSection() {
     return currentIndex === winners.length - 1 ? 0 : currentIndex + 1
   }
 
-  // Auto-scroll every 3 seconds
+  // Auto-scroll every 3 seconds (only if navigation is enabled)
   useEffect(() => {
-    if (winners.length <= 1 || isHovered || isAnimating) return
+    if (winners.length <= 1 || isHovered || isAnimating || !showNavigation) return
 
     const interval = setInterval(() => {
       goToNext()
     }, 3000)
 
     return () => clearInterval(interval)
-  }, [currentIndex, winners.length, isHovered, isAnimating])
+  }, [currentIndex, winners.length, isHovered, isAnimating, showNavigation])
 
   // If no winners are available
   if (isLoading || winners.length === 0) {
     return <div className="text-center p-4">ยังไม่มีผู้โชคดีถูก Jackpot</div>
+  }
+
+  // เมื่อมีผู้ชนะน้อยกว่า 3 คน แสดงแบบ grid
+  if (!showNavigation) {
+    return (
+      <>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="flex items-center justify-center gap-2 text-2xl font-bold text-yellow-400 mb-2">
+            🏆 แท่นรายชื่อ
+          </h2>
+          <p className="text-gray-400 text-sm">
+            ผู้โชคดีได้รับ Jackpot จากตู้กาชา
+          </p>
+        </div>
+        
+        <div className="flex flex-wrap justify-center gap-6">
+          {winners.map((winner: any, index: number) => (
+            <div key={winner.id} className="rounded-3xl shadow-2xl p-8 w-80">
+              <div className="aspect-square relative mb-6 overflow-hidden rounded-2xl">
+                {winner.currentPortraitUrl ? (
+                  <Image
+                    src={winner.currentPortraitUrl || '/placeholder.svg'}
+                    alt={winner.characterName}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <User className="h-16 w-16 text-gray-400" />
+                  </div>
+                )}
+
+                {/* Rank Badge */}
+                <div className="absolute top-2 left-2">
+                  {index + 1 === 1 ? (
+                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
+                      <Crown className="h-4 w-4 text-white" />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-xs font-bold text-white">
+                        #{index + 1}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">
+                  {winner.characterName}
+                </h2>
+                <Badge variant="secondary" className="mb-3">
+                  {winner.jobClassName}
+                </Badge>
+                <div className="text-sm text-muted-foreground mb-4">
+                  <div className="flex items-center justify-center gap-2 text-yellow-600 font-bold mb-2">
+                    <Trophy className="h-5 w-5" />
+                    <span className="text-lg">
+                      {winner.jackpotAmount?.toLocaleString() || '0'} Xeny
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {format(new Date(winner.createdAt), 'dd MMM yyyy HH:mm', {
+                      locale: th,
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )
   }
 
   return (
@@ -152,9 +229,14 @@ export default function JackpotWinnersSection() {
                   </div>
                 )}
               </div>
-              <h3 className="text-sm md:text-lg font-semibold text-center">
+              <h3 className="text-sm md:text-lg font-semibold text-center mb-1">
                 {winners[getPreviousIndex()].characterName}
               </h3>
+              <div className="text-center">
+                <Badge variant="secondary" className="text-xs">
+                  {winners[getPreviousIndex()].jobClassName}
+                </Badge>
+              </div>
             </div>
           </div>
 
@@ -197,9 +279,12 @@ export default function JackpotWinnersSection() {
                 </div>
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold mb-3">
+                <h2 className="text-2xl font-bold mb-2">
                   {winners[currentIndex].characterName}
                 </h2>
+                <Badge variant="secondary" className="mb-3">
+                  {winners[currentIndex].jobClassName}
+                </Badge>
                 <div className="text-sm text-muted-foreground mb-4">
                   <div className="flex items-center justify-center gap-2 text-yellow-600 font-bold mb-2">
                     <Trophy className="h-5 w-5" />
@@ -246,31 +331,40 @@ export default function JackpotWinnersSection() {
                   </div>
                 )}
               </div>
-              <h3 className="text-sm md:text-lg font-semibold text-center">
+              <h3 className="text-sm md:text-lg font-semibold text-center mb-1">
                 {winners[getNextIndex()].characterName}
               </h3>
+              <div className="text-center">
+                <Badge variant="secondary" className="text-xs">
+                  {winners[getNextIndex()].jobClassName}
+                </Badge>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Navigation Buttons */}
-        <Button
-          onClick={goToPrevious}
-          variant="outline"
-          size="icon"
-          disabled={isAnimating || winners.length <= 1}
-          className="absolute left-2 md:left-16 z-30 bg-white/90 backdrop-blur-sm hover:border-2 border-indigo-200 hover:border-indigo-300 w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg disabled:opacity-50">
-          <ChevronLeft className="h-4 w-4 md:h-6 md:w-6 text-indigo-600" />
-        </Button>
+        {/* Navigation Buttons - แสดงเฉพาะเมื่อมี 3 คนขึ้นไป */}
+        {showNavigation && (
+          <>
+            <Button
+              onClick={goToPrevious}
+              variant="outline"
+              size="icon"
+              disabled={isAnimating || winners.length <= 1}
+              className="absolute left-2 md:left-16 z-30 bg-white/90 backdrop-blur-sm hover:border-2 border-indigo-200 hover:border-indigo-300 w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg disabled:opacity-50">
+              <ChevronLeft className="h-4 w-4 md:h-6 md:w-6 text-indigo-600" />
+            </Button>
 
-        <Button
-          onClick={goToNext}
-          variant="outline"
-          size="icon"
-          disabled={isAnimating || winners.length <= 1}
-          className="absolute right-2 md:right-16 z-30 bg-white/90 backdrop-blur-sm hover:border-2 border-indigo-200 hover:border-indigo-300 w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg disabled:opacity-50">
-          <ChevronRight className="h-4 w-4 md:h-6 md:w-6 text-indigo-600" />
-        </Button>
+            <Button
+              onClick={goToNext}
+              variant="outline"
+              size="icon"
+              disabled={isAnimating || winners.length <= 1}
+              className="absolute right-2 md:right-16 z-30 bg-white/90 backdrop-blur-sm hover:border-2 border-indigo-200 hover:border-indigo-300 w-10 h-10 md:w-12 md:h-12 rounded-full shadow-lg disabled:opacity-50">
+              <ChevronRight className="h-4 w-4 md:h-6 md:w-6 text-indigo-600" />
+            </Button>
+          </>
+        )}
       </div>
     </>
   )
