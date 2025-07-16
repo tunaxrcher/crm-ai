@@ -258,8 +258,44 @@ export class QuestService extends BaseService {
     userId: number
   ): Promise<void> {
     try {
-      // ดึงเควสรายวันใหม่ 3 อัน
-      const dailyQuests = await this.getRandomQuestsByType('daily', 3)
+      // ดึงข้อมูล character เพื่อตรวจสอบ level
+      const character = await prisma.character.findUnique({
+        where: { id: characterId },
+        select: { level: true }
+      })
+
+      if (!character) {
+        console.log('Character not found')
+        return
+      }
+
+      let dailyQuests: any[] = []
+
+      // ตรวจสอบ level
+      if (character.level >= 10) {
+        // สำหรับ level 10+ ใช้ personal quests
+        const personalQuests = await prisma.quest.findMany({
+          where: {
+            characterId: characterId,
+            type: 'daily',
+            isActive: true
+          } as any
+        })
+
+        if (personalQuests.length > 0) {
+          // สุ่มเลือก personal quests
+          const shuffled = [...personalQuests].sort(() => 0.5 - Math.random())
+          dailyQuests = shuffled.slice(0, Math.min(3, personalQuests.length))
+          console.log(`Using ${dailyQuests.length} personal daily quests for level ${character.level} character`)
+        } else {
+          // ถ้าไม่มี personal quests ให้ใช้ระบบเดิม
+          console.log('No personal quests found, falling back to random quests')
+          dailyQuests = await this.getRandomQuestsByType('daily', 3)
+        }
+      } else {
+        // สำหรับ level < 10 ใช้ระบบเดิม
+        dailyQuests = await this.getRandomQuestsByType('daily', 3)
+      }
 
       if (dailyQuests.length === 0) {
         console.log('No daily quests available')
@@ -316,7 +352,45 @@ export class QuestService extends BaseService {
 
     // ถ้าไม่มีเควสรายสัปดาห์ ให้มอบหมายเควสรายสัปดาห์ใหม่
     try {
-      const weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
+      // ดึงข้อมูล character เพื่อตรวจสอบ level
+      const character = await prisma.character.findUnique({
+        where: { id: characterId },
+        select: { level: true }
+      })
+
+      if (!character) {
+        console.log('Character not found')
+        return
+      }
+
+      let weeklyQuests: any[] = []
+
+      // ตรวจสอบ level
+      if (character.level >= 10) {
+        // สำหรับ level 10+ ใช้ personal quests
+        // TODO: หลังจาก run `npx prisma generate` แล้ว สามารถเอา 'as any' ออกได้
+        const personalQuests = await prisma.quest.findMany({
+          where: {
+            characterId: characterId,
+            type: 'weekly',
+            isActive: true
+          } as any
+        })
+
+        if (personalQuests.length > 0) {
+          // สุ่มเลือก personal quests
+          const shuffled = [...personalQuests].sort(() => 0.5 - Math.random())
+          weeklyQuests = shuffled.slice(0, Math.min(3, personalQuests.length))
+          console.log(`Using ${weeklyQuests.length} personal weekly quests for level ${character.level} character`)
+        } else {
+          // ถ้าไม่มี personal quests ให้ใช้ระบบเดิม
+          console.log('No personal weekly quests found, falling back to random quests')
+          weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
+        }
+      } else {
+        // สำหรับ level < 10 ใช้ระบบเดิม
+        weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
+      }
 
       if (weeklyQuests.length === 0) {
         console.log('No weekly quests available')
@@ -358,6 +432,37 @@ export class QuestService extends BaseService {
     userId: number
   ): Promise<void> {
     try {
+      // ดึงข้อมูล character เพื่อตรวจสอบ level
+      const character = await prisma.character.findUnique({
+        where: { id: characterId },
+        select: { level: true }
+      })
+
+      if (!character) {
+        console.log('Character not found')
+        return
+      }
+
+      // สำหรับ level 10+ ตรวจสอบว่ามี personal quests หรือยัง
+      if (character.level >= 10) {
+        // TODO: หลังจาก run `npx prisma generate` แล้ว สามารถเอา 'as any' ออกได้
+        const personalQuestCount = await prisma.quest.count({
+          where: {
+            characterId: characterId
+          } as any
+        })
+
+        if (personalQuestCount === 0) {
+          console.log(`Level ${character.level} character has no personal quests yet, using standard quests`)
+        } else {
+          // ถ้ามี personal quests แล้ว ให้ใช้ตามปกติ
+          await this.assignNewDailyQuests(characterId, userId)
+          await this.checkAndAssignWeeklyQuests(characterId, userId, [])
+          return
+        }
+      }
+
+      // สำหรับ level < 10 หรือ level 10+ ที่ยังไม่มี personal quests
       // ดึงเควสรายวัน 3 อัน
       const dailyQuests = await this.getRandomQuestsByType('daily', 3)
 

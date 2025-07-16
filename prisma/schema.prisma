@@ -110,6 +110,7 @@ model Character {
   checkinCheckouts   CheckinCheckout[]
   tokenTransactions  TokenTransaction[]
   xenyTransactions   XenyTransaction[]
+  personalQuests     Quest[]                // เควสส่วนตัวสำหรับ level 10+
 
   @@index([jobClassId], map: "Character_jobClassId_fkey")
   @@index([jobLevelId], map: "Character_jobLevelId_fkey")
@@ -279,9 +280,13 @@ model Quest {
   maxTokenReward   Int?
   jobClassId       Int?
   tokenMultiplier  Float             @default(1)
+  characterId      Int?              // ระบุว่าเป็นเควสสำหรับ character ใด (สำหรับ level 10+)
   assignedQuests   AssignedQuest[]
   questSubmissions QuestSubmission[]
   questTokens      QuestToken[]
+  character        Character?        @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([characterId], map: "Quest_characterId_fkey")
 }
 
 model AssignedQuest {
