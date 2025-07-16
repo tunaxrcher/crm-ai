@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
           orderBy: {
             submittedAt: 'desc'
           },
-          take: 20, // ดึง 20 submission ล่าสุด
+          // ดึงทั้งหมด ไม่จำกัดจำนวน
           include: {
             quest: true
           }
@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
           xpEarned: sub.xpEarned
         }))
 
+        console.log(submissionData)
+
         // สร้าง prompt สำหรับ AI
         const prompt = `
 วิเคราะห์ประวัติการทำเควสของผู้ใช้และสร้างเควสที่เหมาะสมกับสายงาน
@@ -86,7 +88,7 @@ ${JSON.stringify(submissionData, null, 2)}
     {
       "title": "ชื่อเควส",
       "description": "คำอธิบายเควส",
-      "type": "daily", // daily, weekly, special
+      "type": "daily",
       "difficultyLevel": 1-5,
       "xpReward": 100-500,
       "baseTokenReward": 10-50,
@@ -95,7 +97,7 @@ ${JSON.stringify(submissionData, null, 2)}
   ]
 }
 
-สร้างเควสอย่างน้อย 10-15 เควส ที่หลากหลาย
+สร้างเควสรายวัน (daily) อย่างน้อย 10-15 เควส ที่หลากหลาย
 `
 
         // ส่งให้ ChatGPT วิเคราะห์

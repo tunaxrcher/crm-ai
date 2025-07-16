@@ -835,6 +835,7 @@ export class QuestSubmissionService extends BaseService {
         questRequirements: [],
         mediaUrl,
         userDescription: description,
+        questXpReward: quest.xpReward
       }
 
       // 5. ส่งข้อมูลให้ AI วิเคราะห์
@@ -858,7 +859,7 @@ export class QuestSubmissionService extends BaseService {
       const { submission, userToken } =
         await questSubmissionRepository.createQuestSubmissionWithToken({
           questId,
-          questXpEarned: quest.xpReward,
+          questXpEarned: aiAnalysis.xpEarned, //quest.xpReward,
           characterId,
           mediaType,
           mediaUrl,
@@ -882,13 +883,13 @@ export class QuestSubmissionService extends BaseService {
       )
 
       // 9. อัพเดท character XP
-      const characterUpdateResult = await characterService.addXP(quest.xpReward)
+      const characterUpdateResult = await characterService.addXP(aiAnalysis.xpEarned)
 
       // 10. อัพเดท Quest Streak
       await tokenCalculationService.updateQuestStreak(character.userId)
 
       // 11. สร้าง feed item (รวม token ที่ได้)
-      const feedContent = `ทำเควส "${quest.title}" สำเร็จและได้รับ ${quest.xpReward} XP และ ${finalTokens} Tokens!`
+      const feedContent = `ทำเควส "${quest.title}" สำเร็จและได้รับ ${aiAnalysis.xpEarned} XP และ ${finalTokens} Tokens!`
 
       const feedItem =
         await questSubmissionRepository.createQuestCompletionFeedItem(
@@ -897,7 +898,7 @@ export class QuestSubmissionService extends BaseService {
           submission.mediaRevisedTranscript || feedContent,
           mediaType,
           quest.title,
-          quest.xpReward,
+          aiAnalysis.xpEarned,
           submission.id,
           mediaUrl
         )
@@ -913,10 +914,10 @@ export class QuestSubmissionService extends BaseService {
         expiresInHours: 24,
       })
 
-      let successMessage = `Quest completed! You earned ${quest.xpReward} XP and ${finalTokens} tokens!`
+      let successMessage = `Quest completed! You earned ${aiAnalysis.xpEarned} XP and ${finalTokens} tokens!`
 
       if (characterUpdateResult.leveledUp) {
-        successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s), ${quest.xpReward} XP and ${finalTokens} tokens!`
+        successMessage = `Quest completed! You gained ${characterUpdateResult.levelsGained} level(s), ${aiAnalysis.xpEarned} XP and ${finalTokens} tokens!`
       }
 
       // เพิ่มข้อมูล bonus ที่ได้รับ

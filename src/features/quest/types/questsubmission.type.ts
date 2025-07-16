@@ -20,4 +20,5 @@ export interface OpenAIPrompt {
   questRequirements: string[]
   mediaUrl?: string
   userDescription?: string
+  questXpReward?: any
 }
