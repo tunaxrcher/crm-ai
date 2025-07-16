@@ -13,6 +13,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@src/components/ui/tabs'
+import { useCharacter } from '@src/contexts/CharacterContext'
 import { withErrorHandling } from '@src/hooks'
 import useErrorHandler from '@src/hooks/useErrorHandler'
 
@@ -29,6 +30,7 @@ type QuestPageProps = {
 
 function QuestPageComponent({ userId }: QuestPageProps) {
   const router = useRouter()
+  const { character } = useCharacter()
   const { groupedQuests, completedQuests, isLoading, error, refreshQuests } =
     useQuests(userId)
   const [activeTab, setActiveTab] = useState('active')
@@ -50,6 +52,9 @@ function QuestPageComponent({ userId }: QuestPageProps) {
   }
 
   const safeCompletedQuests = completedQuests || []
+
+  // ตรวจสอบว่าควรแสดง AddQuestButton หรือไม่ (ซ่อนสำหรับ level 10+)
+  const shouldShowAddQuestButton = !character || character.level < 10
 
   // Toggle expanded state for quest types
   const toggleExpanded = (type: 'daily' | 'weekly' | 'no-deadline') => {
@@ -195,7 +200,7 @@ function QuestPageComponent({ userId }: QuestPageProps) {
           )}
         </TabsContent>
       </Tabs>
-      <AddQuestButton />
+      {shouldShowAddQuestButton && <AddQuestButton />}
     </div>
   )
 }

@@ -306,7 +306,7 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
 
   async update(
     id: number,
-    data: Partial<Omit<Quest, 'id' | 'createdAt' | 'updatedAt'>>
+    data: any
   ) {
     return this.prisma.questSubmission.update({
       where: { id },
