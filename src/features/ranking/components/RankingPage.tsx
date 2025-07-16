@@ -58,18 +58,11 @@ import { CharacterClass, RankingPeriod } from '../types'
 
 // src/features/ranking/components/RankingPage.tsx
 
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
-// src/features/ranking/components/RankingPage.tsx
-
 function RankingPageComponent() {
   const router = useRouter()
   const [selectedCharacter, setSelectedCharacter] = useState<any>(null)
   const [showCharacterDialog, setShowCharacterDialog] = useState(false)
+  const [loadingCharacter, setLoadingCharacter] = useState(false)
 
   const [period, setPeriod] = useState<RankingPeriod>('all-time')
   const [selectedClass, setSelectedClass] = useState<CharacterClass>('all')
@@ -87,11 +80,32 @@ function RankingPageComponent() {
 
   const { showError } = useError()
 
-  const handleCharacterClick = (e: React.MouseEvent, character: any) => {
+  const handleCharacterClick = async (e: React.MouseEvent, character: any) => {
     console.log(character)
-    // e.preventDefault() // ป้องกันการ navigate
-    // setSelectedCharacter(character)
-    // setShowCharacterDialog(true)
+    e.preventDefault() // ป้องกันการ navigate
+    
+    if (loadingCharacter) return // ป้องกันการกดซ้ำ
+    
+    setLoadingCharacter(true)
+    try {
+      // Fetch detailed character data
+      const response = await fetch(`/api/user/${character.id}/character`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch character data')
+      }
+      
+      const detailedCharacter = await response.json()
+      setSelectedCharacter(detailedCharacter)
+      setShowCharacterDialog(true)
+    } catch (error) {
+      console.error('Error fetching character data:', error)
+      showError('ไม่สามารถโหลดข้อมูล character ได้', {
+        message: 'โปรดลองอีกครั้งในภายหลัง',
+        severity: 'error',
+      })
+    } finally {
+      setLoadingCharacter(false)
+    }
   }
 
   // Get position badge
@@ -268,6 +282,13 @@ function RankingPageComponent() {
                   </Avatar>
                 </div>
 
+                {/* Loading overlay */}
+                {loadingCharacter && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+
                 {/* Crown animation */}
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <Crown className="h-8 w-8 text-yellow-500 animate-pulse" />
@@ -323,10 +344,19 @@ function RankingPageComponent() {
             {getPositionBadge(currentUser.position)}
 
             <div className="flex items-center ml-6">
-              <Avatar className="h-12 w-12 mr-3">
-                <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                <AvatarFallback>{currentUser.name.slice(0, 2)}</AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-12 w-12 mr-3">
+                  <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
+                  <AvatarFallback>{currentUser.name.slice(0, 2)}</AvatarFallback>
+                </Avatar>
+                
+                {/* Loading overlay */}
+                {loadingCharacter && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center mr-3">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
 
               <div className="flex-1">
                 <div className="font-semibold flex items-center">
@@ -382,10 +412,19 @@ function RankingPageComponent() {
             {getPositionBadge(user.position)}
 
             <div className="flex items-center ml-6">
-              <Avatar className="h-10 w-10 mr-3">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-10 w-10 mr-3">
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
+                </Avatar>
+                
+                {/* Loading overlay */}
+                {loadingCharacter && (
+                  <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center mr-3">
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
 
               <div className="flex-1">
                 <div className="font-medium flex items-center">

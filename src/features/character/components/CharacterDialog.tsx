@@ -254,21 +254,6 @@ export default function CharacterDialog({
             </div>
           </div>
 
-          {/* Job Class Info */}
-          {character.jobClass && (
-            <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-              <Briefcase className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-medium">{character.jobClass.name}</p>
-                {character.currentJobLevel && (
-                  <p className="text-xs text-muted-foreground">
-                    Level {character.currentJobLevel.level}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Bio */}
           {character.user?.bio && (
             <div className="p-3 bg-secondary/30 rounded-lg">
