@@ -261,7 +261,7 @@ export class QuestService extends BaseService {
       // ดึงข้อมูล character เพื่อตรวจสอบ level
       const character = await prisma.character.findUnique({
         where: { id: characterId },
-        select: { level: true }
+        select: { level: true },
       })
 
       if (!character) {
@@ -278,52 +278,55 @@ export class QuestService extends BaseService {
           where: {
             characterId: characterId,
             type: 'daily',
-            isActive: true
-          } as any
+            isActive: true,
+          } as any,
         })
 
         if (personalQuests.length > 0) {
           // สุ่มเลือก personal quests
           const shuffled = [...personalQuests].sort(() => 0.5 - Math.random())
-          dailyQuests = shuffled.slice(0, Math.min(3, personalQuests.length))
-          console.log(`Using ${dailyQuests.length} personal daily quests for level ${character.level} character`)
+          dailyQuests = shuffled.slice(0, Math.min(5, personalQuests.length))
+          console.log(
+            `Using ${dailyQuests.length} personal daily quests for level ${character.level} character`
+          )
         } else {
           // ถ้าไม่มี personal quests ให้ใช้ระบบเดิม
           console.log('No personal quests found, falling back to random quests')
-          dailyQuests = await this.getRandomQuestsByType('daily', 3)
+          dailyQuests = await this.getRandomQuestsByType('daily', 5)
         }
       } else {
         // สำหรับ level < 10 ใช้ระบบเดิม
         dailyQuests = await this.getRandomQuestsByType('daily', 3)
-      }
 
-      if (dailyQuests.length === 0) {
-        console.log('No daily quests available')
-        return
-      }
+        if (dailyQuests.length === 0) {
+          console.log('No daily quests available')
+          return
+        }
 
-      console.log(
-        `Assigning ${dailyQuests.length} new daily quests for user ${userId}`
-      )
+        console.log(
+          `Assigning ${dailyQuests.length} new daily quests for user ${userId}`
+        )
 
-      // มอบหมายเควสรายวันใหม่
-      const assignPromises = dailyQuests.map((quest) => {
-        // กำหนด expiresAt (หมดอายุเวลา 23:59:59 ของวันนี้)
-        const expiresAt = new Date()
-        expiresAt.setHours(23, 59, 59, 999)
+        // มอบหมายเควสรายวันใหม่
+        const assignPromises = dailyQuests.map((quest) => {
+          // กำหนด expiresAt (หมดอายุเวลา 23:59:59 ของวันนี้)
+          const expiresAt = new Date()
+          expiresAt.setHours(23, 59, 59, 999)
 
-        return prisma.assignedQuest.create({
-          data: {
-            questId: quest.id,
-            characterId: characterId,
-            status: 'active',
-            assignedAt: new Date(),
-            expiresAt: expiresAt,
-          },
+          return prisma.assignedQuest.create({
+            data: {
+              questId: quest.id,
+              characterId: characterId,
+              status: 'active',
+              assignedAt: new Date(),
+              expiresAt: expiresAt,
+            },
+          })
         })
-      })
 
-      await Promise.all(assignPromises)
+        await Promise.all(assignPromises)
+      }
+
       console.log('New daily quests assigned successfully')
     } catch (error) {
       console.error('Error assigning new daily quests:', error)
@@ -355,7 +358,7 @@ export class QuestService extends BaseService {
       // ดึงข้อมูล character เพื่อตรวจสอบ level
       const character = await prisma.character.findUnique({
         where: { id: characterId },
-        select: { level: true }
+        select: { level: true },
       })
 
       if (!character) {
@@ -373,53 +376,58 @@ export class QuestService extends BaseService {
           where: {
             characterId: characterId,
             type: 'weekly',
-            isActive: true
-          } as any
+            isActive: true,
+          } as any,
         })
 
         if (personalQuests.length > 0) {
           // สุ่มเลือก personal quests
           const shuffled = [...personalQuests].sort(() => 0.5 - Math.random())
           weeklyQuests = shuffled.slice(0, Math.min(3, personalQuests.length))
-          console.log(`Using ${weeklyQuests.length} personal weekly quests for level ${character.level} character`)
+          console.log(
+            `Using ${weeklyQuests.length} personal weekly quests for level ${character.level} character`
+          )
         } else {
           // ถ้าไม่มี personal quests ให้ใช้ระบบเดิม
-          console.log('No personal weekly quests found, falling back to random quests')
+          console.log(
+            'No personal weekly quests found, falling back to random quests'
+          )
           weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
         }
       } else {
         // สำหรับ level < 10 ใช้ระบบเดิม
         weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
-      }
 
-      if (weeklyQuests.length === 0) {
-        console.log('No weekly quests available')
-        return
-      }
+        if (weeklyQuests.length === 0) {
+          console.log('No weekly quests available')
+          return
+        }
 
-      console.log(
-        `Assigning ${weeklyQuests.length} new weekly quests for user ${userId}`
-      )
+        console.log(
+          `Assigning ${weeklyQuests.length} new weekly quests for user ${userId}`
+        )
 
-      // มอบหมายเควสรายสัปดาห์ใหม่
-      const assignPromises = weeklyQuests.map((quest) => {
-        // กำหนด expiresAt (หมดอายุ 7 วันนับจากวันนี้)
-        const expiresAt = new Date()
-        expiresAt.setDate(expiresAt.getDate() + 7)
-        expiresAt.setHours(23, 59, 59, 999)
+        // มอบหมายเควสรายสัปดาห์ใหม่
+        const assignPromises = weeklyQuests.map((quest) => {
+          // กำหนด expiresAt (หมดอายุ 7 วันนับจากวันนี้)
+          const expiresAt = new Date()
+          expiresAt.setDate(expiresAt.getDate() + 7)
+          expiresAt.setHours(23, 59, 59, 999)
 
-        return prisma.assignedQuest.create({
-          data: {
-            questId: quest.id,
-            characterId: characterId,
-            status: 'active',
-            assignedAt: new Date(),
-            expiresAt: expiresAt,
-          },
+          return prisma.assignedQuest.create({
+            data: {
+              questId: quest.id,
+              characterId: characterId,
+              status: 'active',
+              assignedAt: new Date(),
+              expiresAt: expiresAt,
+            },
+          })
         })
-      })
 
-      await Promise.all(assignPromises)
+        await Promise.all(assignPromises)
+      }
+
       console.log('New weekly quests assigned successfully')
     } catch (error) {
       console.error('Error assigning new weekly quests:', error)
@@ -435,7 +443,7 @@ export class QuestService extends BaseService {
       // ดึงข้อมูล character เพื่อตรวจสอบ level
       const character = await prisma.character.findUnique({
         where: { id: characterId },
-        select: { level: true }
+        select: { level: true },
       })
 
       if (!character) {
@@ -448,12 +456,14 @@ export class QuestService extends BaseService {
         // TODO: หลังจาก run `npx prisma generate` แล้ว สามารถเอา 'as any' ออกได้
         const personalQuestCount = await prisma.quest.count({
           where: {
-            characterId: characterId
-          } as any
+            characterId: characterId,
+          } as any,
         })
 
         if (personalQuestCount === 0) {
-          console.log(`Level ${character.level} character has no personal quests yet, using standard quests`)
+          console.log(
+            `Level ${character.level} character has no personal quests yet, using standard quests`
+          )
         } else {
           // ถ้ามี personal quests แล้ว ให้ใช้ตามปกติ
           await this.assignNewDailyQuests(characterId, userId)
@@ -835,7 +845,7 @@ export class QuestSubmissionService extends BaseService {
         questRequirements: [],
         mediaUrl,
         userDescription: description,
-        questXpReward: quest.xpReward
+        questXpReward: quest.xpReward,
       }
 
       // 5. ส่งข้อมูลให้ AI วิเคราะห์
@@ -883,7 +893,9 @@ export class QuestSubmissionService extends BaseService {
       )
 
       // 9. อัพเดท character XP
-      const characterUpdateResult = await characterService.addXP(aiAnalysis.xpEarned)
+      const characterUpdateResult = await characterService.addXP(
+        aiAnalysis.xpEarned
+      )
 
       // 10. อัพเดท Quest Streak
       await tokenCalculationService.updateQuestStreak(character.userId)

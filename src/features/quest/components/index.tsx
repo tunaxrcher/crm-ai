@@ -169,42 +169,12 @@ function QuestPageComponent({ userId }: QuestPageProps) {
             />
           )}
 
-          {/* Weekly Quests Section */}
-          {safeGroupedQuests.weekly.length > 0 && (
-            <div className="opacity-60">
-              <QuestTypeSection
-                quests={safeGroupedQuests.weekly}
-                type="weekly"
-                isExpanded={expandedTypes.weekly}
-                onToggleExpand={() => toggleExpanded('weekly')}
-                onQuestClick={navigateToQuest}
-                formatDeadline={formatDeadline}
-              />
-            </div>
-          )}
-
-          {/* Regular Quests Section */}
-          {safeGroupedQuests['no-deadline'].length > 0 && (
-            <div className="opacity-60">
-              <QuestTypeSection
-                quests={safeGroupedQuests['no-deadline']}
-                type="no-deadline"
-                isExpanded={expandedTypes['no-deadline']}
-                onToggleExpand={() => toggleExpanded('no-deadline')}
-                onQuestClick={navigateToQuest}
-                formatDeadline={formatDeadline}
-              />
-            </div>
-          )}
-
-          {/* ถ้าไม่มีภารกิจเลย */}
-          {Object.values(safeGroupedQuests).every(
-            (quests) => quests.length === 0
-          ) && (
+          {/* ถ้าไม่มีภารกิจประจำวัน */}
+          {safeGroupedQuests.daily.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">ไม่มีภารกิจในขณะนี้</p>
+              <p className="text-muted-foreground">ไม่มีภารกิจประจำวันในขณะนี้</p>
               <p className="text-sm text-muted-foreground mt-2">
-                ภารกิจใหม่จะปรากฏขึ้นเมื่อถึงเวลา
+                ภารกิจประจำวันใหม่จะปรากฏขึ้นเมื่อถึงเวลา
               </p>
             </div>
           )}
