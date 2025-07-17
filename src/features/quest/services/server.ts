@@ -290,42 +290,48 @@ export class QuestService extends BaseService {
             `Using ${dailyQuests.length} personal daily quests for level ${character.level} character`
           )
         } else {
-          // ถ้าไม่มี personal quests ให้ใช้ระบบเดิม
-          console.log('No personal quests found, falling back to random quests')
+          // ถ้าไม่มี personal quests ให้สร้างและใช้ระบบเดิมก่อน
+          console.log('No personal quests found, creating personal quests and falling back to random quests')
+          
+          // สร้าง personal quests อัตโนมัติ (แบบ async เพื่อไม่ให้รอ)
+          this.createPersonalQuestsIfNeeded(characterId).catch((error: any) => {
+            console.error('Error creating personal quests:', error)
+          })
+          
           dailyQuests = await this.getRandomQuestsByType('daily', 5)
         }
       } else {
         // สำหรับ level < 10 ใช้ระบบเดิม
         dailyQuests = await this.getRandomQuestsByType('daily', 3)
-
-        if (dailyQuests.length === 0) {
-          console.log('No daily quests available')
-          return
-        }
-
-        console.log(
-          `Assigning ${dailyQuests.length} new daily quests for user ${userId}`
-        )
-
-        // มอบหมายเควสรายวันใหม่
-        const assignPromises = dailyQuests.map((quest) => {
-          // กำหนด expiresAt (หมดอายุเวลา 23:59:59 ของวันนี้)
-          const expiresAt = new Date()
-          expiresAt.setHours(23, 59, 59, 999)
-
-          return prisma.assignedQuest.create({
-            data: {
-              questId: quest.id,
-              characterId: characterId,
-              status: 'active',
-              assignedAt: new Date(),
-              expiresAt: expiresAt,
-            },
-          })
-        })
-
-        await Promise.all(assignPromises)
       }
+
+      if (dailyQuests.length === 0) {
+        console.log('No daily quests available')
+        return
+      }
+
+      console.log(
+        `Assigning ${dailyQuests.length} new daily quests for user ${userId}`
+      )
+
+      // มอบหมายเควสรายวันใหม่
+      const assignPromises = dailyQuests.map((quest) => {
+        // กำหนด expiresAt (หมดอายุเวลา 23:59:59 ของวันนี้)
+        const expiresAt = new Date()
+        expiresAt.setHours(23, 59, 59, 999)
+
+        return prisma.assignedQuest.create({
+          data: {
+            questId: quest.id,
+            characterId: characterId,
+            status: 'active',
+            assignedAt: new Date(),
+            expiresAt: expiresAt,
+          },
+        })
+      })
+
+      await Promise.all(assignPromises)
 
       console.log('New daily quests assigned successfully')
     } catch (error) {
@@ -388,45 +394,51 @@ export class QuestService extends BaseService {
             `Using ${weeklyQuests.length} personal weekly quests for level ${character.level} character`
           )
         } else {
-          // ถ้าไม่มี personal quests ให้ใช้ระบบเดิม
+          // ถ้าไม่มี personal quests ให้สร้างและใช้ระบบเดิมก่อน
           console.log(
-            'No personal weekly quests found, falling back to random quests'
+            'No personal weekly quests found, creating personal quests and falling back to random quests'
           )
+          
+          // สร้าง personal quests อัตโนมัติ (แบบ async เพื่อไม่ให้รอ)
+          this.createPersonalQuestsIfNeeded(characterId).catch((error: any) => {
+            console.error('Error creating personal quests:', error)
+          })
+          
           weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
         }
       } else {
         // สำหรับ level < 10 ใช้ระบบเดิม
         weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
-
-        if (weeklyQuests.length === 0) {
-          console.log('No weekly quests available')
-          return
-        }
-
-        console.log(
-          `Assigning ${weeklyQuests.length} new weekly quests for user ${userId}`
-        )
-
-        // มอบหมายเควสรายสัปดาห์ใหม่
-        const assignPromises = weeklyQuests.map((quest) => {
-          // กำหนด expiresAt (หมดอายุ 7 วันนับจากวันนี้)
-          const expiresAt = new Date()
-          expiresAt.setDate(expiresAt.getDate() + 7)
-          expiresAt.setHours(23, 59, 59, 999)
-
-          return prisma.assignedQuest.create({
-            data: {
-              questId: quest.id,
-              characterId: characterId,
-              status: 'active',
-              assignedAt: new Date(),
-              expiresAt: expiresAt,
-            },
-          })
-        })
-
-        await Promise.all(assignPromises)
       }
+
+      if (weeklyQuests.length === 0) {
+        console.log('No weekly quests available')
+        return
+      }
+
+      console.log(
+        `Assigning ${weeklyQuests.length} new weekly quests for user ${userId}`
+      )
+
+      // มอบหมายเควสรายสัปดาห์ใหม่
+      const assignPromises = weeklyQuests.map((quest) => {
+        // กำหนด expiresAt (หมดอายุ 7 วันนับจากวันนี้)
+        const expiresAt = new Date()
+        expiresAt.setDate(expiresAt.getDate() + 7)
+        expiresAt.setHours(23, 59, 59, 999)
+
+        return prisma.assignedQuest.create({
+          data: {
+            questId: quest.id,
+            characterId: characterId,
+            status: 'active',
+            assignedAt: new Date(),
+            expiresAt: expiresAt,
+          },
+        })
+      })
+
+      await Promise.all(assignPromises)
 
       console.log('New weekly quests assigned successfully')
     } catch (error) {
@@ -520,6 +532,159 @@ export class QuestService extends BaseService {
       console.error('Error assigning initial quests:', error)
       throw new Error('Failed to assign initial quests')
     }
+  }
+
+  /**
+   * สร้าง personal quests สำหรับ character level 10+ ถ้ายังไม่มี
+   */
+  private async createPersonalQuestsIfNeeded(characterId: number): Promise<void> {
+    try {
+      // ตรวจสอบว่ามี personal quests แล้วหรือยัง
+      const existingPersonalQuests = await prisma.quest.count({
+        where: {
+          characterId: characterId,
+        } as any,
+      })
+
+      if (existingPersonalQuests > 0) {
+        console.log(`Character ${characterId} already has personal quests`)
+        return
+      }
+
+      // ดึงข้อมูล character พร้อม submission history
+      const character = await prisma.character.findUnique({
+        where: { id: characterId },
+        include: {
+          user: true,
+          jobClass: true,
+          questSubmissions: {
+            orderBy: {
+              submittedAt: 'desc'
+            },
+            include: {
+              quest: true
+            }
+          }
+        }
+      })
+
+      if (!character) {
+        console.log('Character not found')
+        return
+      }
+
+      // สร้าง personal quests โดยใช้ fallback หากไม่มี OpenAI API key
+      const questsToCreate = await this.generatePersonalQuests(character)
+
+      if (questsToCreate.length === 0) {
+        console.log('No quests to create')
+        return
+      }
+
+      // บันทึกเควสลงในฐานข้อมูล
+      const createdQuests = []
+      for (const questData of questsToCreate) {
+        const createdQuest = await prisma.quest.create({
+          data: {
+            title: questData.title,
+            description: questData.description,
+            type: questData.type,
+            difficultyLevel: questData.difficultyLevel,
+            xpReward: questData.xpReward,
+            baseTokenReward: questData.baseTokenReward,
+            characterId: character.id,
+            jobClassId: character.jobClassId,
+            isActive: true,
+            tokenMultiplier: 1
+          }
+        })
+        
+        createdQuests.push(createdQuest)
+      }
+
+      console.log(`Created ${createdQuests.length} personal quests for character ${character.name}`)
+
+    } catch (error) {
+      console.error('Error creating personal quests:', error)
+      throw error
+    }
+  }
+
+  /**
+   * สร้างเควสส่วนตัวโดยใช้ fallback หากไม่มี OpenAI
+   */
+  private async generatePersonalQuests(character: any): Promise<any[]> {
+    // Fallback personal quests ตาม job class
+    const fallbackQuests = this.getFallbackPersonalQuests(character.jobClass.name, character.level)
+    
+    // ในอนาคตสามารถเพิ่ม OpenAI integration ได้ที่นี่
+    return fallbackQuests
+  }
+
+  /**
+   * Fallback personal quests ตาม job class
+   */
+  private getFallbackPersonalQuests(jobClassName: string, level: number): any[] {
+    const baseQuests = [
+      {
+        title: 'การพัฒนาทักษะประจำวัน',
+        description: 'ฝึกฝนทักษะที่สำคัญในสายงานของคุณ',
+        type: 'daily',
+        difficultyLevel: Math.min(Math.floor(level / 10) + 1, 5),
+        xpReward: 200 + (level * 5),
+        baseTokenReward: 20 + level
+      },
+      {
+        title: 'ปรับปรุงประสิทธิภาพการทำงาน',
+        description: 'หาวิธีการทำงานที่มีประสิทธิภาพมากขึ้น',
+        type: 'daily',
+        difficultyLevel: Math.min(Math.floor(level / 10) + 2, 5),
+        xpReward: 250 + (level * 6),
+        baseTokenReward: 25 + level
+      },
+      {
+        title: 'การเรียนรู้สิ่งใหม่',
+        description: 'เรียนรู้เทคนิคหรือเครื่องมือใหม่ที่เกี่ยวข้องกับงาน',
+        type: 'daily',
+        difficultyLevel: Math.min(Math.floor(level / 10) + 1, 5),
+        xpReward: 180 + (level * 4),
+        baseTokenReward: 18 + level
+      }
+    ]
+
+    // เพิ่มเควสเฉพาะตาม job class
+    if (jobClassName.includes('Developer') || jobClassName.includes('โปรแกรมเมอร์')) {
+      baseQuests.push({
+        title: 'Code Review และปรับปรุง',
+        description: 'ทบทวนและปรับปรุงคุณภาพของโค้ด',
+        type: 'daily',
+        difficultyLevel: 3,
+        xpReward: 300 + (level * 7),
+        baseTokenReward: 30 + level
+      })
+    } else if (jobClassName.includes('Designer') || jobClassName.includes('ดีไซเนอร์')) {
+      baseQuests.push({
+        title: 'ศึกษาเทรนด์ดีไซน์ใหม่',
+        description: 'ติดตามและประยุกต์ใช้เทรนด์ดีไซน์ล่าสุด',
+        type: 'daily',
+        difficultyLevel: 2,
+        xpReward: 220 + (level * 5),
+        baseTokenReward: 22 + level
+      })
+    } else if (jobClassName.includes('Manager') || jobClassName.includes('ผู้จัดการ')) {
+      baseQuests.push({
+        title: 'พัฒนาทีมงาน',
+        description: 'หาวิธีการพัฒนาและสนับสนุนทีมงาน',
+        type: 'daily',
+        difficultyLevel: 4,
+        xpReward: 350 + (level * 8),
+        baseTokenReward: 35 + level
+      })
+    }
+
+    // สุ่มเลือก 10-15 เควส
+    const shuffled = [...baseQuests, ...baseQuests, ...baseQuests].sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, Math.min(12, shuffled.length))
   }
 
   /**
