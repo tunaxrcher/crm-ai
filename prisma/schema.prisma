@@ -87,6 +87,7 @@ model Character {
   workStartTime      String?                // เวลาเข้างาน เช่น "09:00"
   workEndTime        String?                // เวลาออกงาน เช่น "18:00"
   salary             Float?                 // เงินเดือน
+  workDays           Json?                  // วันทำงาน [0-6] where 0=Sunday, 1=Monday, etc. เช่น [1,2,3,4,5]
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   userId             Int                    @unique
@@ -726,4 +727,18 @@ model CheckinCheckout {
 enum EnumCheckinType {
   onsite // อยู่ในสถานที่ทำงาน
   offsite // อยู่นอกสถานที่ทำงาน
+}
+
+// Holiday Management System
+model Holiday {
+  id          Int      @id @default(autoincrement())
+  name        String   // ชื่อวันหยุด
+  description String?  @db.Text
+  date        DateTime @db.Date // วันที่หยุด
+  isRecurring Boolean  @default(false) // วันหยุดประจำปี
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
 }
