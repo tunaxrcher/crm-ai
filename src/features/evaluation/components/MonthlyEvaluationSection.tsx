@@ -124,22 +124,6 @@ const EvaluationCard = ({ evaluation }: { evaluation: MonthlyEvaluation }) => {
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500" />
                   ))}
-                <Badge
-                  variant="secondary"
-                  className={`${getStatusColor(evaluation.status)} text-white`}>
-                  <div className="flex items-center gap-1">
-                    {getStatusIcon(evaluation.status)}
-                    <span className="text-xs">
-                      {evaluation.status === 'completed'
-                        ? 'เสร็จแล้ว'
-                        : evaluation.status === 'processing'
-                          ? 'กำลังประเมิน'
-                          : evaluation.status === 'failed'
-                            ? 'ล้มเหลว'
-                            : 'รอประเมิน'}
-                    </span>
-                  </div>
-                </Badge>
               </div>
             </div>
 
