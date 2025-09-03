@@ -27,6 +27,7 @@ import GachaHistorySection from './GachaHistorySection'
 import JobProgressionDialog from './JobProgressionDialog'
 import QuestStatistics from './QuestStatistics'
 import { WorkSettingsDialog } from './WorkSettingsDialog'
+import MonthlyEvaluationSection from '@src/features/evaluation/components/MonthlyEvaluationSection'
 
 export default function CharacterPageComponent() {
   // 🧠 ─── Context & Hook Data ───────────────────────────
@@ -213,6 +214,8 @@ export default function CharacterPageComponent() {
           />
 
           <AchievementSection achievements={character.achievements} />
+
+          <MonthlyEvaluationSection characterId={character.id} />
 
           {process.env.NODE_ENV === 'development' && (
             // {true && (

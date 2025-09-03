@@ -112,6 +112,7 @@ model Character {
   tokenTransactions  TokenTransaction[]
   xenyTransactions   XenyTransaction[]
   personalQuests     Quest[]                // เควสส่วนตัวสำหรับ level 10+
+  monthlyEvaluations MonthlyEvaluation[]
 
   @@index([jobClassId], map: "Character_jobClassId_fkey")
   @@index([jobLevelId], map: "Character_jobLevelId_fkey")
@@ -741,4 +742,41 @@ model Holiday {
   updatedAt   DateTime @updatedAt
 
   @@index([date])
+}
+
+// Monthly Performance Evaluation System
+model MonthlyEvaluation {
+  id          Int      @id @default(autoincrement())
+  characterId Int
+  month       Int      // 1-12
+  year        Int
+  status      EnumEvaluationStatus @default(pending)
+  
+  // AI Evaluation Results
+  evaluation  String?  @db.Text  // ผลประเมินจาก AI
+  summary     String?  @db.Text  // สรุปการทำงาน
+  strengths   String?  @db.Text  // จุดดี
+  weaknesses  String?  @db.Text  // จุดบกพร่อง
+  improvements String? @db.Text  // สิ่งที่ต้องแก้/ทำต่อไป
+  isPassed    Boolean? // ผ่านมาตรฐานหรือไม่
+  
+  // Metadata
+  totalSubmissions Int @default(0) // จำนวน quest submission ที่ประเมิน
+  evaluatedAt      DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relations
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  
+  @@unique([characterId, month, year])
+  @@index([characterId])
+  @@index([month, year])
+}
+
+enum EnumEvaluationStatus {
+  pending
+  processing
+  completed
+  failed
 }
