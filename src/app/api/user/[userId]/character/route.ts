@@ -97,4 +97,4 @@ export const GET = withErrorHandling(
 
     return NextResponse.json(characterData)
   }
-) 
+)

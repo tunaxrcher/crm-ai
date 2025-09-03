@@ -54,6 +54,8 @@ import {
 
 // src/features/feed/components/CharacterDialog.tsx
 
+// src/features/feed/components/CharacterDialog.tsx
+
 interface CharacterDialogProps {
   isOpen: boolean
   onClose: () => void

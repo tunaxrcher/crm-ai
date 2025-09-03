@@ -177,7 +177,9 @@ function QuestPageComponent({ userId }: QuestPageProps) {
           {/* ถ้าไม่มีภารกิจประจำวัน */}
           {safeGroupedQuests.daily.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">ไม่มีภารกิจประจำวันในขณะนี้</p>
+              <p className="text-muted-foreground">
+                ไม่มีภารกิจประจำวันในขณะนี้
+              </p>
               <p className="text-sm text-muted-foreground mt-2">
                 ภารกิจประจำวันใหม่จะปรากฏขึ้นเมื่อถึงเวลา
               </p>

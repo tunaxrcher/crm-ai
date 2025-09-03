@@ -49,10 +49,17 @@ export class MonthlyEvaluationService {
   async createMonthlyEvaluationsForAllCharacters(month: number, year: number) {
     const startTime = Date.now()
     try {
-      console.log(`[MonthlyEvaluation] Starting evaluations for ${month}/${year}`)
+      console.log(
+        `[MonthlyEvaluation] Starting evaluations for ${month}/${year}`
+      )
 
       // ตรวจสอบว่าเดือนและปีถูกต้อง
-      if (month < 1 || month > 12 || year < 2020 || year > new Date().getFullYear()) {
+      if (
+        month < 1 ||
+        month > 12 ||
+        year < 2020 ||
+        year > new Date().getFullYear()
+      ) {
         throw new Error(`Invalid month/year: ${month}/${year}`)
       }
 
@@ -87,7 +94,9 @@ export class MonthlyEvaluationService {
 
       for (const character of characters) {
         if (character.questSubmissions.length === 0) {
-          console.log(`[MonthlyEvaluation] No submissions for character ${character.name}, skipping`)
+          console.log(
+            `[MonthlyEvaluation] No submissions for character ${character.name}, skipping`
+          )
           continue
         }
 
@@ -104,7 +113,9 @@ export class MonthlyEvaluationService {
           })
 
           if (existingEvaluation) {
-            console.log(`[MonthlyEvaluation] Evaluation already exists for ${character.name}, skipping`)
+            console.log(
+              `[MonthlyEvaluation] Evaluation already exists for ${character.name}, skipping`
+            )
             continue
           }
 
@@ -119,8 +130,11 @@ export class MonthlyEvaluationService {
 
           results.push(evaluation)
         } catch (error) {
-          console.error(`[MonthlyEvaluation] Error evaluating ${character.name}:`, error)
-          
+          console.error(
+            `[MonthlyEvaluation] Error evaluating ${character.name}:`,
+            error
+          )
+
           // บันทึกการประเมินที่ล้มเหลว
           await prisma.monthlyEvaluation.create({
             data: {
@@ -136,12 +150,17 @@ export class MonthlyEvaluationService {
       }
 
       const duration = Date.now() - startTime
-      console.log(`[MonthlyEvaluation] Completed ${results.length} evaluations in ${duration}ms`)
-      
+      console.log(
+        `[MonthlyEvaluation] Completed ${results.length} evaluations in ${duration}ms`
+      )
+
       return results
     } catch (error) {
       const duration = Date.now() - startTime
-      console.error(`[MonthlyEvaluation] Error in createMonthlyEvaluationsForAllCharacters (${duration}ms):`, error)
+      console.error(
+        `[MonthlyEvaluation] Error in createMonthlyEvaluationsForAllCharacters (${duration}ms):`,
+        error
+      )
       throw error
     }
   }
@@ -157,7 +176,9 @@ export class MonthlyEvaluationService {
     year: number
   ) {
     try {
-      console.log(`[MonthlyEvaluation] Evaluating ${characterName} with ${questSubmissions.length} submissions`)
+      console.log(
+        `[MonthlyEvaluation] Evaluating ${characterName} with ${questSubmissions.length} submissions`
+      )
 
       // สร้างรายการข้อมูลสำหรับ AI
       const submissionData = questSubmissions.map((submission, index) => {
@@ -167,7 +188,10 @@ export class MonthlyEvaluationService {
           ชื่องาน: submission.quest.title,
           ประเภทงาน: submission.quest.type,
           คำอธิบาย: submission.description || 'ไม่มีคำอธิบาย',
-          ผลงาน: submission.mediaRevisedTranscript || submission.description || 'ไม่มีรายละเอียด',
+          ผลงาน:
+            submission.mediaRevisedTranscript ||
+            submission.description ||
+            'ไม่มีรายละเอียด',
           คะแนน: submission.score || 0,
           XP: submission.xpEarned,
           Token: submission.tokensEarned,
@@ -176,7 +200,12 @@ export class MonthlyEvaluationService {
       })
 
       // เรียก AI ประเมิน
-      const aiEvaluation = await this.evaluateWithAI(characterName, submissionData, month, year)
+      const aiEvaluation = await this.evaluateWithAI(
+        characterName,
+        submissionData,
+        month,
+        year
+      )
 
       // บันทึกลงฐานข้อมูล
       const evaluation = await prisma.monthlyEvaluation.create({
@@ -199,7 +228,10 @@ export class MonthlyEvaluationService {
       console.log(`[MonthlyEvaluation] Successfully evaluated ${characterName}`)
       return evaluation
     } catch (error) {
-      console.error(`[MonthlyEvaluation] Error evaluating character ${characterName}:`, error)
+      console.error(
+        `[MonthlyEvaluation] Error evaluating character ${characterName}:`,
+        error
+      )
       throw error
     }
   }
@@ -256,16 +288,21 @@ ${JSON.stringify(submissionData, null, 2)}
       if (!result) throw new Error('No response from OpenAI')
 
       const evaluation = JSON.parse(result) as MonthlyEvaluationResult
-      
+
       // ตรวจสอบโครงสร้าง
-      if (!evaluation.summary || !evaluation.strengths || !evaluation.weaknesses || !evaluation.improvements) {
+      if (
+        !evaluation.summary ||
+        !evaluation.strengths ||
+        !evaluation.weaknesses ||
+        !evaluation.improvements
+      ) {
         throw new Error('Invalid evaluation structure from AI')
       }
 
       return evaluation
     } catch (error) {
       console.error('[MonthlyEvaluation] AI evaluation error:', error)
-      
+
       // Fallback evaluation
       return {
         summary: `ประเมินผลงานของ ${characterName} ในเดือน ${month}/${year} มีการส่งงาน ${submissionData.length} ครั้ง`,
@@ -282,7 +319,7 @@ ${JSON.stringify(submissionData, null, 2)}
    */
   private formatEvaluationText(evaluation: MonthlyEvaluationResult): string {
     const status = evaluation.isPassed ? '✅ ผ่านมาตรฐาน' : '❌ ไม่ผ่านมาตรฐาน'
-    
+
     return `สรุปผลการทำงานในเดือนที่ผ่านมา
 
 📋 สรุป
@@ -308,10 +345,7 @@ ${evaluation.improvements}
       where: {
         characterId,
       },
-      orderBy: [
-        { year: 'desc' },
-        { month: 'desc' },
-      ],
+      orderBy: [{ year: 'desc' }, { month: 'desc' }],
       take: limit,
     })
   }

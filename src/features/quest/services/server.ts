@@ -291,13 +291,15 @@ export class QuestService extends BaseService {
           )
         } else {
           // ถ้าไม่มี personal quests ให้สร้างและใช้ระบบเดิมก่อน
-          console.log('No personal quests found, creating personal quests and falling back to random quests')
-          
+          console.log(
+            'No personal quests found, creating personal quests and falling back to random quests'
+          )
+
           // สร้าง personal quests อัตโนมัติ (แบบ async เพื่อไม่ให้รอ)
           this.createPersonalQuestsIfNeeded(characterId).catch((error: any) => {
             console.error('Error creating personal quests:', error)
           })
-          
+
           dailyQuests = await this.getRandomQuestsByType('daily', 5)
         }
       } else {
@@ -398,12 +400,12 @@ export class QuestService extends BaseService {
           console.log(
             'No personal weekly quests found, creating personal quests and falling back to random quests'
           )
-          
+
           // สร้าง personal quests อัตโนมัติ (แบบ async เพื่อไม่ให้รอ)
           this.createPersonalQuestsIfNeeded(characterId).catch((error: any) => {
             console.error('Error creating personal quests:', error)
           })
-          
+
           weeklyQuests = await this.getRandomQuestsByType('weekly', 3)
         }
       } else {
@@ -537,7 +539,9 @@ export class QuestService extends BaseService {
   /**
    * สร้าง personal quests สำหรับ character level 10+ ถ้ายังไม่มี
    */
-  private async createPersonalQuestsIfNeeded(characterId: number): Promise<void> {
+  private async createPersonalQuestsIfNeeded(
+    characterId: number
+  ): Promise<void> {
     try {
       // ตรวจสอบว่ามี personal quests แล้วหรือยัง
       const existingPersonalQuests = await prisma.quest.count({
@@ -559,13 +563,13 @@ export class QuestService extends BaseService {
           jobClass: true,
           questSubmissions: {
             orderBy: {
-              submittedAt: 'desc'
+              submittedAt: 'desc',
             },
             include: {
-              quest: true
-            }
-          }
-        }
+              quest: true,
+            },
+          },
+        },
       })
 
       if (!character) {
@@ -595,15 +599,16 @@ export class QuestService extends BaseService {
             characterId: character.id,
             jobClassId: character.jobClassId,
             isActive: true,
-            tokenMultiplier: 1
-          }
+            tokenMultiplier: 1,
+          },
         })
-        
+
         createdQuests.push(createdQuest)
       }
 
-      console.log(`Created ${createdQuests.length} personal quests for character ${character.name}`)
-
+      console.log(
+        `Created ${createdQuests.length} personal quests for character ${character.name}`
+      )
     } catch (error) {
       console.error('Error creating personal quests:', error)
       throw error
@@ -615,8 +620,11 @@ export class QuestService extends BaseService {
    */
   private async generatePersonalQuests(character: any): Promise<any[]> {
     // Fallback personal quests ตาม job class
-    const fallbackQuests = this.getFallbackPersonalQuests(character.jobClass.name, character.level)
-    
+    const fallbackQuests = this.getFallbackPersonalQuests(
+      character.jobClass.name,
+      character.level
+    )
+
     // ในอนาคตสามารถเพิ่ม OpenAI integration ได้ที่นี่
     return fallbackQuests
   }
@@ -624,66 +632,80 @@ export class QuestService extends BaseService {
   /**
    * Fallback personal quests ตาม job class
    */
-  private getFallbackPersonalQuests(jobClassName: string, level: number): any[] {
+  private getFallbackPersonalQuests(
+    jobClassName: string,
+    level: number
+  ): any[] {
     const baseQuests = [
       {
         title: 'การพัฒนาทักษะประจำวัน',
         description: 'ฝึกฝนทักษะที่สำคัญในสายงานของคุณ',
         type: 'daily',
         difficultyLevel: Math.min(Math.floor(level / 10) + 1, 5),
-        xpReward: 200 + (level * 5),
-        baseTokenReward: 20 + level
+        xpReward: 200 + level * 5,
+        baseTokenReward: 20 + level,
       },
       {
         title: 'ปรับปรุงประสิทธิภาพการทำงาน',
         description: 'หาวิธีการทำงานที่มีประสิทธิภาพมากขึ้น',
         type: 'daily',
         difficultyLevel: Math.min(Math.floor(level / 10) + 2, 5),
-        xpReward: 250 + (level * 6),
-        baseTokenReward: 25 + level
+        xpReward: 250 + level * 6,
+        baseTokenReward: 25 + level,
       },
       {
         title: 'การเรียนรู้สิ่งใหม่',
         description: 'เรียนรู้เทคนิคหรือเครื่องมือใหม่ที่เกี่ยวข้องกับงาน',
         type: 'daily',
         difficultyLevel: Math.min(Math.floor(level / 10) + 1, 5),
-        xpReward: 180 + (level * 4),
-        baseTokenReward: 18 + level
-      }
+        xpReward: 180 + level * 4,
+        baseTokenReward: 18 + level,
+      },
     ]
 
     // เพิ่มเควสเฉพาะตาม job class
-    if (jobClassName.includes('Developer') || jobClassName.includes('โปรแกรมเมอร์')) {
+    if (
+      jobClassName.includes('Developer') ||
+      jobClassName.includes('โปรแกรมเมอร์')
+    ) {
       baseQuests.push({
         title: 'Code Review และปรับปรุง',
         description: 'ทบทวนและปรับปรุงคุณภาพของโค้ด',
         type: 'daily',
         difficultyLevel: 3,
-        xpReward: 300 + (level * 7),
-        baseTokenReward: 30 + level
+        xpReward: 300 + level * 7,
+        baseTokenReward: 30 + level,
       })
-    } else if (jobClassName.includes('Designer') || jobClassName.includes('ดีไซเนอร์')) {
+    } else if (
+      jobClassName.includes('Designer') ||
+      jobClassName.includes('ดีไซเนอร์')
+    ) {
       baseQuests.push({
         title: 'ศึกษาเทรนด์ดีไซน์ใหม่',
         description: 'ติดตามและประยุกต์ใช้เทรนด์ดีไซน์ล่าสุด',
         type: 'daily',
         difficultyLevel: 2,
-        xpReward: 220 + (level * 5),
-        baseTokenReward: 22 + level
+        xpReward: 220 + level * 5,
+        baseTokenReward: 22 + level,
       })
-    } else if (jobClassName.includes('Manager') || jobClassName.includes('ผู้จัดการ')) {
+    } else if (
+      jobClassName.includes('Manager') ||
+      jobClassName.includes('ผู้จัดการ')
+    ) {
       baseQuests.push({
         title: 'พัฒนาทีมงาน',
         description: 'หาวิธีการพัฒนาและสนับสนุนทีมงาน',
         type: 'daily',
         difficultyLevel: 4,
-        xpReward: 350 + (level * 8),
-        baseTokenReward: 35 + level
+        xpReward: 350 + level * 8,
+        baseTokenReward: 35 + level,
       })
     }
 
     // สุ่มเลือก 10-15 เควส
-    const shuffled = [...baseQuests, ...baseQuests, ...baseQuests].sort(() => 0.5 - Math.random())
+    const shuffled = [...baseQuests, ...baseQuests, ...baseQuests].sort(
+      () => 0.5 - Math.random()
+    )
     return shuffled.slice(0, Math.min(12, shuffled.length))
   }
 

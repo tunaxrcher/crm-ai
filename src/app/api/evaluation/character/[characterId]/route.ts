@@ -1,63 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { monthlyEvaluationService } from '@src/features/evaluation/services/monthlyEvaluationService'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 // GET - ดึงการประเมินของ character
-export const GET = withErrorHandling(async (
-  request: NextRequest,
-  { params }: { params: { characterId: string } }
-) => {
-  try {
-    const characterId = parseInt(params.characterId)
-    
-    if (isNaN(characterId)) {
-      return NextResponse.json(
-        { error: 'Invalid characterId' },
-        { status: 400 }
-      )
-    }
+export const GET = withErrorHandling(
+  async (
+    request: NextRequest,
+    { params }: { params: { characterId: string } }
+  ) => {
+    try {
+      const characterId = parseInt(params.characterId)
 
-    const { searchParams } = new URL(request.url)
-    const month = searchParams.get('month')
-    const year = searchParams.get('year')
-    const limit = searchParams.get('limit')
-
-    if (month && year) {
-      // ดึงการประเมินเฉพาะเดือน
-      const evaluation = await monthlyEvaluationService.getEvaluationByMonth(
-        characterId,
-        parseInt(month),
-        parseInt(year)
-      )
-
-      if (!evaluation) {
+      if (isNaN(characterId)) {
         return NextResponse.json(
-          { error: 'Evaluation not found for specified month/year' },
-          { status: 404 }
+          { error: 'Invalid characterId' },
+          { status: 400 }
         )
       }
 
-      return NextResponse.json({
-        success: true,
-        data: evaluation,
-      })
-    } else {
-      // ดึงการประเมินทั้งหมด
-      const evaluations = await monthlyEvaluationService.getCharacterEvaluations(
-        characterId,
-        limit ? parseInt(limit) : 12
-      )
+      const { searchParams } = new URL(request.url)
+      const month = searchParams.get('month')
+      const year = searchParams.get('year')
+      const limit = searchParams.get('limit')
 
-      return NextResponse.json({
-        success: true,
-        data: evaluations,
-      })
+      if (month && year) {
+        // ดึงการประเมินเฉพาะเดือน
+        const evaluation = await monthlyEvaluationService.getEvaluationByMonth(
+          characterId,
+          parseInt(month),
+          parseInt(year)
+        )
+
+        if (!evaluation) {
+          return NextResponse.json(
+            { error: 'Evaluation not found for specified month/year' },
+            { status: 404 }
+          )
+        }
+
+        return NextResponse.json({
+          success: true,
+          data: evaluation,
+        })
+      } else {
+        // ดึงการประเมินทั้งหมด
+        const evaluations =
+          await monthlyEvaluationService.getCharacterEvaluations(
+            characterId,
+            limit ? parseInt(limit) : 12
+          )
+
+        return NextResponse.json({
+          success: true,
+          data: evaluations,
+        })
+      }
+    } catch (error) {
+      console.error('[API] Character evaluation GET error:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch character evaluations' },
+        { status: 500 }
+      )
     }
-  } catch (error) {
-    console.error('[API] Character evaluation GET error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch character evaluations' },
-      { status: 500 }
-    )
   }
-})
+)

@@ -99,7 +99,8 @@ export default function JackpotWinnersSection() {
 
   // Auto-scroll every 3 seconds (only if navigation is enabled)
   useEffect(() => {
-    if (winners.length <= 1 || isHovered || isAnimating || !showNavigation) return
+    if (winners.length <= 1 || isHovered || isAnimating || !showNavigation)
+      return
 
     const interval = setInterval(() => {
       goToNext()
@@ -126,7 +127,7 @@ export default function JackpotWinnersSection() {
             ผู้โชคดีได้รับ Jackpot จากตู้กาชา
           </p>
         </div>
-        
+
         <div className="flex flex-wrap justify-center gap-6">
           {winners.map((winner: any, index: number) => (
             <div key={winner.id} className="rounded-3xl shadow-2xl p-8 w-80">

@@ -58,6 +58,8 @@ import { CharacterClass, RankingPeriod } from '../types'
 
 // src/features/ranking/components/RankingPage.tsx
 
+// src/features/ranking/components/RankingPage.tsx
+
 function RankingPageComponent() {
   const router = useRouter()
   const [selectedCharacter, setSelectedCharacter] = useState<any>(null)
@@ -83,9 +85,9 @@ function RankingPageComponent() {
   const handleCharacterClick = async (e: React.MouseEvent, character: any) => {
     console.log(character)
     e.preventDefault() // ป้องกันการ navigate
-    
+
     if (loadingCharacter) return // ป้องกันการกดซ้ำ
-    
+
     setLoadingCharacter(true)
     try {
       // Fetch detailed character data
@@ -93,7 +95,7 @@ function RankingPageComponent() {
       if (!response.ok) {
         throw new Error('Failed to fetch character data')
       }
-      
+
       const detailedCharacter = await response.json()
       setSelectedCharacter(detailedCharacter)
       setShowCharacterDialog(true)
@@ -346,10 +348,15 @@ function RankingPageComponent() {
             <div className="flex items-center ml-6">
               <div className="relative">
                 <Avatar className="h-12 w-12 mr-3">
-                  <AvatarImage src={currentUser.avatar} alt={currentUser.name} />
-                  <AvatarFallback>{currentUser.name.slice(0, 2)}</AvatarFallback>
+                  <AvatarImage
+                    src={currentUser.avatar}
+                    alt={currentUser.name}
+                  />
+                  <AvatarFallback>
+                    {currentUser.name.slice(0, 2)}
+                  </AvatarFallback>
                 </Avatar>
-                
+
                 {/* Loading overlay */}
                 {loadingCharacter && (
                   <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center mr-3">
@@ -417,7 +424,7 @@ function RankingPageComponent() {
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback>{user.name.slice(0, 2)}</AvatarFallback>
                 </Avatar>
-                
+
                 {/* Loading overlay */}
                 {loadingCharacter && (
                   <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center mr-3">

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { monthlyEvaluationService } from '@src/features/evaluation/services/monthlyEvaluationService'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
@@ -13,10 +14,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       const providedSecret = request.headers.get('x-cron-secret')
       if (providedSecret !== cronSecret) {
         console.error('[CRON] Invalid cron secret')
-        return NextResponse.json(
-          { error: 'Unauthorized' },
-          { status: 401 }
-        )
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       }
     }
 
@@ -31,21 +29,23 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // ตรวจสอบว่าเป็นการ force run หรือไม่
     const forceRun = request.headers.get('x-force-run') === 'true'
     const isValidTime = now.getDate() <= 3 // อนุญาตให้รันได้ในช่วง 3 วันแรกของเดือน
-    
+
     if (!isValidTime && !forceRun) {
       return NextResponse.json({
         success: false,
-        message: 'Can only run in the first 3 days of the month or with force flag',
+        message:
+          'Can only run in the first 3 days of the month or with force flag',
         currentDate: now.toISOString(),
         currentDay: now.getDate(),
       })
     }
 
     // รันการประเมิน
-    const results = await monthlyEvaluationService.createMonthlyEvaluationsForAllCharacters(
-      month,
-      year
-    )
+    const results =
+      await monthlyEvaluationService.createMonthlyEvaluationsForAllCharacters(
+        month,
+        year
+      )
 
     const successCount = results.length
     const message = `Monthly evaluation completed for ${month}/${year}. Created ${successCount} evaluations.`
@@ -65,7 +65,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     })
   } catch (error) {
     console.error('[CRON] Monthly evaluation cronjob error:', error)
-    
+
     return NextResponse.json(
       {
         success: false,

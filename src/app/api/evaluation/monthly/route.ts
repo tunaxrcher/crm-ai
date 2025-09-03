@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { monthlyEvaluationService } from '@src/features/evaluation/services/monthlyEvaluationService'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
@@ -32,10 +33,11 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
       })
     } else {
       // ดึงการประเมินทั้งหมด
-      const evaluations = await monthlyEvaluationService.getCharacterEvaluations(
-        parseInt(characterId),
-        limit ? parseInt(limit) : 12
-      )
+      const evaluations =
+        await monthlyEvaluationService.getCharacterEvaluations(
+          parseInt(characterId),
+          limit ? parseInt(limit) : 12
+        )
 
       return NextResponse.json({
         success: true,
@@ -65,7 +67,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // ตรวจสอบว่าเป็นเดือนและปีที่ถูกต้อง
-    if (month < 1 || month > 12 || year < 2020 || year > new Date().getFullYear()) {
+    if (
+      month < 1 ||
+      month > 12 ||
+      year < 2020 ||
+      year > new Date().getFullYear()
+    ) {
       return NextResponse.json(
         { error: 'Invalid month or year' },
         { status: 400 }
@@ -74,10 +81,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     console.log(`[API] Starting monthly evaluation for ${month}/${year}`)
 
-    const results = await monthlyEvaluationService.createMonthlyEvaluationsForAllCharacters(
-      month,
-      year
-    )
+    const results =
+      await monthlyEvaluationService.createMonthlyEvaluationsForAllCharacters(
+        month,
+        year
+      )
 
     return NextResponse.json({
       success: true,

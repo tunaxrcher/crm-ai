@@ -15,6 +15,7 @@ import {
 } from '@src/components/ui/card'
 import { useNotification } from '@src/components/ui/notification-system'
 import { useCharacter } from '@src/contexts/CharacterContext'
+import MonthlyEvaluationSection from '@src/features/evaluation/components/MonthlyEvaluationSection'
 import { TokenDisplay } from '@src/features/user/components/TokenDisplay'
 import { XenyDisplay } from '@src/features/xeny/components/XenyDisplay'
 import { AlertCircle } from 'lucide-react'
@@ -27,7 +28,6 @@ import GachaHistorySection from './GachaHistorySection'
 import JobProgressionDialog from './JobProgressionDialog'
 import QuestStatistics from './QuestStatistics'
 import { WorkSettingsDialog } from './WorkSettingsDialog'
-import MonthlyEvaluationSection from '@src/features/evaluation/components/MonthlyEvaluationSection'
 
 export default function CharacterPageComponent() {
   // 🧠 ─── Context & Hook Data ───────────────────────────

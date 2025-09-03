@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+
+import { Badge } from '@src/components/ui/badge'
 import { Button } from '@src/components/ui/button'
 import {
   Card,
@@ -15,9 +17,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@src/components/ui/dialog'
-import { Badge } from '@src/components/ui/badge'
 import { ScrollArea } from '@src/components/ui/scroll-area'
-import { Calendar, TrendingUp, TrendingDown, CheckCircle, XCircle, Clock } from 'lucide-react'
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  TrendingDown,
+  TrendingUp,
+  XCircle,
+} from 'lucide-react'
+
 import { useMonthlyEvaluations } from '../hooks/useMonthlyEvaluations'
 
 interface MonthlyEvaluationSectionProps {
@@ -41,8 +50,19 @@ interface MonthlyEvaluation {
 }
 
 const MONTH_NAMES = [
-  '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+  '',
+  'มกราคม',
+  'กุมภาพันธ์',
+  'มีนาคม',
+  'เมษายน',
+  'พฤษภาคม',
+  'มิถุนายน',
+  'กรกฎาคม',
+  'สิงหาคม',
+  'กันยายน',
+  'ตุลาคม',
+  'พฤศจิกายน',
+  'ธันวาคม',
 ]
 
 const getStatusColor = (status: string) => {
@@ -98,54 +118,59 @@ const EvaluationCard = ({ evaluation }: { evaluation: MonthlyEvaluation }) => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {evaluation.isPassed !== null && (
-                  evaluation.isPassed ? (
+                {evaluation.isPassed !== null &&
+                  (evaluation.isPassed ? (
                     <TrendingUp className="h-4 w-4 text-green-500" />
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-500" />
-                  )
-                )}
-                <Badge 
-                  variant="secondary" 
-                  className={`${getStatusColor(evaluation.status)} text-white`}
-                >
+                  ))}
+                <Badge
+                  variant="secondary"
+                  className={`${getStatusColor(evaluation.status)} text-white`}>
                   <div className="flex items-center gap-1">
                     {getStatusIcon(evaluation.status)}
                     <span className="text-xs">
-                      {evaluation.status === 'completed' ? 'เสร็จแล้ว' :
-                       evaluation.status === 'processing' ? 'กำลังประเมิน' :
-                       evaluation.status === 'failed' ? 'ล้มเหลว' : 'รอประเมิน'}
+                      {evaluation.status === 'completed'
+                        ? 'เสร็จแล้ว'
+                        : evaluation.status === 'processing'
+                          ? 'กำลังประเมิน'
+                          : evaluation.status === 'failed'
+                            ? 'ล้มเหลว'
+                            : 'รอประเมิน'}
                     </span>
                   </div>
                 </Badge>
               </div>
             </div>
-            
+
             <div className="text-sm text-gray-600 mb-2">
               งานที่ส่ง: {evaluation.totalSubmissions} งาน
             </div>
-            
+
             {evaluation.summary && (
-              <div className="text-sm line-clamp-2">
-                {evaluation.summary}
-              </div>
+              <div className="text-sm line-clamp-2">{evaluation.summary}</div>
             )}
-            
-            {evaluation.status === 'completed' && evaluation.isPassed !== null && (
-              <div className="mt-2 flex items-center gap-1">
-                {evaluation.isPassed ? (
-                  <>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-green-600 font-medium">ผ่านมาตรฐาน</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-sm text-red-600 font-medium">ไม่ผ่านมาตรฐาน</span>
-                  </>
-                )}
-              </div>
-            )}
+
+            {evaluation.status === 'completed' &&
+              evaluation.isPassed !== null && (
+                <div className="mt-2 flex items-center gap-1">
+                  {evaluation.isPassed ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm text-green-600 font-medium">
+                        ผ่านมาตรฐาน
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-red-600 font-medium">
+                        ไม่ผ่านมาตรฐาน
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
           </CardContent>
         </Card>
       </DialogTrigger>
@@ -154,7 +179,8 @@ const EvaluationCard = ({ evaluation }: { evaluation: MonthlyEvaluation }) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-blue-500" />
-            ผลประเมินประจำเดือน {MONTH_NAMES[evaluation.month]} {evaluation.year + 543}
+            ผลประเมินประจำเดือน {MONTH_NAMES[evaluation.month]}{' '}
+            {evaluation.year + 543}
           </DialogTitle>
         </DialogHeader>
 
@@ -175,11 +201,15 @@ const EvaluationCard = ({ evaluation }: { evaluation: MonthlyEvaluation }) => {
                 </div> */}
                 <div>
                   <span className="font-medium">งานที่ส่ง:</span>
-                  <div className="mt-1 font-semibold">{evaluation.totalSubmissions} งาน</div>
+                  <div className="mt-1 font-semibold">
+                    {evaluation.totalSubmissions} งาน
+                  </div>
                 </div>
                 <div>
                   <span className="font-medium">วันที่ประเมิน:</span>
-                  <div className="mt-1">{formatDate(evaluation.evaluatedAt)}</div>
+                  <div className="mt-1">
+                    {formatDate(evaluation.evaluatedAt)}
+                  </div>
                 </div>
                 <div>
                   <span className="font-medium">ผลการประเมิน:</span>
@@ -208,20 +238,23 @@ const EvaluationCard = ({ evaluation }: { evaluation: MonthlyEvaluation }) => {
             {evaluation.status === 'completed' && evaluation.evaluation && (
               <div className="space-y-4">
                 <div className="border rounded-lg p-4 text-center">
-                  <h3 className="font-semibold mb-3 text-lg">📋 รายงานการประเมิน</h3>
+                  <h3 className="font-semibold mb-3 text-lg">
+                    📋 รายงานการประเมิน
+                  </h3>
                   <div className="whitespace-pre-wrap text-sm leading-relaxed ">
                     {evaluation.summary}
                   </div>
                 </div>
 
                 {/* Detailed Sections */}
-                {(evaluation.strengths || evaluation.weaknesses || evaluation.improvements) && (
+                {(evaluation.strengths ||
+                  evaluation.weaknesses ||
+                  evaluation.improvements) && (
                   <div className="grid gap-4">
                     {evaluation.strengths && (
                       <div className="border border-green-200 rounded-lg p-4">
                         <h4 className="font-semibold text-green-600 mb-2 flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4" />
-                          ✅ จุดดี
+                          <TrendingUp className="h-4 w-4" />✅ จุดดี
                         </h4>
                         <div className="text-sm whitespace-pre-wrap">
                           {evaluation.strengths}
@@ -272,9 +305,7 @@ const EvaluationCard = ({ evaluation }: { evaluation: MonthlyEvaluation }) => {
             {evaluation.status === 'pending' && (
               <div className="border rounded-lg p-4 text-center">
                 <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <div className="text-sm">
-                  รอการประเมินผลประจำเดือน
-                </div>
+                <div className="text-sm">รอการประเมินผลประจำเดือน</div>
               </div>
             )}
           </div>
@@ -284,8 +315,15 @@ const EvaluationCard = ({ evaluation }: { evaluation: MonthlyEvaluation }) => {
   )
 }
 
-export default function MonthlyEvaluationSection({ characterId }: MonthlyEvaluationSectionProps) {
-  const { data: evaluations, isLoading, error, refetch } = useMonthlyEvaluations(characterId)
+export default function MonthlyEvaluationSection({
+  characterId,
+}: MonthlyEvaluationSectionProps) {
+  const {
+    data: evaluations,
+    isLoading,
+    error,
+    refetch,
+  } = useMonthlyEvaluations(characterId)
 
   if (isLoading) {
     return (
@@ -351,18 +389,17 @@ export default function MonthlyEvaluationSection({ characterId }: MonthlyEvaluat
             )}
             <div className="overflow-x-auto scrollbar-hide">
               <div className="flex gap-3 pb-4 min-w-max">
-              {evaluations
-                .sort((a, b) => {
-                  // เรียงจากใหม่ไปเก่า (year desc, month desc)
-                  if (a.year !== b.year) return b.year - a.year
-                  return b.month - a.month
-                })
-                .map((evaluation) => (
-                  <div key={evaluation.id} className="flex-shrink-0 w-72">
-                    <EvaluationCard evaluation={evaluation} />
-                  </div>
-                ))
-              }
+                {evaluations
+                  .sort((a, b) => {
+                    // เรียงจากใหม่ไปเก่า (year desc, month desc)
+                    if (a.year !== b.year) return b.year - a.year
+                    return b.month - a.month
+                  })
+                  .map((evaluation) => (
+                    <div key={evaluation.id} className="flex-shrink-0 w-72">
+                      <EvaluationCard evaluation={evaluation} />
+                    </div>
+                  ))}
               </div>
             </div>
           </>

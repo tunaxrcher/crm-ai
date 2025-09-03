@@ -18,33 +18,35 @@ interface MonthlyEvaluation {
   updatedAt: Date
 }
 
-const fetchCharacterEvaluations = async (characterId: number): Promise<MonthlyEvaluation[]> => {
+const fetchCharacterEvaluations = async (
+  characterId: number
+): Promise<MonthlyEvaluation[]> => {
   const response = await fetch(`/api/evaluation/character/${characterId}`)
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch evaluations')
   }
-  
+
   const data = await response.json()
   return data.data
 }
 
 const fetchEvaluationByMonth = async (
-  characterId: number, 
-  month: number, 
+  characterId: number,
+  month: number,
   year: number
 ): Promise<MonthlyEvaluation | null> => {
   const response = await fetch(
     `/api/evaluation/character/${characterId}?month=${month}&year=${year}`
   )
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       return null
     }
     throw new Error('Failed to fetch evaluation')
   }
-  
+
   const data = await response.json()
   return data.data
 }
@@ -59,8 +61,8 @@ export const useMonthlyEvaluations = (characterId: number) => {
 }
 
 export const useMonthlyEvaluationByMonth = (
-  characterId: number, 
-  month: number, 
+  characterId: number,
+  month: number,
   year: number
 ) => {
   return useQuery({
@@ -81,13 +83,13 @@ export const useTriggerEvaluation = () => {
       },
       body: JSON.stringify({ month, year }),
     })
-    
+
     if (!response.ok) {
       throw new Error('Failed to trigger evaluation')
     }
-    
+
     return response.json()
   }
-  
+
   return { triggerEvaluation }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { prisma } from '@src/lib/db'
 import OpenAI from 'openai'
 
@@ -9,22 +10,22 @@ export async function POST(request: NextRequest) {
     const highLevelCharacters = await prisma.character.findMany({
       where: {
         level: {
-          gt: 9
-        }
+          gt: 9,
+        },
       },
       include: {
         user: true,
         jobClass: true,
         questSubmissions: {
           orderBy: {
-            submittedAt: 'desc'
+            submittedAt: 'desc',
           },
           // ดึงทั้งหมด ไม่จำกัดจำนวน
           include: {
-            quest: true
-          }
-        }
-      }
+            quest: true,
+          },
+        },
+      },
     })
 
     // กรองเฉพาะ characters ที่ยังไม่มี personal quests
@@ -32,8 +33,8 @@ export async function POST(request: NextRequest) {
     for (const character of highLevelCharacters) {
       const personalQuestCount = await prisma.quest.count({
         where: {
-          characterId: character.id
-        }
+          characterId: character.id,
+        },
       })
 
       if (personalQuestCount === 0) {
@@ -41,7 +42,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`Found ${eligibleCharacters.length} characters eligible for personal quests`)
+    console.log(
+      `Found ${eligibleCharacters.length} characters eligible for personal quests`
+    )
 
     const results = []
 
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
           score: sub.score,
           feedback: sub.feedback,
           submittedAt: sub.submittedAt,
-          xpEarned: sub.xpEarned
+          xpEarned: sub.xpEarned,
         }))
 
         console.log(submissionData)
@@ -106,16 +109,17 @@ ${JSON.stringify(submissionData, null, 2)}
           messages: [
             {
               role: 'system',
-              content: 'คุณเป็น AI ที่ช่วยสร้างเควสสำหรับแอปจำลองเกม RPG ที่ช่วยเพิ่มประสิทธิภาพการทำงาน'
+              content:
+                'คุณเป็น AI ที่ช่วยสร้างเควสสำหรับแอปจำลองเกม RPG ที่ช่วยเพิ่มประสิทธิภาพการทำงาน',
             },
             {
               role: 'user',
-              content: prompt
-            }
+              content: prompt,
+            },
           ],
           temperature: 0.7,
           max_tokens: 2000,
-          response_format: { type: 'json_object' }
+          response_format: { type: 'json_object' },
         })
 
         const aiResponse = completion.choices[0]?.message?.content
@@ -131,34 +135,35 @@ ${JSON.stringify(submissionData, null, 2)}
         for (const questData of questsArray) {
           // ไม่บันทึก reasoning
           const { reasoning, ...questInfo } = questData
-          
+
           const createdQuest = await prisma.quest.create({
             data: {
               ...questInfo,
               characterId: character.id,
               jobClassId: character.jobClassId,
               isActive: true,
-              tokenMultiplier: 1
-            }
+              tokenMultiplier: 1,
+            },
           })
-          
+
           createdQuests.push(createdQuest)
         }
 
         results.push({
           characterId: character.id,
           characterName: character.name,
-          questsCreated: createdQuests.length
+          questsCreated: createdQuests.length,
         })
 
-        console.log(`Created ${createdQuests.length} personal quests for character ${character.name}`)
-
+        console.log(
+          `Created ${createdQuests.length} personal quests for character ${character.name}`
+        )
       } catch (error) {
         console.error(`Error processing character ${character.id}:`, error)
         results.push({
           characterId: character.id,
           characterName: character.name,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         })
       }
     }
@@ -166,17 +171,16 @@ ${JSON.stringify(submissionData, null, 2)}
     return NextResponse.json({
       success: true,
       message: `Processed ${eligibleCharacters.length} characters`,
-      results
+      results,
     })
-
   } catch (error) {
     console.error('Error in check-level API:', error)
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     )
   }
-} 
+}

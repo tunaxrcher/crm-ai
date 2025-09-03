@@ -304,10 +304,7 @@ export class QuestSubmissionRepository extends BaseRepository<QuestSubmission> {
     })
   }
 
-  async update(
-    id: number,
-    data: any
-  ) {
+  async update(id: number, data: any) {
     return this.prisma.questSubmission.update({
       where: { id },
       data,
