@@ -4,7 +4,10 @@ import { questSubmissionService } from '@src/features/quest/services/server'
 import { withErrorHandling } from '@src/lib/withErrorHandling'
 
 export const POST = withErrorHandling(
-  async (request: NextRequest, context: { params: Promise<any> }) => {
+  async (
+    request: NextRequest,
+    context: { params: Promise<{ id: string }> }
+  ) => {
     console.log(`[API] Submit Quest`)
 
     const { id: questId } = await context.params
@@ -38,7 +41,10 @@ export const POST = withErrorHandling(
 
 // PUT สำหรับอัพเดท summary
 export const PUT = withErrorHandling(
-  async (request: NextRequest, context: { params: Promise<any> }) => {
+  async (
+    request: NextRequest,
+    context: { params: Promise<{ id: string }> }
+  ) => {
     console.log(`[API] Update Quest`)
 
     const { id: questId } = await context.params

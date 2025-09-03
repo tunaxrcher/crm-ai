@@ -5,7 +5,7 @@ import { questService } from '@src/features/quest/services/server'
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<any> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log(`[API] Fetching Quest By ID`)

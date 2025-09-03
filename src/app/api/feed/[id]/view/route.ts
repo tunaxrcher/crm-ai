@@ -8,6 +8,8 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  console.log(`[API] POST Story View`)
+
   try {
     const { id } = await context.params
     const body = await request.json()

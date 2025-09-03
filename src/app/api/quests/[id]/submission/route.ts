@@ -7,7 +7,7 @@ import {
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<any> }
+  context: { params: Promise<{ id: string }> }
 ) {
   console.log(`[API] GET Quest Submission`)
 
@@ -49,7 +49,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Promise<any> }
+  context: { params: Promise<{ id: string }> }
 ) {
   console.log(`[API] UPDATE Quest Submission`)
 

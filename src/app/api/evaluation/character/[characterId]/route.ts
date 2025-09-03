@@ -7,10 +7,13 @@ import { withErrorHandling } from '@src/lib/withErrorHandling'
 export const GET = withErrorHandling(
   async (
     request: NextRequest,
-    { params }: { params: { characterId: string } }
+    context: { params: Promise<{ characterId: string }> }
   ) => {
+    console.log(`[API] GET Character Evaluation`)
+
     try {
-      const characterId = parseInt(params.characterId)
+      const { characterId: characterIdStr } = await context.params
+      const characterId = parseInt(characterIdStr)
 
       if (isNaN(characterId)) {
         return NextResponse.json(

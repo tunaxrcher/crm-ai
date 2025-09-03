@@ -8,6 +8,8 @@ export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  console.log(`[API] GET Feed Item`)
+
   try {
     const { id } = await context.params
     const feedItem = await feedService.getFeedItemById(parseInt(id))
@@ -34,6 +36,8 @@ export async function DELETE(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
+  console.log(`[API] DELETE Feed Item`)
+
   try {
     const { id } = await context.params
     await feedService.deleteFeedItem(parseInt(id))

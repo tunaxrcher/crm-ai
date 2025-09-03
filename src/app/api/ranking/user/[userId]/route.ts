@@ -6,6 +6,8 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ userId: string }> }
 ) {
+  console.log(`[API] GET User Ranking`)
+
   try {
     const { userId } = await context.params
     const searchParams = request.nextUrl.searchParams

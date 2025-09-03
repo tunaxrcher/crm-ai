@@ -8,6 +8,8 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ commentId: string }> }
 ) {
+  console.log(`[API] POST Comment Reply`)
+
   try {
     const { commentId } = await context.params
     const body = await request.json()
