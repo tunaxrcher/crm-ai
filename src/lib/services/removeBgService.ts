@@ -17,7 +17,7 @@ class RemoveBgService {
       console.log('[RemoveBg] Starting background removal...')
 
       const formData = new FormData()
-      formData.append('image_file', new Blob([imageBuffer]), 'image.png')
+      formData.append('image_file', new Blob([new Uint8Array(imageBuffer)]), 'image.png')
       formData.append('size', 'auto')
       formData.append('format', 'png')
 
