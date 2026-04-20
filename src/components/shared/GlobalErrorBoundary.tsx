@@ -36,10 +36,10 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
         {process.env.NODE_ENV === 'development' && (
           <div className="bg-red-900/20 p-4 rounded-md mb-4 w-full max-w-md overflow-auto text-left">
             <p className="text-red-500 font-mono text-sm break-words">
-              {error.message}
+              {error instanceof Error ? error.message : String(error)}
             </p>
             <p className="text-red-400/70 font-mono text-xs mt-2 break-words">
-              {error.stack?.split('\n').slice(0, 3).join('\n')}
+              {error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : ''}
             </p>
           </div>
         )}
