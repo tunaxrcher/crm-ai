@@ -5,6 +5,8 @@ import { useState } from 'react'
 
 import Image from 'next/image'
 import Link from 'next/link'
+
+import { LOGO_ALT, LOGO_PATH } from '@src/lib/logo'
 import { useRouter } from 'next/navigation'
 
 import { Badge } from '@src/components/ui/badge'
@@ -316,8 +318,8 @@ const AddQuestButton = () => {
         <DialogContent className="sm:max-w-md overflow-y-auto max-h-screen">
           <DialogHeader>
             <Image
-              src="/auto-import-evx-logo.png"
-              alt="Auto Import EVX Logo"
+              src={LOGO_PATH}
+              alt={LOGO_ALT}
               width={120}
               height={40}
               className="mx-auto mb-5"

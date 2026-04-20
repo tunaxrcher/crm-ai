@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 
 import Image from 'next/image'
 
+import { LOGO_ALT, LOGO_PATH } from '@src/lib/logo'
 import { Avatar, AvatarFallback, AvatarImage } from '@src/components/ui/avatar'
 import { Badge } from '@src/components/ui/badge'
 import { Button } from '@src/components/ui/button'
@@ -484,8 +485,8 @@ export const LevelUpNotification: React.FC<{
       <div className="text-center">
         <div className="mb-4">
           <Image
-            src="/auto-import-evx-logo.png"
-            alt="Auto Import EVX Logo"
+            src={LOGO_PATH}
+            alt={LOGO_ALT}
             width={120}
             height={40}
             className="mx-auto"
@@ -539,8 +540,8 @@ export const AchievementUnlockedNotification: React.FC<{
       <div className="text-center">
         <div className="mb-4">
           <Image
-            src="/auto-import-evx-logo.png"
-            alt="Auto Import EVX Logo"
+            src={LOGO_PATH}
+            alt={LOGO_ALT}
             width={120}
             height={40}
             className="mx-auto"
@@ -607,8 +608,8 @@ export const XPGainedNotification: React.FC<{
       <div className="text-center">
         <div className="mb-4">
           <Image
-            src="/auto-import-evx-logo.png"
-            alt="Auto Import EVX Logo"
+            src={LOGO_PATH}
+            alt={LOGO_ALT}
             width={120}
             height={40}
             className="mx-auto"
@@ -663,8 +664,8 @@ export const ClassUnlockNotification: React.FC<{
       <div className="text-center">
         <div className="mb-4">
           <Image
-            src="/auto-import-evx-logo.png"
-            alt="Auto Import EVX Logo"
+            src={LOGO_PATH}
+            alt={LOGO_ALT}
             width={120}
             height={40}
             className="mx-auto"
@@ -748,8 +749,8 @@ export const JobTitleNotification: React.FC<{
       <div className="text-center">
         <div className="mb-4">
           <Image
-            src="/auto-import-evx-logo.png"
-            alt="Auto Import EVX Logo"
+            src={LOGO_PATH}
+            alt={LOGO_ALT}
             width={120}
             height={40}
             className="mx-auto"

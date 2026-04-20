@@ -5,6 +5,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 
 import { Button } from '@src/components/ui/button'
+import { LOGO_ALT, LOGO_PATH } from '@src/lib/logo'
 import { signIn } from 'next-auth/react'
 
 export function GoogleLoginForm() {
@@ -25,8 +26,8 @@ export function GoogleLoginForm() {
     <div className="w-full max-w-sm mx-auto">
       <div className="mb-8 flex justify-center">
         <Image
-          src="/auto-import-evx-logo.png"
-          alt="Auto Import EV Logo"
+          src={LOGO_PATH}
+          alt={LOGO_ALT}
           width={160}
           height={60}
           priority

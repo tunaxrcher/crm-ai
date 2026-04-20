@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 
 import Image from 'next/image'
 
+import { LOGO_ALT, LOGO_PATH } from '@src/lib/logo'
 import {
   Dialog,
   DialogContent,
@@ -154,8 +155,8 @@ export default function CharacterDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <Image
-            src="/auto-import-evx-logo.png"
-            alt="Auto Import EVX Logo"
+            src={LOGO_PATH}
+            alt={LOGO_ALT}
             width={120}
             height={40}
             className="mx-auto mb-5"

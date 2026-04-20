@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Kanit } from 'next/font/google'
 
+import { LOGO_PATH } from '@src/lib/logo'
 import { AuthProvider } from '@src/providers/AuthProvider'
 import ReactQueryProvider from '@src/providers/ReactQueryProvider'
 
@@ -31,12 +32,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/auto-import-evx-logo.png?v=1.0.0' },
+      { url: `${LOGO_PATH}?v=1.0.0` },
       { url: '/icon-192x192.png?v=1.0.0', sizes: '192x192', type: 'image/png' },
       { url: '/icon-512x512.png?v=1.0.0', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/auto-import-evx-logo.png?v=1.0.0' },
+      { url: `${LOGO_PATH}?v=1.0.0` },
       {
         url: '/apple-touch-icon.png?v=1.0.0',
         sizes: '180x180',
@@ -60,7 +61,7 @@ export default function RootLayout({
           content="black-translucent"
         />
         <meta name="apple-mobile-web-app-title" content="KPI & AI" />
-        <link rel="apple-touch-icon" href="/auto-import-evx-logo.png?v=1.0.0" />
+        <link rel="apple-touch-icon" href={`${LOGO_PATH}?v=1.0.0`} />
         <link rel="manifest" href="/manifest.json?v=1.0.0" />
         <script
           dangerouslySetInnerHTML={{

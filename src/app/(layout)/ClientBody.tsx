@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { ImageWithFallback } from '@src/components/shared'
+import { LOGO_ALT, LOGO_PATH } from '@src/lib/logo'
 import NotificationSheet from '@src/components/shared/NotificationSheet'
 import ProfileSheet from '@src/components/shared/ProfileSheet'
 import {
@@ -157,8 +158,8 @@ function ClientBodyInner({ children }: { children: React.ReactNode }) {
         <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-card border-b border-border flex items-center justify-between px-4 max-w-md mx-auto">
           <Link href="/">
             <ImageWithFallback
-              src="/auto-import-evx-logo.png"
-              alt="Auto Import EVX Logo"
+              src={LOGO_PATH}
+              alt={LOGO_ALT}
               width={120}
               height={40}
               className="h-8 w-auto"

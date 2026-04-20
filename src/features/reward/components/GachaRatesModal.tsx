@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 
+import { LOGO_ALT, LOGO_PATH } from '@src/lib/logo'
 import { Badge } from '@src/components/ui/badge'
 import {
   Dialog,
@@ -64,8 +65,8 @@ export default function GachaRatesModal({
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <Image
-            src="/auto-import-evx-logo.png"
-            alt="Auto Import EVX Logo"
+            src={LOGO_PATH}
+            alt={LOGO_ALT}
             width={120}
             height={40}
             className="mx-auto mb-5"
